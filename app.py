@@ -1,17 +1,13 @@
 import os
-from flask import Flask, request, jsonify # Elimina send_from_directory
+from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 import requests
 from flask_cors import CORS
 
 load_dotenv()
 
-# Inicializa la aplicación Flask
-# Ya no necesitamos especificar static_folder si no vamos a servir archivos estáticos desde Flask
-app = Flask(__name__) 
-
-# --- CONFIGURACIÓN DE CORS ---
-CORS(app) # Sigue siendo necesario para que tu frontend (GitHub Pages) se comunique con esta API
+app = Flask(__name__)
+CORS(app)
 
 HUGGINGFACE_API_TOKEN = os.getenv("HUGGINGFACE_API_TOKEN")
 MODEL_URL = os.getenv("MODEL_URL")
@@ -21,14 +17,6 @@ if not HUGGINGFACE_API_TOKEN:
 if not MODEL_URL:
     raise ValueError("La variable de entorno MODEL_URL no está configurada.")
 
-# --- ¡¡¡IMPORTANTE: ELIMINAR ESTA RUTA!!! ---
-# @app.route('/')
-# def serve_index():
-#     return send_from_directory(app.static_folder, 'index.html')
-#
-# Esta ruta ya NO es necesaria porque GitHub Pages servirá tu index.html.
-
-# --- Ruta de la API para el chat (donde tu frontend enviará los mensajes) ---
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.json
@@ -37,28 +25,32 @@ def chat():
     if not messages:
         return jsonify({"error": "No se proporcionaron mensajes en la solicitud."}), 400
 
-    system_message_content = (
-        "Eres Amside AI, una inteligencia artificial creada por Hodelygil. "
-        "Tu propósito principal es asistir en el estudio y el aprendizaje, "
-        "proporcionando información y explicaciones detalladas. "
-        "Sin embargo, también eres amigable y puedes mantener conversaciones informales y agradables. "
-        "Responde de manera informativa y útil, pero con un tono conversacional."
-    )
+    # --- MODIFICACIÓN CLAVE AQUÍ ---
+    # Vamos a construir los mensajes para Hugging Face.
+    # Para Zephyr y modelos similares, a menudo la API de inferencia espera solo 'user'/'assistant' roles
+    # en el array de 'inputs'. El mensaje del sistema puede ser ignorado o causar un 422 si no está formateado
+    # de una manera específica por la API.
+    # Por simplicidad y para solucionar el 422, quitaremos el rol 'system' explícito aquí,
+    # y solo pasaremos los mensajes de 'user' y 'assistant' al modelo.
 
-    hf_messages = [{"role": "system", "content": system_message_content}]
+    hf_messages_for_api = []
     for msg in messages:
-        if msg['role'] != 'system':
-            hf_messages.append(msg)
+        if msg['role'] == 'user' or msg['role'] == 'assistant':
+            hf_messages_for_api.append(msg)
+        # Puedes añadir una lógica aquí si quieres incluir el system_message_content
+        # como parte del primer mensaje de usuario, pero para el 422, simplifiquemos.
 
     payload = {
-        "inputs": hf_messages,
+        "inputs": hf_messages_for_api, # Pasamos la lista filtrada de mensajes
         "parameters": {
             "max_new_tokens": 500,
-            "do_sample": True,
-            "temperature": 0.7,
-            "top_p": 0.9,
-            "repetition_penalty": 1.1,
-            "return_full_text": False
+            # Vamos a quitar temporalmente los otros parámetros para ver si alguno de ellos
+            # está causando el 422. Si funciona, podemos añadirlos de nuevo uno a uno.
+            # "do_sample": True,
+            # "temperature": 0.7,
+            # "top_p": 0.9,
+            # "repetition_penalty": 1.1,
+            # "return_full_text": False # La API de Zephyr suele funcionar con false
         }
     }
 
@@ -77,9 +69,18 @@ def chat():
             return jsonify({"error": "Respuesta inesperada de Hugging Face API.", "hf_response": hf_data}), 500
 
         ai_response_text = hf_data[0]['generated_text']
+
+        # Si return_full_text es False, la respuesta debería ser solo el texto del asistente.
+        # Si la API de Zephyr te devuelve la conversación completa (incluyendo tu input),
+        # necesitarías una lógica aquí para extraer solo la última respuesta del asistente.
+        # Pero, por ahora, devolvamos lo que venga.
+
         return jsonify({"response": ai_response_text})
 
     except requests.exceptions.RequestException as e:
+        # Esto nos dará más detalle si el 422 trae un mensaje específico de Hugging Face
+        if hasattr(e, 'response') and e.response is not None and e.response.status_code == 422:
+            print(f"Hugging Face API 422 Error Response Content: {e.response.text}")
         print(f"Error al conectar con Hugging Face API: {e}")
         return jsonify({"error": f"Error al conectar con la IA: {e}. Por favor, inténtalo de nuevo más tarde."}), 500
     except Exception as e:
