@@ -71,18 +71,16 @@ def generate_text():
             hf_messages.append(msg)
 
     # Configuración del payload para la API de inferencia de Hugging Face
-    payload = {
-        "inputs": hf_messages, # Este es el historial de chat que el modelo usará
-        "parameters": {
-            "max_new_tokens": 500,       # Longitud máxima de la respuesta de la IA
-            "do_sample": True,           # Habilita el muestreo (para respuestas más creativas)
-            "temperature": 0.7,          # Controla la aleatoriedad (0.7 es un buen equilibrio)
-            "top_p": 0.9,                # Muestreo con corte por probabilidad acumulada
-            "repetition_penalty": 1.1,   # Penaliza la repetición de palabras/frases
-            "return_full_text": False    # Importante: Solo queremos el texto generado por la IA, no el prompt completo
-        }
+payload = {
+    "inputs": hf_messages,
+    "parameters": {
+        "max_new_tokens": 500,
+        "temperature": 0.7,
+        # "do_sample": True,          # <-- Try commenting these out
+        # "top_p": 0.95,              # <-- Try commenting these out
+        # "repetition_penalty": 1.2   # <-- Try commenting these out
     }
-
+}
     try:
         # Realizar la solicitud POST a la API de inferencia de Hugging Face
         response = requests.post(MODEL_URL, headers=HEADERS, json=payload)
