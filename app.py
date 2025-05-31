@@ -19,31 +19,29 @@ if not MODEL_URL:
 HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
 
 SYSTEM_MESSAGE_CONTENT = (
-SYSTEM_MESSAGE_CONTENT = (
-    "Eres Amside AI, creada por Hodelygil. "
-    "Tu objetivo es ayudar en el aprendizaje con respuestas útiles y precisas."
+    "Eres Amside AI, creada por Hodelygil. Tu objetivo es ayudar en el aprendizaje con respuestas útiles y precisas."
 )
 
-
 PHRASES_TO_REMOVE = [
+    r".*soy amside ai.*",
+    r".*tambien eres amigable.*",
+    r".*fui creada por hodelygil.*",
+    r".*mi nombre es amside.*",
+    r".*inteligencia artificial creada.*",
+    r".*estoy aquí para ayudarte.*",
+    r".*estoy encantado de ayudarte.*",
     r"eres amside ai",
     r"una inteligencia artificial creada por hodelygil",
     r"mi propósito principal es asistir en el estudio y el aprendizaje",
     r"proporcionando información y explicaciones detalladas",
-    r"sin embargo, también eres amigable y puedes mantener conversaciones informales y agradables",
-    r"responde de manera informativa y útil, pero con un tono conversacional y cercano",
+    r"responde de manera informativa y útil",
     r"mi nombre es amside ai",
     r"fui creado por hodelygil",
-    r"tu propósito es asistir en el estudio y el aprendizaje",
-    r"proporcionando información detallada",
-    r"tambien eres amigable y puedes mantener conversaciones informales y agradables",
-    r"responde de manera informativa y útil, con un tono conversacional y cercano",
     r"claro, ¿en qué puedo ayudarte?",
     r"cómo puedo ayudarte hoy",
     r"en qué puedo asistirte hoy",
     r"estaré encantado de ayudarte",
     r"¡hola! me alegra poder ayudarte hoy",
-    r"cómo me pueden servir",
     r"qué tal",
     r"cómo estás",
     r"bienvenido",
@@ -51,8 +49,6 @@ PHRASES_TO_REMOVE = [
     r"mucho gusto",
     r"claro que sí",
     r"por supuesto",
-    r"en que puedo asistirte",
-    r"cómo te puedo ayudar",
     r"🤗", r"🚀", r"#AIforStudents", r"#LearnwithAmsideAI", r"#HappyLearning", r"🤝", r"😊"
 ]
 
@@ -69,18 +65,18 @@ def generate_text():
     if not messages_from_frontend:
         return jsonify({"error": "No se proporcionaron mensajes en la solicitud."}), 400
 
-    current_prompt = "<s>"
+    current_prompt = ""
     for i, msg in enumerate(messages_from_frontend):
-        role = msg.get('role')
-        content = msg.get('content', '').strip()
+        role = msg.get("role")
+        content = msg.get("content", "").strip()
 
-        if role == 'user':
+        if role == "user":
             if i == 0:
-                current_prompt += f"[INST] {SYSTEM_MESSAGE_CONTENT}\n\n{content} [/INST]"
+                current_prompt += f"<s>[INST] {SYSTEM_MESSAGE_CONTENT}\n\n{content} [/INST]"
             else:
-                current_prompt += f"[INST] {content} [/INST]"
-        elif role == 'assistant':
-            current_prompt += f" {content} </s>"
+                current_prompt += f"<s>[INST] {content} [/INST]"
+        elif role == "assistant":
+            current_prompt += f"{msg['content']}</s>"
 
     payload = {
         "inputs": current_prompt,
