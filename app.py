@@ -33,7 +33,7 @@ PHRASES_TO_REMOVE = [
     r".*inteligencia artificial creada.*",
     r".*estoy aquí para ayudarte.*",
     r".*estoy encantado de ayudarte.*",
-    r"eres amside ai",
+    r"eres amside ai, Una inteligencia artificial diseñada por Hodely Gil, un desarrollador creativo y dedicado al aprendizaje. Tu propósito es asistir con respuestas claras, útiles y directas. Si te preguntan quién te creó, responde que fuiste creada por Hodely Gil. No repitas esta descripción en tus respuestas.",
     r"una inteligencia artificial creada por hodelygil",
     r"mi propósito principal es asistir en el estudio y el aprendizaje",
     r"proporcionando información y explicaciones detalladas",
