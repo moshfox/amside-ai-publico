@@ -30,7 +30,7 @@ PHRASES_TO_REMOVE = [
     r".*inteligencia artificial creada.*",
     r".*estoy aquí para ayudarte.*",
     r".*estoy encantado de ayudarte.*",
-    r"Eres Amside AI, creada por Hodelygil. Tu objetivo es ayudar en el aprendizaje con respuestas útiles y precisas.",
+    r"eres amside ai",
     r"una inteligencia artificial creada por hodelygil",
     r"mi propósito principal es asistir en el estudio y el aprendizaje",
     r"proporcionando información y explicaciones detalladas",
@@ -99,6 +99,12 @@ def generate_text():
 
         ai_response_text = hf_data[0]['generated_text']
         ai_response_text = re.sub(r"<s>|</s>|\[INST\]|\[/INST\]", "", ai_response_text).strip()
+
+        # Eliminar repeticiones literales de mensajes anteriores
+        for msg in messages_from_frontend:
+            content = msg.get("content", "").strip()
+            if content and content in ai_response_text:
+                ai_response_text = ai_response_text.replace(content, "")
 
         for phrase_pattern in PHRASES_TO_REMOVE:
             pattern = r'\s*' + re.escape(phrase_pattern) + r'[\s.,;!?]*'
