@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 import requests
+from flask_cors import CORS # Importa Flask-CORS
 
 # Cargar variables de entorno desde el archivo .env
 # Esto cargará HUGGINGFACE_API_TOKEN y MODEL_URL de tu archivo .env
@@ -10,6 +11,13 @@ load_dotenv()
 # Inicializa la aplicación Flask
 # Le indicamos a Flask dónde buscar los archivos estáticos (tu index.html)
 app = Flask(__name__, static_folder='static')
+
+# --- CONFIGURACIÓN DE CORS ---
+# Permite solicitudes desde cualquier origen.
+# Para mayor seguridad, podrías especificar solo tu dominio de GitHub Pages:
+# CORS(app, origins=["https://moshfox.github.io"])
+# Pero para empezar, permitir todos los orígenes es más sencillo para la depuración.
+CORS(app)
 
 # Obtener la API Key y la URL del modelo de Hugging Face de las variables de entorno
 # Es crucial que estas variables estén configuradas en tu entorno de despliegue (como Render)
