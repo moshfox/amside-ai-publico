@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify, Response, stream_with_context # Importar Response y stream_with_context
+from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 import requests
 from flask_cors import CORS
@@ -17,14 +17,13 @@ if not HUGGINGFACE_API_TOKEN:
 if not MODEL_URL:
     raise ValueError("La variable de entorno MODEL_URL no está configurada.")
 
+# Define el mensaje del sistema fuera de la ruta para que sea fácilmente accesible
 system_message_content = (
-    "Te llamas "Amside AI", una inteligencia artificial creada por el desarrollador independiente Hodelygil. "
-    "Tienes que ser creativo y social. "
-    "Tienes que caerle bien a las personas "
+    "Eres Amside AI, una inteligencia artificial creada por Hodelygil. "
+    "Tu propósito principal es asistir en el estudio y el aprendizaje, "
+    "proporcionando información y explicaciones detalladas. "
     "Sin embargo, también eres amigable y puedes mantener conversaciones informales y agradables. "
     "Responde de manera informativa y útil, pero con un tono conversacional."
-    "Tu creador es HodelyGil"
-    "intenta responder en mensajes cortos"
 )
 
 @app.route('/api/chat', methods=['POST'])
@@ -35,28 +34,32 @@ def chat():
     if not messages:
         return jsonify({"error": "No se proporcionaron mensajes en la solicitud."}), 400
 
+    # --- MODIFICACIÓN CLAVE AQUÍ: Construir un único string para 'inputs' ---
+
+    # Extraer el contenido del último mensaje del usuario
     last_user_message_content = ""
-    for msg in reversed(messages):
+    for msg in reversed(messages): # Iterar en reversa para encontrar el último mensaje de usuario
         if msg['role'] == 'user':
             last_user_message_content = msg['content']
             break
 
+    # Construir el prompt final como un único string, siguiendo el formato de chat de Zephyr
+    # Esto incluye el mensaje del sistema y el último mensaje del usuario.
     prompt_string = (
         f"<s>[INST] <<SYS>>\n{system_message_content}\n<</SYS>>\n\n"
         f"{last_user_message_content} [/INST]"
     )
 
     payload = {
-        "inputs": prompt_string,
+        "inputs": prompt_string, # Ahora 'inputs' es un único string, como lo exige el error 422
         "parameters": {
             "max_new_tokens": 500,
             "do_sample": True,
             "temperature": 0.7,
             "top_p": 0.9,
             "repetition_penalty": 1.1,
-            "return_full_text": False
-        },
-        "stream": True # <--- ¡IMPORTANTE: Habilitar el streaming!
+            "return_full_text": False # Pedimos solo el texto generado nuevo
+        }
     }
 
     headers = {
@@ -64,58 +67,37 @@ def chat():
         'Authorization': f'Bearer {HUGGINGFACE_API_TOKEN}'
     }
 
-    # Definir una función generadora para el streaming
-    def generate():
-        try:
-            # Petición a Hugging Face en modo streaming
-            response_hf = requests.post(MODEL_URL, headers=headers, json=payload, stream=True)
-            response_hf.raise_for_status()
+    try:
+        response = requests.post(MODEL_URL, headers=headers, json=payload)
+        response.raise_for_status() # Esto levantará un HTTPError para respuestas 4xx/5xx
 
-            # Leer y enviar cada chunk de datos
-            for chunk in response_hf.iter_content(chunk_size=1): # chunk_size=1 para texto char por char
-                if chunk:
-                    # La API de Hugging Face devuelve eventos SSE (Server-Sent Events)
-                    # Necesitas parsear cada línea para extraer el 'token'
-                    try:
-                        # Cada chunk es un byte, decodificamos y separamos por líneas
-                        decoded_chunk = chunk.decode('utf-8')
-                        for line in decoded_chunk.splitlines():
-                            if line.startswith("data:"):
-                                json_data = line[len("data:"):].strip()
-                                # Intentar parsear el JSON
-                                try:
-                                    data_obj = json.loads(json_data)
-                                    # El texto generado está en 'token' -> 'text'
-                                    token_text = data_obj.get('token', {}).get('text', '')
-                                    if token_text:
-                                        yield token_text # Enviar el fragmento de texto
-                                    elif data_obj.get('generated_text') is not None:
-                                        # Esto es para el chunk final que contiene la respuesta completa
-                                        # o si el streaming termina antes de la respuesta final.
-                                        # Puedes decidir si lo envías o si ya el frontend ha reconstruido todo.
-                                        pass # El frontend ya habrá recibido los tokens
-                                except json.JSONDecodeError:
-                                    # print(f"Error decodificando JSON del chunk: {json_data}")
-                                    pass # No es JSON válido, quizás parte de un chunk incompleto
-                    except UnicodeDecodeError:
-                        # print(f"Error decodificando chunk: {chunk}")
-                        pass # Ignorar errores de decodificación si no es texto UTF-8
+        hf_data = response.json()
 
-        except requests.exceptions.RequestException as e:
-            error_message = f"Error al conectar con la IA: {e}. Por favor, inténtalo de nuevo más tarde."
-            if hasattr(e, 'response') and e.response is not None:
-                error_message = f"Error al conectar con la IA: {e.response.status_code} {e.response.reason}. Contenido: {e.response.text}. Por favor, inténtalo de nuevo más tarde."
-                print(f"Hugging Face API Error Status: {e.response.status_code}")
-                print(f"Hugging Face API Error Response Content: {e.response.text}")
-            print(f"Error al conectar con Hugging Face API: {e}")
-            yield f"data: {json.dumps({'error': error_message})}\n\n" # Enviar error como un evento SSE
-        except Exception as e:
-            error_message = f"Ocurrió un error inesperado en el servidor: {e}. Por favor, contacta al soporte."
-            print(f"Error interno del servidor: {e}")
-            yield f"data: {json.dumps({'error': error_message})}\n\n" # Enviar error como un evento SSE
+        if not hf_data or not isinstance(hf_data, list) or not hf_data[0].get('generated_text'):
+            return jsonify({"error": "Respuesta inesperada de Hugging Face API.", "hf_response": hf_data}), 500
 
-    # Devolver una respuesta de stream para el frontend
-    return Response(stream_with_context(generate()), mimetype='text/event-stream')
+        ai_response_text = hf_data[0]['generated_text']
+
+        # Zephyr, con return_full_text=False y el formato adecuado, debería devolver
+        # solo la parte de la respuesta del asistente. Si aún incluye el prompt completo,
+        # podríamos necesitar una lógica de extracción más robusta aquí.
+        # Por ahora, si el texto generado empieza con el prompt, lo eliminamos.
+        if ai_response_text.startswith(prompt_string):
+             ai_response_text = ai_response_text[len(prompt_string):].strip()
+
+
+        return jsonify({"response": ai_response_text})
+
+    except requests.exceptions.RequestException as e:
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Hugging Face API Error Status: {e.response.status_code}")
+            # Esto es lo que nos dio el error claro
+            print(f"Hugging Face API Error Response Content: {e.response.text}")
+        print(f"Error al conectar con Hugging Face API: {e}")
+        return jsonify({"error": f"Error al conectar con la IA: {e}. Por favor, inténtalo de nuevo más tarde."}), 500
+    except Exception as e:
+        print(f"Error interno del servidor: {e}")
+        return jsonify({"error": f"Ocurrió un error inesperado en el servidor: {e}. Por favor, contacta al soporte."}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
