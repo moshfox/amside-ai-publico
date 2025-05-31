@@ -820,243 +820,58 @@
             transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
             display: flex;
             align-items: center;
-            gap: 5px;
         }
 
-        .dynamic-prompt-suggestions .suggest-item:hover {
-            background-color: #3f4a56;
-            border-color: var(--accent-color);
-            transform: translateY(-2px);
-        }
-        .dynamic-prompt-suggestions .suggest-item .material-symbols-outlined {
-            font-size: 1em;
-            color: var(--accent-color);
-        }
-
-
-        /* Ajustes para pantallas pequeñas */
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-                overflow-y: auto; /* Permitir scroll en el body si es necesario */
-            }
-
-            .sidebar {
-                width: 100%;
-                min-height: auto;
-                border-right: none;
-                border-bottom: 1px solid #444d57;
-                padding: 15px 20px;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-                transition: height 0.3s ease; /* Transición para colapsar/expandir */
-            }
-
-            .sidebar-header {
-                margin-bottom: 15px;
-            }
-
-            .new-chat-button {
-                width: auto; /* El botón puede ser más pequeño en móvil */
-                align-self: center; /* Centrar en el sidebar */
-                padding: 10px 15px;
-            }
-
-            .chat-list-title {
-                display: none; /* Ocultar el título del historial en móvil */
-            }
-
-            .chat-list {
-                display: flex; /* Mostrar historial horizontalmente si cabe */
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 8px;
-                overflow-x: auto; /* Scroll horizontal si hay muchos */
-                padding-bottom: 10px;
-                scrollbar-width: none; /* Ocultar scrollbar de Firefox */
-            }
-            .chat-list::-webkit-scrollbar {
-                display: none; /* Ocultar scrollbar de Webkit */
-            }
-
-            .chat-list li {
-                flex-shrink: 0; /* No se encogen */
-                width: auto; /* Ancho automático para los ítems */
-                max-width: 150px; /* Limitar el ancho */
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                padding: 8px 12px;
-                margin-bottom: 0; /* Eliminar margen vertical */
-            }
-
-            .chat-container {
-                margin: 15px;
-                width: calc(100% - 30px); /* Ajustar el ancho */
-                flex-grow: 1; /* Ocupar el resto del espacio vertical */
-            }
-
-            .chat-header {
-                padding: 12px 15px;
-            }
-
-            .chat-header h2 {
-                font-size: 1.2em;
-            }
-
-            .chat-body {
-                padding: 15px;
-                gap: 10px;
-            }
-
-            .message, .user-message, .error-message {
-                padding: 10px 14px;
-                font-size: 0.9em;
-                max-width: 90%; /* Más ancho en pantallas pequeñas */
-            }
-            .message::before, .user-message::before, .error-message::before {
-                left: -6px; /* Ajuste de cola */
-                right: -6px; /* Ajuste de cola */
-                border-width: 6px;
-            }
-
-            .input-area {
-                padding: 10px;
-                flex-direction: row; /* Volver a una fila si es posible */
-                flex-wrap: wrap; /* Permitir que los elementos se envuelvan */
-                gap: 8px;
-            }
-
-            .input-field {
-                padding: 10px 12px;
-                margin-right: 0; /* Eliminar margen derecho si el botón está debajo */
-                width: 100%; /* Ocupar todo el ancho disponible */
-                min-height: 35px;
-                font-size: 0.95em;
-            }
-
-            .send-button {
-                width: 100%; /* Ocupar todo el ancho disponible */
-                padding: 8px 12px;
-                font-size: 0.9em;
-            }
-            
-            /* Ajustes para la pantalla de bienvenida en móvil */
-            .welcome-screen h1 {
-                font-size: 2.5em;
-                margin-bottom: 15px;
-            }
-            .welcome-screen p {
-                font-size: 1em;
-                margin-bottom: 20px;
-            }
-            .welcome-screen .start-chat-button {
-                padding: 15px 25px;
-                font-size: 1.2em;
-                margin-bottom: 25px;
-            }
-            .prompt-suggestions {
-                flex-direction: column;
-                max-width: 90%;
-            }
-            .prompt-suggestions .suggest-prompt-button {
-                width: 100%;
-            }
-
-            /* Ajustes para el input centrado en móvil */
-            .chat-container.centered-input .input-area {
-                width: calc(100% - 30px);
-                padding: 20px;
-                gap: 15px;
-            }
-            .chat-container.centered-input .input-area .input-field {
-                min-height: 50px;
-                font-size: 1em;
-            }
-            .chat-container.centered-input .input-area .send-button {
-                font-size: 1em;
-            }
-
-            .dynamic-prompt-suggestions {
-                width: calc(100% - 20px); /* Ajustar por padding del input-area */
-                left: 50%; /* Mantener centrado */
-                transform: translateX(-50%);
-                padding: 8px;
-                gap: 6px;
-            }
-            .dynamic-prompt-suggestions .suggest-item {
-                font-size: 0.85em;
-                padding: 6px 10px;
-            }
-
-            /* Esconder sidebar si no es necesario (por ejemplo, con un botón de toggle) */
-            /* Esto es un ejemplo, se necesitaría JS para manejarlo */
-            .sidebar.collapsed {
-                width: 0;
-                padding: 0;
-                overflow: hidden;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <div class="sidebar-header">
-            <span class="material-symbols-outlined icon">smart_toy</span>
+            <span class="material-symbols-outlined icon">auto_awesome</span>
             <h2>Amside AI</h2>
         </div>
-        <button class="new-chat-button" id="new-chat-button">
+        <button class="new-chat-button" id="newChatButton">
             <span class="material-symbols-outlined">add_comment</span>
             Nueva Conversación
         </button>
-        <div class="chat-list-title">Historial</div>
-        <ul class="chat-list" id="chat-list">
+        <p class="chat-list-title">Historial</p>
+        <ul class="chat-list" id="chatList">
             </ul>
     </div>
 
-    <div class="chat-container" id="chat-container">
-        <div class="welcome-screen" id="welcome-screen">
+    <div class="chat-container" id="chatContainer">
+        <div class="welcome-screen" id="welcomeScreen">
             <h1>Bienvenido a Amside AI</h1>
-            <p>Soy tu asistente personal impulsado por IA, diseñado para ayudarte a explorar conceptos complejos, aprender más rápido y mantener conversaciones estimulantes.</p>
-            <button class="start-chat-button" id="start-chat-button">
+            <p>Soy tu asistente personal, creado por Hodelygil. Estoy aquí para ayudarte a estudiar, aprender y resolver tus dudas de manera informativa y amigable. ¡Comencemos!</p>
+            <button class="start-chat-button" id="startChatButton">
                 <span class="material-symbols-outlined">chat</span>
-                Empezar a Chatear
+                Iniciar Nuevo Chat
             </button>
             <div class="prompt-suggestions">
-                <button class="suggest-prompt-button" data-prompt="Explícame la teoría de la relatividad especial.">
-                    <span class="material-symbols-outlined">lightbulb</span>
-                    Relatividad Especial
-                </button>
-                <button class="suggest-prompt-button" data-prompt="¿Cómo funciona la IA generativa?">
-                    <span class="material-symbols-outlined">auto_awesome</span>
-                    IA Generativa
-                </button>
-                <button class="suggest-prompt-button" data-prompt="Dame consejos para mejorar mis hábitos de estudio.">
-                    <span class="material-symbols-outlined">school</span>
-                    Hábitos de Estudio
-                </button>
-                <button class="suggest-prompt-button" data-prompt="¿Cuál es la importancia de la ciberseguridad hoy en día?">
-                    <span class="material-symbols-outlined">security</span>
-                    Ciberseguridad
-                </button>
-            </div>
-        </div>
-
-        <div class="chat-header" id="chat-header">
-            <button id="back-to-history-button">
-                <span class="material-symbols-outlined">arrow_back</span>
-                Historial
-            </button>
-            <h2 id="current-chat-title">Nueva Conversación</h2>
-        </div>
-
-        <div class="chat-body" id="chat-box">
-            </div>
-
-        <div class="input-area" id="input-area">
-            <div class="dynamic-prompt-suggestions" id="dynamic-prompt-suggestions">
                 </div>
-            <textarea id="user-input" class="input-field" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
-            <button id="send-button" class="send-button">
+        </div>
+
+        <div class="chat-header hidden" id="chatHeader">
+            <button id="toggleSidebarButton" title="Ocultar/Mostrar Sidebar">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <h2 id="currentChatTitle">Nuevo Chat</h2>
+        </div>
+
+        <div class="chat-body hidden" id="chatBody">
+            <div class="loading-indicator" id="loadingIndicator">
+                <div class="loading-spinner"></div>
+                <div class="typing-indicator">
+                    <span>.</span><span>.</span><span>.</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area" id="inputArea">
+            <div class="dynamic-prompt-suggestions hidden">
+                </div>
+            <textarea id="messageInput" class="input-field" placeholder="Escribe tu mensaje aquí..."></textarea>
+            <button id="sendButton" class="send-button">
                 <span class="material-symbols-outlined">send</span>
                 Enviar
             </button>
@@ -1064,129 +879,310 @@
     </div>
 
     <script>
-        // --- Variables y elementos del DOM ---
-        const chatBox = document.getElementById('chat-box');
-        const userInput = document.getElementById('user-input');
-        const sendButton = document.getElementById('send-button');
-        const newChatButton = document.getElementById('new-chat-button');
-        const chatList = document.getElementById('chat-list');
-        const welcomeScreen = document.getElementById('welcome-screen');
-        const startChatButton = document.getElementById('start-chat-button');
-        const chatHeader = document.getElementById('chat-header');
-        const currentChatTitle = document.getElementById('current-chat-title');
-        const backToHistoryButton = document.getElementById('back-to-history-button');
-        const chatContainer = document.getElementById('chat-container');
-        const promptSuggestionButtons = document.querySelectorAll('.prompt-suggestions .suggest-prompt-button');
-        const dynamicPromptSuggestions = document.getElementById('dynamic-prompt-suggestions');
+        // *** Constantes y Elementos del DOM ***
+        const API_URL = 'https://amside-ai-backend.onrender.com'; // <-- ¡Tu URL del backend en Render!
+        const chatList = document.getElementById('chatList');
+        const chatBody = document.getElementById('chatBody');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const newChatButton = document.getElementById('newChatButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const chatContainer = document.getElementById('chatContainer');
+        const chatHeader = document.getElementById('chatHeader');
+        const currentChatTitle = document.getElementById('currentChatTitle');
+        const startChatButton = document.getElementById('startChatButton');
+        const welcomePromptSuggestions = document.querySelector('.welcome-screen .prompt-suggestions');
+        const dynamicPromptSuggestions = document.querySelector('.input-area .dynamic-prompt-suggestions');
+        const toggleSidebarButton = document.getElementById('toggleSidebarButton');
+        const sidebar = document.querySelector('.sidebar');
 
-        let currentChatId = null; // ID del chat actual (null para nueva conversación)
-        let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || {}; // { chatId: { title: "", messages: [] } }
-        let currentMessages = []; // Mensajes del chat actual
+        // *** Variables de Estado Globales ***
+        let chats = JSON.parse(localStorage.getItem('amsideAIChats')) || {}; // Guarda chats por ID
+        let currentChatId = localStorage.getItem('amsideAICurrentChatId') || null;
+        let isSending = false; // Para evitar múltiples envíos
 
-        // --- Funciones de Utilidad ---
+        // *** Sugerencias de prompts ***
+        const initialPromptSuggestions = [
+            "Explícame la teoría de la relatividad de Einstein.",
+            "¿Cómo funciona la fotosíntesis?",
+            "Dame un resumen de la historia de la Segunda Guerra Mundial.",
+            "Ayúdame a entender el ciclo del agua.",
+            "¿Cuáles son los principios básicos de la programación?",
+            "¿Qué es la inteligencia artificial y cómo se aplica?",
+            "Recomiéndame libros sobre historia antigua."
+        ];
 
-        // Función para ajustar la altura del textarea dinámicamente
-        function adjustTextareaHeight() {
-            userInput.style.height = 'auto'; // Resetear la altura
-            userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px'; // Ajustar hasta 120px
+        // *** Funciones de Utilidad ***
+
+        // Guarda el estado actual en localStorage
+        function saveChats() {
+            localStorage.setItem('amsideAIChats', JSON.stringify(chats));
+            localStorage.setItem('amsideAICurrentChatId', currentChatId);
         }
 
-        // Función para mostrar mensajes en la UI
-        function addMessage(sender, text, isError = false) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'ai'}`;
-            if (isError) {
-                messageDiv.classList.add('error-message');
-                messageDiv.textContent = text; // Para errores, el texto es simple
+        // Genera un ID único para cada chat
+        function generateUniqueId() {
+            return 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Muestra u oculta la pantalla de bienvenida y el chat principal
+        function showWelcomeScreen() {
+            welcomeScreen.classList.remove('hidden');
+            chatHeader.classList.add('hidden');
+            chatBody.classList.add('hidden');
+            chatContainer.classList.add('centered-input');
+            dynamicPromptSuggestions.classList.add('hidden'); // Ocultar sugerencias dinámicas
+
+            // Limpiar input y scroll
+            messageInput.value = '';
+            chatBody.innerHTML = '<div class="loading-indicator" id="loadingIndicator"><div class="loading-spinner"></div><div class="typing-indicator"><span>.</span><span>.</span><span>.</span></div></div>'; // Mantener el indicador oculto
+            
+            // Re-obtener la referencia al loadingIndicator ya que se reconstruyó el innerHTML
+            const newLoadingIndicator = document.getElementById('loadingIndicator');
+            newLoadingIndicator.style.display = 'none'; // Asegurarse de que esté oculto
+
+            renderPromptSuggestions(welcomePromptSuggestions, initialPromptSuggestions);
+        }
+
+        function hideWelcomeScreen() {
+            welcomeScreen.classList.add('hidden');
+            chatHeader.classList.remove('hidden');
+            chatBody.classList.remove('hidden');
+            chatContainer.classList.remove('centered-input');
+            // La visibilidad de dynamicPromptSuggestions se controla con el input
+        }
+
+        // Renderiza las sugerencias de prompt en el contenedor dado
+        function renderPromptSuggestions(container, suggestionsArray) {
+            container.innerHTML = '';
+            suggestionsArray.forEach(suggestion => {
+                const button = document.createElement('button');
+                button.classList.add('suggest-prompt-button');
+                button.innerHTML = `<span class="material-symbols-outlined">lightbulb</span> ${suggestion}`;
+                button.addEventListener('click', () => {
+                    messageInput.value = suggestion;
+                    messageInput.focus();
+                    if (welcomeScreen.classList.contains('hidden')) {
+                         // Si el welcome screen ya está oculto, enviar el mensaje directamente
+                         // Esto es para las sugerencias dinámicas
+                         sendMessage();
+                    } else {
+                        // Si estamos en la pantalla de bienvenida, solo llena el input y pasa al chat
+                        startNewChat(); // Esto ocultará la pantalla de bienvenida
+                    }
+                });
+                container.appendChild(button);
+            });
+        }
+
+        // *** Manejo de Mensajes en la UI ***
+
+        function addMessageToChat(message, sender, chatId = currentChatId) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.innerHTML = sender === 'user' ? `<div class="user-message">${message}</div>` : `<div class="message">${message}</div>`;
+            
+            if (sender === 'user') {
+                const container = document.createElement('div');
+                container.classList.add('user-message-container');
+                container.appendChild(messageElement.querySelector('.user-message')); // Solo el div interno
+                chatBody.appendChild(container);
             } else {
-                messageDiv.textContent = text;
+                chatBody.appendChild(messageElement.querySelector('.message')); // Solo el div interno
             }
             
-            // Si es un mensaje de usuario, lo envolvemos en un contenedor para alineación
-            if (sender === 'user') {
-                const userMessageContainer = document.createElement('div');
-                userMessageContainer.className = 'user-message-container';
-                userMessageContainer.appendChild(messageDiv);
-                chatBox.appendChild(userMessageContainer);
+            // Si el mensaje es un error, añadir clase de error
+            if (sender === 'error') {
+                if (sender === 'user') { // Un mensaje de usuario no puede ser de error en sí mismo, pero su container sí
+                     messageElement.classList.add('error-message');
+                } else { // Si el error viene de la IA
+                     messageElement.classList.add('error-message');
+                     // Modificar el contenido para que se vea como un error
+                     messageElement.querySelector('.message').textContent = message;
+                }
+            }
+
+
+            // Scroll al final del chat
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            // Guardar el mensaje en el chat actual
+            if (chatId && chats[chatId]) {
+                chats[chatId].messages.push({ content: message, role: sender });
+                saveChats();
+            }
+        }
+        
+        function updateAIMessage(messageContent) {
+            const lastMessageDiv = chatBody.lastElementChild;
+            if (lastMessageDiv && lastMessageDiv.classList.contains('message') && !lastMessageDiv.classList.contains('user-message-container') && !lastMessageDiv.classList.contains('error-message')) {
+                lastMessageDiv.textContent = messageContent;
             } else {
-                chatBox.appendChild(messageDiv);
+                // Si el último mensaje no es un mensaje de IA normal (quizás un error o un loading), añade uno nuevo
+                addMessageToChat(messageContent, 'ai');
             }
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll al final
-            return messageDiv; // Devuelve el div del mensaje para futuras actualizaciones
+            chatBody.scrollTop = chatBody.scrollHeight;
         }
 
-        // Función para mostrar errores en la UI
-        function displayError(message) {
-            addMessage('error', message, true); // Usamos la misma función, marcando como error
-        }
-
-        // Función para mostrar/ocultar el indicador de carga
-        let loadingIndicatorDiv = null;
         function showLoadingIndicator() {
-            if (!loadingIndicatorDiv) {
-                loadingIndicatorDiv = document.createElement('div');
-                loadingIndicatorDiv.className = 'loading-indicator message';
-                loadingIndicatorDiv.innerHTML = `
-                    <div class="loading-spinner"></div>
-                    <div class="typing-indicator"><span>.</span><span>.</span><span>.</span></div>
-                `;
-                chatBox.appendChild(loadingIndicatorDiv);
-            }
-            loadingIndicatorDiv.style.display = 'flex'; // Mostrar el indicador
-            chatBox.scrollTop = chatBox.scrollHeight;
+            loadingIndicator.style.display = 'flex';
+            chatBody.scrollTop = chatBody.scrollHeight;
         }
 
         function hideLoadingIndicator() {
-            if (loadingIndicatorDiv) {
-                loadingIndicatorDiv.style.display = 'none'; // Ocultar el indicador
+            loadingIndicator.style.display = 'none';
+        }
+
+        // *** Lógica de API (Envío de Mensajes) ***
+
+        async function sendMessage() {
+            if (isSending) return; // Evitar envíos duplicados
+            const messageContent = messageInput.value.trim();
+            if (!messageContent) return;
+
+            isSending = true;
+            sendButton.disabled = true;
+            messageInput.value = ''; // Limpiar input inmediatamente
+
+            // Si es un nuevo chat y estamos en la pantalla de bienvenida, ocultarla
+            if (welcomeScreen.classList.contains('hidden')) {
+                // Si ya estamos en un chat y el chatbody está vacío (ej. después de borrar), ajustamos la UI
+                if (chatBody.children.length <= 1) { // Solo el loading indicator está dentro
+                    chatContainer.classList.remove('centered-input');
+                    chatHeader.classList.remove('hidden');
+                    chatBody.classList.remove('hidden');
+                }
+            } else {
+                startNewChat(); // Inicia un nuevo chat y oculta la pantalla de bienvenida
+            }
+
+            addMessageToChat(messageContent, 'user');
+            showLoadingIndicator();
+            
+            // Ocultar sugerencias dinámicas después de enviar un mensaje
+            dynamicPromptSuggestions.classList.add('hidden');
+
+
+            try {
+                // Construir el historial de mensajes para enviar al backend
+                const messagesToSend = chats[currentChatId].messages.filter(msg => msg.role !== 'error'); // No enviar mensajes de error al backend
+                
+                // Asegurarse de que el último mensaje del usuario esté incluido si no lo está ya
+                const lastUserMessageInHistory = messagesToSend.findLast(msg => msg.role === 'user');
+                if (!lastUserMessageInHistory || lastUserMessageInHistory.content !== messageContent) {
+                    messagesToSend.push({ content: messageContent, role: 'user' });
+                }
+
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ messages: messagesToSend }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    console.error('Error de la API:', response.status, errorData);
+                    throw new Error(`Error del servidor (${response.status}): ${errorData}`);
+                }
+
+                const data = await response.json();
+                
+                // Asegurarse de que data.response existe y no es vacío
+                if (data && data.response) {
+                    addMessageToChat(data.response, 'ai');
+                    // Actualizar el título del chat si es el primer mensaje y no tiene título
+                    if (chats[currentChatId].messages.length === 2) { // 1 user message + 1 ai message
+                        updateChatTitle(currentChatId, messageContent);
+                    }
+                } else {
+                    addMessageToChat("Lo siento, no pude obtener una respuesta válida. Por favor, inténtalo de nuevo.", 'error');
+                }
+
+            } catch (error) {
+                console.error('Error al comunicarse con la API de IA:', error);
+                addMessageToChat(`Error al obtener respuesta de la IA: ${error.message}. Por favor, inténtalo de nuevo.`, 'error');
+            } finally {
+                hideLoadingIndicator();
+                isSending = false;
+                sendButton.disabled = false;
+                messageInput.focus(); // Volver a poner el foco en el input
             }
         }
 
-        // Función para cargar el historial de chats del localStorage
-        function loadChatList() {
-            chatList.innerHTML = ''; // Limpiar lista actual
-            const sortedChatIds = Object.keys(chatHistory).sort((a, b) => {
-                const lastMessageA = chatHistory[a].messages[chatHistory[a].messages.length - 1];
-                const lastMessageB = chatHistory[b].messages[chatHistory[b].messages.length - 1];
-                return (lastMessageB?.timestamp || 0) - (lastMessageA?.timestamp || 0);
+        // *** Manejo de Chats (Sidebar) ***
+
+        // Renderiza la lista de chats en el sidebar
+        function renderChatList() {
+            chatList.innerHTML = '';
+            const sortedChatIds = Object.keys(chats).sort((a, b) => {
+                // Ordenar por la fecha del último mensaje si existe, si no, por el id (creación)
+                const lastMessageTimeA = chats[a].messages.length > 0 ? chats[a].messages[chats[a].messages.length - 1].timestamp || 0 : 0;
+                const lastMessageTimeB = chats[b].messages.length > 0 ? chats[b].messages[chats[b].messages.length - 1].timestamp || 0 : 0;
+                return lastMessageTimeB - lastMessageTimeA; // Más reciente primero
             });
 
+
+            if (sortedChatIds.length === 0) {
+                // Si no hay chats, mostramos la pantalla de bienvenida
+                showWelcomeScreen();
+                return;
+            } else {
+                // Si hay chats y estamos en la pantalla de bienvenida, ir al chat activo o al último
+                if (welcomeScreen.classList.contains('hidden')) {
+                    // Si ya estamos en chat, no hacer nada
+                } else {
+                    // Si hay chats y se carga la página, mostrar el último o el activo
+                    if (!currentChatId || !chats[currentChatId]) {
+                        currentChatId = sortedChatIds[0]; // Cargar el último chat por defecto
+                        saveChats();
+                    }
+                    loadChat(currentChatId);
+                }
+            }
+
+
             sortedChatIds.forEach(id => {
-                const chat = chatHistory[id];
+                const chat = chats[id];
                 const li = document.createElement('li');
                 li.dataset.chatId = id;
-                li.innerHTML = `
-                    <span class="chat-title-content">
-                        <span class="material-symbols-outlined">chat_bubble</span>
-                        <span class="title-text">${chat.title}</span>
-                    </span>
-                    <div class="chat-actions">
-                        <span class="material-symbols-outlined edit-icon">edit</span>
-                        <span class="material-symbols-outlined delete-icon">delete</span>
-                    </div>
-                `;
-                
-                if (id === currentChatId) {
-                    li.classList.add('active');
-                }
+                li.classList.toggle('active', id === currentChatId);
 
+                // Contenido del título del chat
+                const titleContent = document.createElement('div');
+                titleContent.classList.add('chat-title-content');
+                titleContent.innerHTML = `<span class="material-symbols-outlined">chat_bubble</span><span class="chat-title-text">${chat.title}</span>`;
+                li.appendChild(titleContent);
+
+                // Acciones (editar/eliminar)
+                const actions = document.createElement('div');
+                actions.classList.add('chat-actions');
+                actions.innerHTML = `
+                    <span class="material-symbols-outlined edit-icon" title="Editar título">edit</span>
+                    <span class="material-symbols-outlined delete-icon" title="Eliminar conversación">delete</span>
+                `;
+                li.appendChild(actions);
+
+                // Event listener para cargar el chat
                 li.addEventListener('click', (event) => {
-                    // Prevenir que el clic en los iconos active el chat
-                    if (event.target.classList.contains('edit-icon') || event.target.classList.contains('delete-icon')) {
-                        return;
+                    // Solo cargar si no se hizo clic en un icono de acción
+                    if (!event.target.closest('.chat-actions')) {
+                        loadChat(id);
                     }
-                    loadChat(id);
                 });
 
-                // Event listener para editar el título
-                li.querySelector('.edit-icon').addEventListener('click', (event) => {
-                    event.stopPropagation(); // Evitar que se active el chat
+                // Event listener para editar
+                actions.querySelector('.edit-icon').addEventListener('click', (event) => {
+                    event.stopPropagation(); // Evitar que el click en el icono cargue el chat
                     editChatTitle(id, li);
                 });
 
-                // Event listener para borrar el chat
-                li.querySelector('.delete-icon').addEventListener('click', (event) => {
-                    event.stopPropagation(); // Evitar que se active el chat
+                // Event listener para eliminar
+                actions.querySelector('.delete-icon').addEventListener('click', (event) => {
+                    event.stopPropagation(); // Evitar que el click en el icono cargue el chat
                     deleteChat(id);
                 });
 
@@ -1194,383 +1190,214 @@
             });
         }
 
-        // Función para crear un nuevo chat
-        function newChat() {
-            currentChatId = null;
-            currentMessages = [];
-            chatBox.innerHTML = ''; // Limpiar mensajes de la UI
-            updateChatHeader('Nueva Conversación');
-            toggleChatView(true); // Mostrar chat
-            loadChatList(); // Actualizar lista de chats para desmarcar el activo
-            userInput.focus();
-        }
-
-        // Función para cargar un chat existente
-        function loadChat(chatId) {
-            currentChatId = chatId;
-            currentMessages = chatHistory[chatId].messages;
-            chatBox.innerHTML = ''; // Limpiar mensajes de la UI
-            currentMessages.forEach(msg => {
-                addMessage(msg.role, msg.content);
-            });
-            updateChatHeader(chatHistory[chatId].title);
-            toggleChatView(true); // Mostrar chat
-            loadChatList(); // Actualizar lista de chats para marcar el activo
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll al final
-            userInput.focus();
-        }
-
-        // Función para guardar el chat actual
-        function saveChat() {
-            if (currentMessages.length === 0) return; // No guardar chats vacíos
-
-            if (!currentChatId) {
-                // Si es un chat nuevo, generar un ID y un título
-                currentChatId = Date.now().toString(); // ID único basado en timestamp
-                // Intentar generar un título basado en el primer mensaje de usuario
-                const firstUserMessage = currentMessages.find(msg => msg.role === 'user');
-                const defaultTitle = firstUserMessage ? firstUserMessage.content.substring(0, 30) + '...' : 'Conversación sin título';
-                chatHistory[currentChatId] = {
-                    title: defaultTitle,
-                    messages: currentMessages
-                };
-            } else {
-                // Actualizar mensajes y timestamp del chat existente
-                chatHistory[currentChatId].messages = currentMessages;
-                const lastMessage = currentMessages[currentMessages.length - 1];
-                if (lastMessage) {
-                    lastMessage.timestamp = Date.now(); // Actualizar timestamp del último mensaje para ordenar
-                }
+        // Carga y muestra los mensajes de un chat específico
+        function loadChat(id) {
+            if (!chats[id]) {
+                console.error("Chat no encontrado:", id);
+                return;
             }
-            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-            loadChatList(); // Recargar la lista para que se muestre el nuevo/actualizado chat
+
+            currentChatId = id;
+            saveChats();
+            hideWelcomeScreen();
+            
+            chatBody.innerHTML = ''; // Limpiar mensajes anteriores
+            // Re-añadir el loading indicator para futuros usos
+            const newLoadingIndicator = document.createElement('div');
+            newLoadingIndicator.classList.add('loading-indicator');
+            newLoadingIndicator.id = 'loadingIndicator'; // Es importante mantener el ID para que funcione show/hideLoadingIndicator
+            newLoadingIndicator.innerHTML = '<div class="loading-spinner"></div><div class="typing-indicator"><span>.</span><span>.</span><span>.</span></div>';
+            newLoadingIndicator.style.display = 'none'; // Asegurarse de que esté oculto al cargar
+            chatBody.appendChild(newLoadingIndicator);
+
+            chats[id].messages.forEach(msg => {
+                if (msg.role === 'user') {
+                    const container = document.createElement('div');
+                    container.classList.add('user-message-container');
+                    const messageElement = document.createElement('div');
+                    messageElement.classList.add('user-message');
+                    messageElement.textContent = msg.content;
+                    container.appendChild(messageElement);
+                    chatBody.appendChild(container);
+                } else if (msg.role === 'ai') {
+                    addMessageToChat(msg.content, 'ai', id); // Reutilizar addMessageToChat para mantener el estilo
+                } else if (msg.role === 'error') {
+                     const messageElement = document.createElement('div');
+                     messageElement.classList.add('error-message');
+                     messageElement.textContent = msg.content;
+                     chatBody.appendChild(messageElement);
+                }
+            });
+
+            currentChatTitle.textContent = chats[id].title; // Actualizar título del header
+            renderChatList(); // Actualizar el estado activo en la lista
+            chatBody.scrollTop = chatBody.scrollHeight; // Scroll al final
+            messageInput.focus(); // Poner el foco en el input
+
+            // Asegurarse de que el input-area no esté centrado al cargar un chat
+            chatContainer.classList.remove('centered-input');
         }
 
-        // Función para editar el título del chat
-        function editChatTitle(chatId, listItem) {
-            const currentTitleSpan = listItem.querySelector('.title-text');
+        // Inicia una nueva conversación
+        function startNewChat() {
+            currentChatId = generateUniqueId();
+            chats[currentChatId] = {
+                id: currentChatId,
+                title: 'Nuevo Chat',
+                messages: []
+            };
+            saveChats();
+            loadChat(currentChatId); // Cargar el nuevo chat
+            currentChatTitle.textContent = 'Nuevo Chat'; // Asegurar el título
+            hideWelcomeScreen();
+            messageInput.focus();
+        }
+
+        // Edita el título de un chat
+        function editChatTitle(id, listItem) {
+            const currentTitleSpan = listItem.querySelector('.chat-title-text');
             const currentTitle = currentTitleSpan.textContent;
 
             const input = document.createElement('input');
             input.type = 'text';
-            input.className = 'edit-title-input';
+            input.classList.add('edit-title-input');
             input.value = currentTitle;
+            input.maxLength = 50; // Limitar la longitud
 
-            // Reemplazar el span del título con el input
-            const chatTitleContent = listItem.querySelector('.chat-title-content');
-            chatTitleContent.replaceChild(input, currentTitleSpan);
+            // Reemplazar el span con el input
+            currentTitleSpan.replaceWith(input);
             input.focus();
+            input.select(); // Seleccionar todo el texto para facilitar la edición
 
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    input.blur(); // Perder el foco para guardar
-                }
-            });
-
-            input.addEventListener('blur', () => {
+            const saveChanges = () => {
                 const newTitle = input.value.trim();
                 if (newTitle && newTitle !== currentTitle) {
-                    chatHistory[chatId].title = newTitle;
-                    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-                    currentTitleSpan.textContent = newTitle; // Actualizar el span original
-                    if (chatId === currentChatId) {
-                        currentChatTitle.textContent = newTitle; // Actualizar el título del encabezado si es el chat activo
-                    }
-                } else {
-                    currentTitleSpan.textContent = currentTitle; // Restaurar el título original si está vacío o es igual
+                    chats[id].title = newTitle;
+                    saveChats();
+                    updateChatTitle(id, newTitle); // Actualiza el título en el header si es el chat activo
                 }
-                chatTitleContent.replaceChild(currentTitleSpan, input); // Reemplazar el input con el span
-                loadChatList(); // Recargar por si el orden ha cambiado al actualizar
+                // Reemplazar el input con el span de nuevo
+                input.replaceWith(currentTitleSpan); // currentTitleSpan es la referencia original
+                currentTitleSpan.textContent = newTitle || currentTitle; // Asegurarse de que el texto se actualice
+                renderChatList(); // Vuelve a renderizar la lista para actualizar los estilos
+            };
+
+            input.addEventListener('blur', saveChanges); // Guardar cuando se pierde el foco
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Evita salto de línea
+                    saveChanges();
+                }
             });
         }
 
-        // Función para borrar un chat
-        function deleteChat(chatId) {
-            if (confirm('¿Estás seguro de que quieres eliminar esta conversación?')) {
-                delete chatHistory[chatId];
-                localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-                loadChatList();
-                if (chatId === currentChatId) {
-                    newChat(); // Si se borra el chat actual, iniciar una nueva conversación
-                }
+        // Actualiza el título del chat activo en el header
+        function updateChatTitle(id, newTitle) {
+            if (id === currentChatId) {
+                currentChatTitle.textContent = newTitle;
             }
+            chats[id].title = newTitle;
+            saveChats();
+            renderChatList(); // Actualizar la lista en el sidebar
         }
 
-        // Función para actualizar el título del encabezado del chat
-        function updateChatHeader(title) {
-            currentChatTitle.textContent = title;
-        }
+        // Elimina una conversación
+        function deleteChat(id) {
+            if (confirm(`¿Estás seguro de que quieres eliminar la conversación "${chats[id].title}"?`)) {
+                delete chats[id];
+                if (currentChatId === id) {
+                    currentChatId = null; // Reiniciar si se eliminó el chat activo
+                }
+                saveChats();
+                renderChatList();
 
-        // Función para mostrar/ocultar la vista de chat vs. pantalla de bienvenida
-        function toggleChatView(showChat) {
-            if (showChat) {
-                welcomeScreen.classList.add('hidden');
-                chatContainer.classList.remove('centered-input');
-                chatHeader.classList.remove('hidden');
-                chatBox.classList.remove('hidden');
-                // userInput y sendButton se muestran/ocultan por el contenedor input-area,
-                // que es gestionado por la clase centered-input en chat-container.
-                // Si hay mensajes, aseguramos que el input-area no esté centrado
-                if (currentMessages.length > 0) {
-                     chatContainer.classList.remove('centered-input');
+                // Si no quedan chats, mostrar la pantalla de bienvenida
+                if (Object.keys(chats).length === 0) {
+                    showWelcomeScreen();
+                } else if (!currentChatId) {
+                    // Si se eliminó el chat activo y quedan otros, cargar el primero de la lista
+                    currentChatId = Object.keys(chats)[0];
+                    loadChat(currentChatId);
                 } else {
-                     // Si no hay mensajes, y venimos de la bienvenida, centramos el input
-                     chatContainer.classList.add('centered-input');
-                }
-            } else {
-                welcomeScreen.classList.remove('hidden');
-                chatContainer.classList.add('centered-input'); // Siempre centrar input si no hay chat activo o no hay mensajes
-                chatHeader.classList.add('hidden');
-                chatBox.classList.add('hidden');
-            }
-        }
-
-        // --- Lógica principal para enviar mensajes (con streaming) ---
-        async function sendMessage() {
-            const message = userInput.value.trim();
-
-            if (message === '') return;
-
-            // Añadir mensaje del usuario a la UI y al historial
-            addMessage('user', message);
-            currentMessages.push({ role: 'user', content: message, timestamp: Date.now() });
-            userInput.value = ''; // Limpiar input
-            adjustTextareaHeight(); // Ajustar altura tras limpiar
-
-            // Guardar el chat inmediatamente después del mensaje del usuario
-            saveChat();
-
-            // Ocultar sugerencias dinámicas
-            dynamicPromptSuggestions.classList.add('hidden');
-
-            // Mostrar indicador de carga
-            showLoadingIndicator();
-            userInput.disabled = true; // Deshabilitar input
-            sendButton.disabled = true; // Deshabilitar botón de enviar
-
-            // Preparar el div del mensaje de la IA para streaming
-            const aiMessageDiv = document.createElement('div');
-            aiMessageDiv.className = 'message ai';
-            aiMessageDiv.style.backgroundColor = '#2c343c'; // Estilo base
-            const aiTextSpan = document.createElement('span'); // Span para actualizar el texto
-            aiMessageDiv.appendChild(aiTextSpan);
-            chatBox.appendChild(aiMessageDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            let fullAiResponse = ''; // Para almacenar la respuesta completa de la IA
-
-            try {
-                // La URL de tu backend en Render. Asegúrate de que sea la correcta.
-                // Por ejemplo: 'https://tu-backend-amside-ai.onrender.com/api/chat'
-                const backendUrl = 'https://amside-ai-backend.onrender.com'; // Si tu frontend y backend están en el mismo dominio o si Render gestiona la URL
-
-                const response = await fetch(backendUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ messages: currentMessages }), // Enviar todos los mensajes del chat
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `Error del servidor: ${response.status} ${response.statusText}`);
-                }
-
-                if (!response.body) {
-                    throw new Error('Error: La respuesta del servidor no es un stream o está vacía.');
-                }
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder('utf-8');
-                let done = false;
-                let buffer = ''; // Buffer para manejar chunks incompletos de SSE
-
-                while (!done) {
-                    const { value, done: readerDone } = await reader.read();
-                    done = readerDone;
-                    buffer += decoder.decode(value, { stream: !done }); // Decodificar y añadir al buffer
-
-                    // Procesar el buffer línea por línea
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop(); // La última línea puede estar incompleta, la dejamos en el buffer
-
-                    for (const line of lines) {
-                        if (line.startsWith('data:')) {
-                            const jsonPart = line.substring(5).trim(); // Quitar "data:"
-                            if (jsonPart) {
-                                try {
-                                    const data = JSON.parse(jsonPart);
-                                    if (data.token && data.token.text) {
-                                        fullAiResponse += data.token.text;
-                                        aiTextSpan.textContent = fullAiResponse; // Actualizar el span en tiempo real
-                                        chatBox.scrollTop = chatBox.scrollHeight; // Scroll al final
-                                    } else if (data.error) { // Si el backend envía un error en el stream
-                                        displayError(`Error de la IA: ${data.error}`);
-                                        done = true; // Terminar el stream en caso de error
-                                    } else if (data.generated_text !== undefined) {
-                                        // Este es el chunk final de Hugging Face si return_full_text fue true
-                                        // o para asegurar que se capture todo el texto.
-                                        // Si ya estamos reconstruyendo con 'token.text', podemos ignorar o usar para validación final.
-                                        // Asegurarse de que el texto final coincida o se use.
-                                        // Por ahora, asumimos que 'token.text' lo construye bien.
-                                    }
-                                } catch (e) {
-                                    // console.warn('Error al parsear chunk JSON:', e, jsonPart);
-                                    // Puede que el JSON esté incompleto en este chunk, se procesará en el siguiente
-                                }
-                            }
-                        }
-                    }
-                }
-                // Si hay texto restante en el buffer al final del stream
-                if (buffer.startsWith('data:')) {
-                     const jsonPart = buffer.substring(5).trim();
-                     if (jsonPart) {
-                         try {
-                             const data = JSON.parse(jsonPart);
-                             if (data.token && data.token.text) {
-                                 fullAiResponse += data.token.text;
-                                 aiTextSpan.textContent = fullAiResponse;
-                                 chatBox.scrollTop = chatBox.scrollTop;
-                             } else if (data.error) {
-                                 displayError(`Error de la IA: ${data.error}`);
-                             }
-                         } catch (e) {
-                             // console.warn('Error final al parsear chunk JSON:', e, jsonPart);
-                         }
-                     }
-                }
-
-                // Asegurar que el texto final esté presente
-                aiTextSpan.textContent = fullAiResponse;
-
-                // Añadir respuesta completa al historial
-                currentMessages.push({ role: 'assistant', content: fullAiResponse, timestamp: Date.now() });
-                saveChat(); // Guardar el chat con la respuesta de la IA
-
-            } catch (error) {
-                console.error('Error al obtener respuesta de la IA:', error);
-                displayError(`Error al obtener respuesta de la IA: ${error.message}. Por favor, inténtalo de nuevo.`);
-                // Si hubo un error, eliminar el div del mensaje de IA vacío si no se llenó
-                if (fullAiResponse === '' && aiMessageDiv.parentNode) {
-                    aiMessageDiv.parentNode.removeChild(aiMessageDiv);
-                }
-            } finally {
-                hideLoadingIndicator(); // Ocultar indicador de carga
-                userInput.disabled = false; // Habilitar input
-                sendButton.disabled = false; // Habilitar botón de enviar
-                userInput.focus(); // Volver a enfocar el input
-                // Si el chat ahora tiene mensajes, asegurar que no está centrado
-                if (currentMessages.length > 0) {
-                    chatContainer.classList.remove('centered-input');
+                    // Si se eliminó un chat no activo, simplemente recargar el chat activo
+                    loadChat(currentChatId);
                 }
             }
         }
-
-        // --- Gestión de Sugerencias Dinámicas ---
-        const commonSuggestions = [
-            "¿Qué es la computación cuántica?",
-            "Explícame la teoría de la relatividad.",
-            "Dame un resumen de la historia de la inteligencia artificial.",
-            "¿Cuáles son los principios de la programación orientada a objetos?",
-            "Háblame sobre la importancia de la educación en el futuro.",
-            "¿Cómo puedo mejorar mi memoria y concentración?",
-            "Consejos para aprender un nuevo idioma.",
-            "¿Qué es el aprendizaje automático y cómo funciona?",
-            "Definición y ejemplos de energía renovable.",
-            "¿Cuál es el proceso de desarrollo de software?"
-        ];
-
-        function displayDynamicSuggestions() {
-            dynamicPromptSuggestions.innerHTML = ''; // Limpiar sugerencias anteriores
-            const filteredSuggestions = commonSuggestions.filter(s =>
-                s.toLowerCase().includes(userInput.value.toLowerCase()) && !userInput.value.trim().endsWith(s)
-            ).slice(0, 5); // Mostrar hasta 5 sugerencias relevantes
-
-            if (userInput.value.trim() !== '' && filteredSuggestions.length > 0) {
-                dynamicPromptSuggestions.classList.remove('hidden');
-                filteredSuggestions.forEach(suggestion => {
-                    const button = document.createElement('button');
-                    button.className = 'suggest-item';
-                    button.innerHTML = `<span class="material-symbols-outlined">lightbulb</span> ${suggestion}`;
-                    button.onclick = () => {
-                        userInput.value = suggestion;
-                        adjustTextareaHeight();
-                        dynamicPromptSuggestions.classList.add('hidden'); // Ocultar después de seleccionar
-                        userInput.focus();
-                    };
-                    dynamicPromptSuggestions.appendChild(button);
-                });
-            } else {
-                dynamicPromptSuggestions.classList.add('hidden');
-            }
+        
+        // Función para alternar la visibilidad del sidebar
+        function toggleSidebar() {
+            sidebar.classList.toggle('hidden-sidebar');
+            // Podrías ajustar el layout del chat-container aquí si el sidebar se superpone
         }
 
-        // --- Event Listeners ---
+        // *** Event Listeners ***
+
         sendButton.addEventListener('click', sendMessage);
-        userInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault(); // Prevenir salto de línea
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { // Enter para enviar, Shift+Enter para nueva línea
+                e.preventDefault(); // Prevenir salto de línea en textarea
                 sendMessage();
             }
         });
-        userInput.addEventListener('input', () => {
-            adjustTextareaHeight();
-            displayDynamicSuggestions(); // Mostrar sugerencias dinámicas al escribir
-        });
-        userInput.addEventListener('focus', () => {
-            displayDynamicSuggestions(); // Mostrar sugerencias al enfocar
-        });
-        userInput.addEventListener('blur', () => {
-            // Un pequeño retraso para permitir clics en las sugerencias antes de ocultar
-            setTimeout(() => {
-                dynamicPromptSuggestions.classList.add('hidden');
-            }, 100);
-        });
 
-        newChatButton.addEventListener('click', newChat);
-        startChatButton.addEventListener('click', newChat); // Botón "Empezar a Chatear" hace lo mismo
+        messageInput.addEventListener('input', () => {
+            // Ajustar la altura del textarea
+            messageInput.style.height = 'auto';
+            messageInput.style.height = messageInput.scrollHeight + 'px';
 
-        // Asignar eventos a los botones de sugerencia de la pantalla de bienvenida
-        promptSuggestionButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const prompt = button.dataset.prompt;
-                userInput.value = prompt;
-                adjustTextareaHeight();
-                newChat(); // Inicia un nuevo chat
-                sendMessage(); // Envía el prompt
-            });
-        });
-
-        backToHistoryButton.addEventListener('click', () => {
-            if (currentMessages.length > 0) { // Si hay mensajes en el chat actual, guardarlo antes de volver
-                saveChat();
-            }
-            toggleChatView(false); // Volver a la pantalla de bienvenida/historial
-            loadChatList(); // Asegurar que la lista esté actualizada
-        });
-
-        // --- Inicialización ---
-        document.addEventListener('DOMContentLoaded', () => {
-            loadChatList();
-            // Si no hay chats guardados, o el último chat está vacío, mostrar pantalla de bienvenida
-            if (Object.keys(chatHistory).length === 0 || currentMessages.length === 0) {
-                toggleChatView(false); // Mostrar pantalla de bienvenida
+            // Mostrar/ocultar sugerencias dinámicas solo si hay texto
+            if (messageInput.value.trim().length > 0) {
+                 dynamicPromptSuggestions.classList.add('hidden');
             } else {
-                // Si hay chats, cargar el último modificado
-                const sortedChatIds = Object.keys(chatHistory).sort((a, b) => {
-                    const lastMessageA = chatHistory[a].messages[chatHistory[a].messages.length - 1];
-                    const lastMessageB = chatHistory[b].messages[chatHistory[b].messages.length - 1];
-                    return (lastMessageB?.timestamp || 0) - (lastMessageA?.timestamp || 0);
-                });
-                if (sortedChatIds.length > 0) {
-                    loadChat(sortedChatIds[0]);
-                } else {
-                    toggleChatView(false); // Si no hay chats, volver a la pantalla de bienvenida
-                }
+                 dynamicPromptSuggestions.classList.remove('hidden');
+                 // Aquí podrías generar sugerencias basadas en el historial del chat o ser estáticas
+                 renderPromptSuggestions(dynamicPromptSuggestions, ["¿Qué es la IA generativa?", "¿Cómo puedo aprender Python?", "¿Ideas para un proyecto?", "¿Cómo funciona la blockchain?"]);
             }
-            adjustTextareaHeight(); // Ajustar altura inicial del textarea
+        });
+
+        newChatButton.addEventListener('click', () => {
+            newChatButton.classList.add('clicked');
+            startNewChat();
+            setTimeout(() => {
+                newChatButton.classList.remove('clicked');
+            }, 600); // Duración de la animación
+        });
+
+        startChatButton.addEventListener('click', startNewChat);
+
+        toggleSidebarButton.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed'); // Asume que tienes una clase 'collapsed' en CSS para el sidebar
+            // Si necesitas un estilo CSS para ocultar/mostrar el sidebar, lo puedes definir así:
+            // .sidebar.collapsed { width: 60px; } // O lo que quieras para el estado colapsado
+            // .sidebar.collapsed .sidebar-header h2, .sidebar.collapsed .chat-list-title, .sidebar.collapsed .new-chat-button span:last-child { display: none; }
+            // Y los íconos se mantendrían visibles.
+        });
+
+
+        // *** Inicialización de la Aplicación ***
+        document.addEventListener('DOMContentLoaded', () => {
+            renderChatList(); // Cargar y mostrar la lista de chats
+            // Si no hay chats existentes, showWelcomeScreen() ya es llamado dentro de renderChatList()
+            // Si hay chats, el chat activo se carga también en renderChatList() o loadChat()
+        });
+
+        // Configurar el comportamiento de las sugerencias dinámicas cuando el input está vacío
+        messageInput.addEventListener('focus', () => {
+            if (messageInput.value.trim() === '') {
+                dynamicPromptSuggestions.classList.remove('hidden');
+                renderPromptSuggestions(dynamicPromptSuggestions, ["¿Qué es la IA generativa?", "¿Cómo puedo aprender Python?", "¿Ideas para un proyecto?", "¿Cómo funciona la blockchain?"]);
+            }
+        });
+
+        messageInput.addEventListener('blur', () => {
+            // Ocultar las sugerencias solo si el input está vacío y no estamos en un proceso de envío
+            if (messageInput.value.trim() === '' && !isSending) {
+                setTimeout(() => { // Pequeño retraso para permitir el click en las sugerencias
+                    dynamicPromptSuggestions.classList.add('hidden');
+                }, 100);
+            }
         });
 
     </script>
