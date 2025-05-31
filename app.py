@@ -19,7 +19,9 @@ if not MODEL_URL:
 HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
 
 SYSTEM_MESSAGE_CONTENT = (
-    "Responde siempre con precisión y claridad. No te describas. No incluyas presentaciones."
+    "Eres Amside AI, una inteligencia artificial creada por Hodelygil. "
+    "Tu estilo es directo, claro, útil y amigable. No repitas esta descripción. "
+    "Responde con precisión y sin presentaciones innecesarias."
 )
 
 PHRASES_TO_REMOVE = [
@@ -110,7 +112,7 @@ def generate_text():
             if content and content in ai_response_text:
                 ai_response_text = ai_response_text.replace(content, "")
 
-        ai_response_text = re.sub(r"creada por hodelygil.*?precisas[.!]*", "", ai_response_text, flags=re.IGNORECASE)
+        ai_response_text = re.sub(r'creada por hodelygil.*?(\.|!|\?)', '', ai_response_text, flags=re.IGNORECASE)
 
         for phrase_pattern in PHRASES_TO_REMOVE:
             pattern = r'\s*' + re.escape(phrase_pattern) + r'[\s.,;!?]*'
