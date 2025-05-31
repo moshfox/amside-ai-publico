@@ -28,27 +28,37 @@ HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
 # --- Definición de la Personalidad de la IA ---
 SYSTEM_MESSAGE_CONTENT = (
     "Eres Amside AI, una inteligencia artificial creada por Hodelygil. "
-    "Tu propósito principal es asistir en el estudio y el aprendizaje, "
-    "proporcionando información y explicaciones detalladas. "
-    "Sin embargo, también eres amigable y puedes mantener conversaciones informales y agradables. "
-    "Responde de manera informativa y útil, pero con un tono conversacional y cercano."
+    "Tu propósito es asistir en el estudio y el aprendizaje, "
+    "proporcionando información detallada. "
+    "También eres amigable y puedes mantener conversaciones informales y agradables. "
+    "Responde de manera informativa y útil, con un tono conversacional y cercano."
 )
 
-# Frases de auto-descripción que el modelo tiende a repetir
+# Frases de auto-descripción y saludos que el modelo tiende a repetir
 PHRASES_TO_REMOVE = [
+    # Auto-descripción
     r"eres amside ai",
     r"una inteligencia artificial creada por hodelygil",
     r"mi propósito principal es asistir en el estudio y el aprendizaje",
     r"proporcionando información y explicaciones detalladas",
-    r"sin embargo, también soy amigable y puedo mantener conversaciones informales y agradables",
-    r"respondo de manera informativa y útil, pero con un tono conversacional y cercano",
+    r"sin embargo, también eres amigable y puedes mantener conversaciones informales y agradables",
+    r"responde de manera informativa y útil, pero con un tono conversacional y cercano",
     r"mi nombre es amside ai",
     r"fui creado por hodelygil",
+    r"tu propósito es asistir en el estudio y el aprendizaje",
+    r"proporcionando información detallada",
+    r"también eres amigable y puedes mantener conversaciones informales y agradables",
+    r"responde de manera informativa y útil, con un tono conversacional y cercano",
+
+    # Fragmento exacto que se repite
+    r"tu propósito principal es asistir en el estudio y el aprendizaje, Sin embargo, también eres amigable y puedes mantener conversaciones informales y agradables. Responde de manera informativa y útil, pero con un tono conversacional y cercano.",
+
+    # Saludos y frases introductorias
     r"claro, ¿en qué puedo ayudarte?",
     r"cómo puedo ayudarte hoy",
     r"en qué puedo asistirte hoy",
     r"estaré encantado de ayudarte",
-    r"¡hola! me alegra poder ayudarte hoy", # Añadido el saludo específico que mencionaste
+    r"¡hola! me alegra poder ayudarte hoy",
     r"cómo me pueden servir",
     r"estáis buscando información sobre algún tema específico o quieré practicar habilidades específicas",
     r"o simplemente queréis chatear sobre algo interesante",
@@ -56,6 +66,7 @@ PHRASES_TO_REMOVE = [
     r"espero que estemos juntos durante este tiempo",
     r"qué tal",
     r"cómo estás",
+    r"en qué puedo ayudarte",
     r"qué deseas saber",
     r"bienvenido",
     r"un gusto saludarte",
@@ -63,15 +74,25 @@ PHRASES_TO_REMOVE = [
     r"claro que sí",
     r"por supuesto",
     r"en que puedo asistirte",
-    r"cómo te puedo ayudar"
+    r"cómo te puedo ayudar",
+    r"me llamo soy una inteligencia artificial desarrollada por la empresa Hodelygil",
+    r"mi papel principal es ayudarte a estudiar y a aprender, ofreciendo información y explicaciones detalladas",
+    r"estoy programado para ser útil y eficaz, pero también quiero que tu experiencia sea divertida y genial",
+    r"deja nos comunicamos a través de este mensaje y empieza a descubrir todo lo que yo puedo hacer por ti",
+    r"ai for students",
+    r"learn with amsideai",
+    r"happy learning",
+    r"saludos cordiales",
+    r"🤗",
+    r"🚀"
 ]
+
 
 def query_huggingface_model(payload):
     """
     Función auxiliar para enviar la solicitud a la API de Hugging Face.
     """
     print(f"DEBUG: Enviando a Hugging Face URL: {MODEL_URL}")
-    # print(f"DEBUG: Enviando a Hugging Face Headers: {HEADERS}") # Evitar imprimir tokens sensibles
     print(f"DEBUG: Enviando a Hugging Face Payload: {payload}")
 
     response = requests.post(MODEL_URL, headers=HEADERS, json=payload)
@@ -107,7 +128,7 @@ def generate_text():
     # Al final, añadir el token de inicio del asistente para que el modelo complete la respuesta
     formatted_prompt_parts.append("<|assistant|>")
 
-    full_prompt_string = "".join(formatted_prompt_parts) # Unimos sin \n para una cadena más compacta
+    full_prompt_string = "".join(formatted_prompt_parts)
 
     payload = {
         "inputs": full_prompt_string,
@@ -117,9 +138,6 @@ def generate_text():
             "do_sample": True,
             "top_p": 0.95,
             "repetition_penalty": 1.2,
-            # Asegúrate de que estos stop_sequences funcionen bien.
-            # Puedes probar a eliminar "</s>" de aquí si sigue cortando prematuramente,
-            # ya que a veces el modelo lo genera al final de una frase válida.
             "stop_sequences": ["<|user|>", "<|system|>"]
         },
         "return_full_text": False
@@ -134,40 +152,39 @@ def generate_text():
 
         ai_response_text = hf_data[0]['generated_text']
 
-        # --- INICIO MEJORA DE LIMPIEZA DEL TEXTO GENERADO ---
+        # --- INICIO MEJORA DE LIMPIEZA DEL TEXTO GENERADO (ULTRA-AGRESIVA) ---
 
         # 1. Eliminar tokens de control y secuencias de ChatML
-        # Elimina <s>, </s>, <|system|>, <|user|>, <|assistant|>
         ai_response_text = re.sub(r"<\/?s>", "", ai_response_text)
         ai_response_text = re.sub(r"<\|system\|>", "", ai_response_text)
         ai_response_text = re.sub(r"<\|user\|>", "", ai_response_text)
-        ai_response_text = re.sub(r"<\|assistant\|>", "", ai_response_text) # Elimina todas las ocurrencias
+        ai_response_text = re.sub(r"<\|assistant\|>", "", ai_response_text)
 
         # 2. Eliminar las frases de auto-descripción y saludos genéricos muy agresivamente
-        # Convertimos la respuesta a minúsculas para la búsqueda, pero reemplazamos en el original
-        temp_response_lower = ai_response_text.lower()
-        
-        for phrase in PHRASES_TO_REMOVE:
-            # Crea un patrón regex para la frase, haciendo que el espacio sea opcional al inicio y al final
-            # y que ignore mayúsculas/minúsculas. También considera puntuación.
-            pattern = r'\s*' + re.escape(phrase) + r'[\s.,;!?]*'
+        for phrase_pattern in PHRASES_TO_REMOVE:
+            # Crear un patrón regex que sea más flexible con espacios y puntuación alrededor de la frase
+            # re.escape() asegura que la frase literal no se interprete como regex.
+            # \s* para 0 o más espacios
+            # [.,;!?]* para 0 o más signos de puntuación
+            # El uso de \b (word boundary) es opcional y a veces puede ser muy restrictivo,
+            # lo quito para ser más agresivo si la frase es un fragmento.
+            
+            # Se reemplaza por un espacio para evitar concatenaciones extrañas
+            pattern = r'\s*' + re.escape(phrase_pattern) + r'[\s.,;!?]*'
             ai_response_text = re.sub(pattern, ' ', ai_response_text, flags=re.IGNORECASE)
             
-        # 3. Limpieza final de espacios extra y puntuación/comas al inicio
-        ai_response_text = ai_response_text.strip() # Elimina espacios al inicio/fin
-        ai_response_text = re.sub(r'^[.,;!?\s]+', '', ai_response_text) # Elimina puntuación/espacios iniciales
-        ai_response_text = ' '.join(ai_response_text.split()) # Normaliza múltiples espacios a uno solo
+        # 3. Limpieza final de espacios extra, comas/puntuación al inicio y normalización.
+        ai_response_text = ai_response_text.strip()
+        ai_response_text = re.sub(r'^[.,;!?\s]+', '', ai_response_text)
+        ai_response_text = ' '.join(ai_response_text.split())
 
         # Asegúrate de que la primera letra sea mayúscula si es una oración
         if ai_response_text and ai_response_text[0].islower():
             ai_response_text = ai_response_text[0].upper() + ai_response_text[1:]
 
-
         # Si la limpieza dejó la respuesta vacía, proporcionar un mensaje predeterminado
         if not ai_response_text:
-            ai_response_text = "¡Hola! Soy Amside AI. ¿En qué puedo ayudarte hoy?" 
-            # Si el usuario solo dice "Hola", la limpieza podría dejarlo vacío.
-            # En ese caso, damos un saludo más natural por defecto.
+            ai_response_text = "¡Hola! Soy Amside AI, un asistente de estudio. ¿En qué puedo ayudarte hoy?"
 
         # --- FIN MEJORA DE LIMPIEZA DEL TEXTO GENERADO ---
 
