@@ -113,12 +113,19 @@ def generate_text():
             if content and content in ai_response_text:
                 ai_response_text = ai_response_text.replace(content, "")
 
-        # Ocultar descripciones del system message
+        # Eliminar mensaje completo si se cuela el system message
         ai_response_text = re.sub(
-            r"una inteligencia artificial.*?innecesarias[.!]*", "", ai_response_text, flags=re.IGNORECASE
+            r"una inteligencia artificial diseñada por hodely gil, un desarrollador creativo.*?estoy aquí para ayudar[.!]*",
+            "",
+            ai_response_text,
+            flags=re.IGNORECASE | re.DOTALL
         )
+
         ai_response_text = re.sub(
-            r"(fui creada por|fui desarrollada por|fui entrenada por).*?(\.|!|\?)", "", ai_response_text, flags=re.IGNORECASE
+            r"(fui creada por|fui desarrollada por|fui entrenada por).*?(\.|!|\?)",
+            "",
+            ai_response_text,
+            flags=re.IGNORECASE
         )
 
         for phrase_pattern in PHRASES_TO_REMOVE:
