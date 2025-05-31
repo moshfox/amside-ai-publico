@@ -1,0 +1,648 @@
+ transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dynamic-prompt-suggestions .suggest-item:hover {
+            background-color: #3f4a56;
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        .dynamic-prompt-suggestions .suggest-item .material-symbols-outlined {
+            font-size: 0.9em;
+            color: var(--accent-color);
+        }
+
+        /* Para el modo oscuro/claro (ejemplo, se necesitaría JS para cambiar una clase en body/html) */
+        /* body.light-mode {
+            --primary-color: #f0f2f5;
+            --secondary-color: #ffffff;
+            --accent-color: #1a73e8;
+            --accent-color-hover: #155cb7;
+            --text-color-primary: #333;
+            --text-color-secondary: #555;
+            --text-color-dark: #eee;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        } */
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <span class="material-symbols-outlined icon" aria-hidden="true">auto_awesome</span> 
+            <h2 data-text="Amside AI">Amside AI</h2>
+        </div>
+        <button class="new-chat-button" id="new-chat-button" type="button">
+            <span class="material-symbols-outlined" aria-hidden="true">add_circle</span>
+            Nueva Conversación
+        </button>
+        <h3 class="chat-list-title">Historial</h3>
+        <ul class="chat-list" id="chat-list">
+            </ul>
+    </div>
+    <div class="chat-container" id="chat-container">
+        <div class="chat-header" id="chat-header">
+            <button id="new-conversation-header-button" type="button">
+                <span class="material-symbols-outlined" aria-hidden="true">add</span>
+                Nuevo
+            </button>
+            <h2 id="current-chat-title">Chat</h2>
+            <button id="clear-chat-button" type="button" style="margin-left: auto; background: none; border: none; color: var(--text-color-secondary); cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                <span class="material-symbols-outlined" aria-hidden="true">delete_sweep</span>
+                Limpiar
+            </button>
+        </div>
+        
+        <div class="welcome-screen" id="welcome-screen">
+            <span class="material-symbols-outlined" aria-hidden="true" style="font-size: 6em; color: var(--accent-color); margin-bottom: 30px; text-shadow: 0 0 18px rgba(var(--accent-color-rgb), 0.9);">psychology</span> 
+            <h1>Bienvenido a Amside AI</h1>
+            <p>Estoy aquí para ayudarte a desbloquear nuevas posibilidades. Pregunta, crea, innova. Tu conversación, nuestra inteligencia.</p>
+            <button class="start-chat-button" id="start-chat-from-welcome" type="button">
+                <span class="material-symbols-outlined" aria-hidden="true">chat</span>
+                ¡Empezar a chatear!
+            </button>
+            <div class="prompt-suggestions">
+                <button class="suggest-prompt-button" type="button" data-prompt="¿Cómo funciona el aprendizaje automático?">
+                    <span class="material-symbols-outlined" aria-hidden="true">lightbulb</span>
+                    ¿Qué es el machine learning?
+                </button>
+                <button class="suggest-prompt-button" type="button" data-prompt="Escríbeme un poema sobre el futuro y la tecnología.">
+                    <span class="material-symbols-outlined" aria-hidden="true">edit_note</span>
+                    Escribir un poema
+                </button>
+                <button class="suggest-prompt-button" type="button" data-prompt="Dame ideas para un nombre de startup de inteligencia artificial.">
+                    <span class="material-symbols-outlined" aria-hidden="true">science</span>
+                    Ideas para startups AI
+                </button>
+                <button class="suggest-prompt-button" type="button" data-prompt="Resume los puntos clave del último avance en chips neuromórficos.">
+                    <span class="material-symbols-outlined" aria-hidden="true">summarize</span>
+                    Resumen sobre chips
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-body" id="chat-messages">
+            </div>
+        <div class="input-area" id="input-area">
+            <div class="dynamic-prompt-suggestions hidden" id="dynamic-prompt-suggestions">
+                </div>
+            <textarea class="input-field" id="user-input" placeholder="Escribe tu mensaje..."></textarea>
+            <button class="send-button" id="send-button" type="button">
+                <span class="material-symbols-outlined" aria-hidden="true">send</span>
+                Enviar
+            </button>
+        </div>
+        <div id="typing-indicator" class="loading-indicator">
+            <div class="loading-spinner"></div> 
+            <span class="typing-indicator">Procesando<span>.</span><span>.</span><span>.</span></span>
+        </div>
+    </div>
+
+    <script>
+        // --- ¡¡¡IMPORTANTE!!! ---
+        // ESTA URL APUNTA A TU BACKEND FLASK.
+        // CUANDO DESPLIEGUES TU BACKEND EN RENDER.COM, OBTENDRÁS UNA URL PÚBLICA.
+        // DEBERÁS REEMPLAZAR ESTA LÍNEA CON ESA URL PÚBLICA.
+        // EJEMPLO: const API_CHAT_ENDPOINT = "https://tu-nombre-de-servicio.onrender.com/api/chat";
+        // Mientras tanto, para pruebas locales con Flask, "/api/chat" funciona.
+        const API_CHAT_ENDPOINT = "/api/chat";
+
+        // Referencias a los elementos del DOM
+        const chatContainer = document.getElementById('chat-container');
+        const chatHeader = document.getElementById('chat-header');
+        const currentChatTitle = document.getElementById('current-chat-title');
+        const chatMessages = document.getElementById('chat-messages');
+        const userInputField = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const chatList = document.getElementById('chat-list');
+        const newChatButtonSidebar = document.getElementById('new-chat-button');
+        const newChatButtonHeader = document.getElementById('new-conversation-header-button');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const inputArea = document.getElementById('input-area');
+        const startChatFromWelcomeButton = document.getElementById('start-chat-from-welcome');
+        const clearChatButton = document.getElementById('clear-chat-button');
+
+        // Sugerencias de prompts de la welcome screen
+        const suggestPromptButtons = document.querySelectorAll('.suggest-prompt-button');
+
+        // Nuevo: Contenedor para sugerencias dinámicas
+        const dynamicPromptSuggestions = document.getElementById('dynamic-prompt-suggestions');
+
+        // Nuevo: Array de sugerencias de prompts para la escritura
+        const PROMPT_SUGGESTIONS = [
+            { text: "Explícame", icon: "lightbulb", fullPrompt: "Explícame " },
+            { text: "Dame ideas para", icon: "psychology", fullPrompt: "Dame ideas para " },
+            { text: "Escribe un poema sobre", icon: "edit_note", fullPrompt: "Escribe un poema sobre " },
+            { text: "Resume este concepto:", icon: "summarize", fullPrompt: "Resume este concepto: " },
+            { text: "Traduce esto:", icon: "translate", fullPrompt: "Traduce esto: " },
+            { text: "Genera código JavaScript para", icon: "code", fullPrompt: "Genera código JavaScript para " },
+            { text: "Cómo puedo", icon: "help", fullPrompt: "Cómo puedo " },
+            { text: "Diferencia entre", icon: "compare_arrows", fullPrompt: "Diferencia entre " },
+            { text: "Definición de", icon: "article", fullPrompt: "Definición de " },
+            { text: "Cuáles son los beneficios de", icon: "trending_up", fullPrompt: "Cuáles son los beneficios de " },
+        ];
+
+
+        // Almacena mensajes en formato ChatML { role: "user/assistant/system", content: "..." }
+        let currentChatMessages = []; // Mensajes de la conversación actual
+        let chatHistory = []; // Para guardar múltiples conversaciones en la lista de la izquierda
+        let activeChatIndex = -1; // Índice del chat activo en chatHistory
+        let isSendingMessage = false; // Bandera para evitar envíos múltiples
+        let userScrolledUp = false; // Nueva bandera para controlar el scroll automático
+
+        // --- Funciones para la persistencia del chat usando localStorage ---
+        function loadChatHistory() {
+            const storedHistory = localStorage.getItem('amside_chat_history');
+            if (storedHistory) {
+                try {
+                    chatHistory = JSON.parse(storedHistory);
+                    if (!Array.isArray(chatHistory)) {
+                        chatHistory = [];
+                    }
+                    // Asegurarse de que cada chat tenga un título si no lo tenía
+                    chatHistory.forEach(chat => {
+                        if (!chat.title) {
+                            const firstUserMessage = chat.messages.find(msg => msg.role === 'user');
+                            chat.title = firstUserMessage ? firstUserMessage.content.substring(0, 22) + (firstUserMessage.content.length > 22 ? '...' : '') : 'Nueva Conversación';
+                        }
+                    });
+                } catch (e) {
+                    console.error("Error parsing chat history from localStorage:", e);
+                    chatHistory = []; // Si hay un error, inicializar vacío
+                }
+            }
+            updateChatList();
+        }
+
+        function saveChatHistory() {
+            localStorage.setItem('amside_chat_history', JSON.stringify(chatHistory));
+        }
+
+        // --- Funciones de la Interfaz de Usuario ---
+
+        // Muestra la pantalla de bienvenida y oculta el resto
+        function showInitialWelcomeScreen() {
+            welcomeScreen.classList.remove('hidden');
+            chatContainer.classList.remove('centered-input');
+            chatHeader.classList.add('hidden');
+            chatMessages.classList.add('hidden');
+            inputArea.classList.add('hidden');
+            userInputField.value = '';
+            userInputField.focus();
+            currentChatTitle.textContent = 'Chat';
+            dynamicPromptSuggestions.classList.add('hidden'); // Ocultar sugerencias dinámicas
+        }
+
+        // Muestra el input de chat centrado (cuando no hay mensajes y la bienvenida está oculta)
+        function showCenteredInput() {
+            welcomeScreen.classList.add('hidden');
+            chatContainer.classList.add('centered-input');
+            chatHeader.classList.add('hidden');
+            chatMessages.classList.add('hidden');
+            inputArea.classList.remove('hidden');
+            userInputField.value = '';
+            userInputField.focus();
+            currentChatTitle.textContent = 'Nueva Conversación';
+            dynamicPromptSuggestions.classList.add('hidden'); // Ocultar sugerencias dinámicas
+        }
+
+        // Muestra el chat completo (mensajes y input abajo)
+        function showChatContent() {
+            welcomeScreen.classList.add('hidden');
+            chatContainer.classList.remove('centered-input');
+            chatHeader.classList.remove('hidden');
+            chatMessages.classList.remove('hidden');
+            inputArea.classList.remove('hidden');
+            userInputField.focus();
+        }
+
+        // Añade un mensaje visualmente al chat
+        function addMessageToChat(role, content) {
+            const messageContainer = document.createElement('div');
+            const messageDiv = document.createElement('div');
+
+            if (role === 'user') {
+                messageContainer.classList.add('user-message-container');
+                messageDiv.classList.add('user-message');
+            } else if (role === 'assistant') {
+                messageDiv.classList.add('message');
+            } else if (role === 'error') {
+                messageDiv.classList.add('error-message');
+            }
+            messageDiv.textContent = content;
+            messageContainer.appendChild(messageDiv);
+            chatMessages.appendChild(messageContainer);
+
+            // Solo hacemos scroll si el usuario no ha subido manualmente
+            if (!userScrolledUp) {
+                scrollToBottom();
+            }
+        }
+
+        // Muestra un chat completo (ej. al cargar uno del historial)
+        function displayChat(messages) {
+            chatMessages.innerHTML = ''; // Limpiar el chat actual
+            if (messages.length > 0) {
+                messages.forEach(msg => {
+                    if (msg.role === 'user' || msg.role === 'assistant' || msg.role === 'error') {
+                        addMessageToChat(msg.role, msg.content);
+                    }
+                });
+                showChatContent(); // Muestra el chat normal con header y input
+            } else {
+                showCenteredInput(); // Si no hay mensajes, muestra el input centrado
+            }
+            scrollToBottom(); // Siempre ir al final al cargar un chat
+        }
+
+        // Desplaza el chat hasta el último mensaje
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            userScrolledUp = false; // Resetear la bandera cuando se hace scroll al final
+        }
+
+        // Actualiza la lista de chats en el sidebar
+        function updateChatList() {
+            chatList.innerHTML = '';
+            if (chatHistory.length === 0) {
+                const emptyListItem = document.createElement('li');
+                emptyListItem.textContent = 'No hay conversaciones.';
+                emptyListItem.style.textAlign = 'center';
+                emptyListItem.style.fontStyle = 'italic';
+                emptyListItem.style.color = 'var(--text-color-secondary)';
+                emptyListItem.style.cursor = 'default';
+                emptyListItem.style.backgroundColor = 'transparent';
+                chatList.appendChild(emptyListItem);
+                return;
+            }
+
+            chatHistory.forEach((chat, index) => {
+                const listItem = document.createElement('li');
+                listItem.dataset.index = index;
+                if (index === activeChatIndex) {
+                    listItem.classList.add('active');
+                }
+
+                const chatTitleContent = document.createElement('div');
+                chatTitleContent.classList.add('chat-title-content');
+                chatTitleContent.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">chat_bubble</span><span class="chat-text-display">${chat.title}</span>`;
+                
+                listItem.appendChild(chatTitleContent);
+
+                // Acciones de edición y borrado
+                const chatActions = document.createElement('div');
+                chatActions.classList.add('chat-actions');
+                chatActions.innerHTML = `
+                    <span class="material-symbols-outlined edit-icon" aria-hidden="true" title="Editar título">edit</span>
+                    <span class="material-symbols-outlined delete-icon" aria-hidden="true" title="Borrar conversación">delete</span>
+                `;
+                listItem.appendChild(chatActions);
+
+                chatList.appendChild(listItem);
+            });
+        }
+
+        // Inicia una nueva conversación
+        function startNewConversation() {
+            if (activeChatIndex !== -1 && currentChatMessages.length > 0) {
+                // Guarda la conversación actual si no está vacía
+                chatHistory[activeChatIndex].messages = [...currentChatMessages];
+                saveChatHistory();
+            }
+            currentChatMessages = []; // Reiniciar mensajes
+            activeChatIndex = chatHistory.length; // Crear un nuevo índice al final
+            chatHistory.push({
+                title: "Nueva Conversación",
+                messages: []
+            });
+            updateChatList();
+            saveChatHistory();
+            displayChat(currentChatMessages); // Muestra la pantalla de input centrado
+            currentChatTitle.textContent = "Nueva Conversación";
+            userInputField.focus();
+            hideDynamicPromptSuggestions(); // Ocultar sugerencias al iniciar un nuevo chat
+        }
+
+        // Carga una conversación existente
+        function loadConversation(index) {
+            if (index === activeChatIndex) return; // Ya está activa
+
+            if (activeChatIndex !== -1 && currentChatMessages.length > 0) {
+                // Guarda la conversación actual antes de cargar otra
+                chatHistory[activeChatIndex].messages = [...currentChatMessages];
+                saveChatHistory();
+            }
+
+            activeChatIndex = index;
+            currentChatMessages = [...chatHistory[index].messages]; // Carga los mensajes del historial
+            currentChatTitle.textContent = chatHistory[index].title;
+            displayChat(currentChatMessages);
+            updateChatList(); // Actualiza la clase 'active'
+            hideDynamicPromptSuggestions(); // Ocultar sugerencias al cargar un chat existente
+        }
+
+        // Edita el título de un chat
+        function editChatTitle(index, newTitle) {
+            if (index >= 0 && index < chatHistory.length) {
+                chatHistory[index].title = newTitle;
+                if (index === activeChatIndex) {
+                    currentChatTitle.textContent = newTitle;
+                }
+                saveChatHistory();
+                updateChatList();
+            }
+        }
+
+        // Elimina una conversación
+        function deleteChat(index) {
+            if (confirm("¿Estás seguro de que quieres borrar esta conversación?")) {
+                chatHistory.splice(index, 1);
+                saveChatHistory();
+
+                if (activeChatIndex === index) {
+                    // Si borramos el chat activo, iniciamos uno nuevo
+                    activeChatIndex = -1; // Resetear
+                    startNewConversation();
+                } else if (activeChatIndex > index) {
+                    // Si el chat activo está después del borrado, ajustamos su índice
+                    activeChatIndex--;
+                    // No es necesario recargar los mensajes, solo actualizar el índice para futuras operaciones
+                }
+                updateChatList();
+            }
+        }
+
+        // --- Lógica de envío de mensajes y comunicación con la IA ---
+        async function sendMessage() {
+            const userMessage = userInputField.value.trim();
+            if (userMessage === "" || isSendingMessage) {
+                return;
+            }
+
+            isSendingMessage = true;
+            sendButton.disabled = true;
+            userInputField.disabled = true;
+            userInputField.value = ''; // Limpiar input después de enviar
+            adjustTextareaHeight(); // Ajustar altura después de limpiar
+            hideDynamicPromptSuggestions(); // Ocultar sugerencias al enviar
+
+            // Si es el primer mensaje de una nueva conversación, muestra el contenido normal
+            if (currentChatMessages.length === 0) {
+                showChatContent();
+                // Si es el primer mensaje, el título es la parte inicial del mensaje
+                const newTitle = userMessage.substring(0, 22) + (userMessage.length > 22 ? '...' : '');
+                chatHistory[activeChatIndex].title = newTitle;
+                currentChatTitle.textContent = newTitle;
+                updateChatList();
+            }
+
+            addMessageToChat('user', userMessage);
+            currentChatMessages.push({ role: "user", content: userMessage });
+
+            // Mostrar indicador de carga/typing
+            typingIndicator.style.display = 'flex';
+            scrollToBottom();
+
+            try {
+                const response = await fetch(API_CHAT_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ messages: currentChatMessages })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                addMessageToChat('assistant', data.response);
+                currentChatMessages.push({ role: "assistant", content: data.response });
+
+            } catch (error) {
+                console.error("Error al comunicarse con la IA:", error);
+                addMessageToChat('error', `Error al obtener respuesta de la IA: ${error.message}. Por favor, inténtalo de nuevo.`);
+                currentChatMessages.push({ role: "error", content: `Error al obtener respuesta de la IA: ${error.message}. Por favor, inténtalo de nuevo.` });
+            } finally {
+                typingIndicator.style.display = 'none';
+                isSendingMessage = false;
+                sendButton.disabled = false;
+                userInputField.disabled = false;
+                userInputField.focus();
+                saveChatHistory(); // Guardar el historial después de cada interacción
+                scrollToBottom();
+            }
+        }
+
+        // Ajustar altura del textarea dinámicamente
+        function adjustTextareaHeight() {
+            userInputField.style.height = 'auto'; // Reset height
+            userInputField.style.height = userInputField.scrollHeight + 'px';
+            // Asegurarse de no exceder el max-height definido en CSS
+            if (userInputField.scrollHeight > 120) {
+                userInputField.style.height = '120px';
+            }
+        }
+
+        // --- Gestión de Sugerencias Dinámicas de Prompts ---
+        function showDynamicPromptSuggestions(suggestions) {
+            dynamicPromptSuggestions.innerHTML = '';
+            if (suggestions.length === 0) {
+                dynamicPromptSuggestions.classList.add('hidden');
+                return;
+            }
+            dynamicPromptSuggestions.classList.remove('hidden');
+            suggestions.forEach(sug => {
+                const button = document.createElement('button');
+                button.classList.add('suggest-item');
+                button.type = 'button';
+                button.innerHTML = `<span class="material-symbols-outlined" aria-hidden="true">${sug.icon}</span> ${sug.text}`;
+                button.dataset.fullPrompt = sug.fullPrompt || sug.text; // Almacena el prompt completo si es diferente
+                button.addEventListener('click', () => {
+                    userInputField.value = button.dataset.fullPrompt;
+                    adjustTextareaHeight();
+                    userInputField.focus();
+                    hideDynamicPromptSuggestions();
+                });
+                dynamicPromptSuggestions.appendChild(button);
+            });
+        }
+
+        function hideDynamicPromptSuggestions() {
+            dynamicPromptSuggestions.classList.add('hidden');
+        }
+
+        function filterAndShowSuggestions(query) {
+            const lowerCaseQuery = query.toLowerCase();
+            const filtered = PROMPT_SUGGESTIONS.filter(sug => 
+                sug.text.toLowerCase().includes(lowerCaseQuery) || sug.fullPrompt.toLowerCase().includes(lowerCaseQuery)
+            );
+            if (query.length > 1) { // Mostrar sugerencias solo si hay al menos 2 caracteres
+                showDynamicPromptSuggestions(filtered);
+            } else {
+                hideDynamicPromptSuggestions();
+            }
+        }
+
+        // --- Event Listeners ---
+
+        // Evento para el botón de nueva conversación en el sidebar
+        newChatButtonSidebar.addEventListener('click', () => {
+            newChatButtonSidebar.classList.add('clicked');
+            setTimeout(() => {
+                newChatButtonSidebar.classList.remove('clicked');
+                startNewConversation();
+            }, 600);
+        });
+
+        // Evento para el botón de nueva conversación en el header
+        newChatButtonHeader.addEventListener('click', () => {
+            startNewConversation();
+        });
+
+        // Evento para el botón de iniciar chat desde la pantalla de bienvenida
+        startChatFromWelcomeButton.addEventListener('click', () => {
+            startChatFromWelcomeButton.classList.add('clicked');
+            setTimeout(() => {
+                startChatFromWelcomeButton.classList.remove('clicked');
+                if (chatHistory.length === 0) {
+                    startNewConversation();
+                } else {
+                    loadConversation(chatHistory.length - 1);
+                }
+            }, 300);
+        });
+
+        // Evento para enviar mensaje al hacer clic en el botón
+        sendButton.addEventListener('click', sendMessage);
+
+        // Evento para enviar mensaje al presionar Enter en el campo de texto
+        userInputField.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Evento para ajustar la altura del textarea al escribir
+        userInputField.addEventListener('input', () => {
+            adjustTextareaHeight();
+            filterAndShowSuggestions(userInputField.value); // Activar sugerencias dinámicas
+        });
+
+        // Evento para ocultar sugerencias al perder foco
+        userInputField.addEventListener('blur', () => {
+            // Un pequeño retraso para permitir que los clics en las sugerencias se registren
+            setTimeout(() => {
+                if (!dynamicPromptSuggestions.contains(document.activeElement)) {
+                    hideDynamicPromptSuggestions();
+                }
+            }, 100);
+        });
+
+        // Evento para manejar clics en la lista de chats (cargar/editar/borrar)
+        chatList.addEventListener('click', (event) => {
+            const listItem = event.target.closest('li');
+            if (!listItem) return;
+
+            const index = parseInt(listItem.dataset.index);
+
+            if (event.target.classList.contains('edit-icon')) {
+                const textDisplay = listItem.querySelector('.chat-text-display');
+                const currentTitle = textDisplay.textContent;
+                
+                const inputEdit = document.createElement('input');
+                inputEdit.type = 'text';
+                inputEdit.classList.add('edit-title-input');
+                inputEdit.value = currentTitle;
+                inputEdit.maxLength = 50;
+
+                textDisplay.replaceWith(inputEdit);
+                inputEdit.focus();
+
+                const saveEdit = () => {
+                    const newTitle = inputEdit.value.trim();
+                    if (newTitle && newTitle !== currentTitle) {
+                        editChatTitle(index, newTitle);
+                    } else {
+                        textDisplay.textContent = currentTitle;
+                        inputEdit.replaceWith(textDisplay);
+                    }
+                    inputEdit.removeEventListener('blur', saveEdit);
+                    inputEdit.removeEventListener('keypress', handleEnterEdit);
+                };
+
+                const handleEnterEdit = (e) => {
+                    if (e.key === 'Enter') {
+                        inputEdit.blur();
+                    }
+                };
+
+                inputEdit.addEventListener('blur', saveEdit);
+                inputEdit.addEventListener('keypress', handleEnterEdit);
+
+            } else if (event.target.classList.contains('delete-icon')) {
+                deleteChat(index);
+            } else {
+                loadConversation(index);
+            }
+        });
+
+        // Evento para el botón "Limpiar Chat" en el header
+        clearChatButton.addEventListener('click', () => {
+            if (confirm("¿Estás seguro de que quieres limpiar los mensajes de esta conversación?")) {
+                currentChatMessages = [];
+                if (activeChatIndex !== -1) {
+                    chatHistory[activeChatIndex].messages = [];
+                }
+                saveChatHistory();
+                displayChat(currentChatMessages);
+            }
+        });
+
+        // Eventos para las sugerencias de prompts en la pantalla de bienvenida
+        suggestPromptButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                userInputField.value = button.dataset.prompt;
+                if (!welcomeScreen.classList.contains('hidden') && chatHistory.length === 0) {
+                    startNewConversation();
+                    setTimeout(() => sendMessage(), 100);
+                } else {
+                    sendMessage();
+                }
+            });
+        });
+
+        // Nuevo: Control de scroll manual del usuario
+        chatMessages.addEventListener('scroll', () => {
+            // Si el usuario no está cerca del final, asumimos que ha hecho scroll hacia arriba
+            const scrollThreshold = 50; // Pixeles desde el final para considerar "cerca"
+            userScrolledUp = (chatMessages.scrollHeight - chatMessages.clientHeight - chatMessages.scrollTop) > scrollThreshold;
+        });
+
+
+        // --- Inicialización al cargar la página ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadChatHistory();
+            if (chatHistory.length === 0) {
+                showInitialWelcomeScreen();
+            } else {
+                loadConversation(chatHistory.length - 1);
+            }
+            adjustTextareaHeight();
+        });
+
+        // Añadir atajo de teclado para nuevo chat (Ctrl/Cmd + N)
+        document.addEventListener('keydown', (event) => {
+            if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+                event.preventDefault();
+                startNewConversation();
+            }
+        });
+
+    </script>
+</body>
+</html>
