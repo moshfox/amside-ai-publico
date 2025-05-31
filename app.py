@@ -26,7 +26,6 @@ if not MODEL_URL:
 HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
 
 # --- Definición de la Personalidad de la IA ---
-# Versión ligeramente más concisa para ver si ayuda
 SYSTEM_MESSAGE_CONTENT = (
     "Eres Amside AI, una inteligencia artificial creada por Hodelygil. "
     "Tu propósito es asistir en el estudio y el aprendizaje, "
@@ -36,7 +35,6 @@ SYSTEM_MESSAGE_CONTENT = (
 )
 
 # Frases de auto-descripción y saludos que el modelo tiende a repetir
-# He añadido variaciones y el fragmento exacto que te está repitiendo
 PHRASES_TO_REMOVE = [
     # Auto-descripción
     r"eres amside ai",
@@ -47,10 +45,10 @@ PHRASES_TO_REMOVE = [
     r"responde de manera informativa y útil, pero con un tono conversacional y cercano",
     r"mi nombre es amside ai",
     r"fui creado por hodelygil",
-    r"tu propósito es asistir en el estudio y el aprendizaje", # Versión concisa del sistema
-    r"proporcionando información detallada", # Versión concisa del sistema
-    r"también eres amigable y puedes mantener conversaciones informales y agradables", # Versión concisa del sistema
-    r"responde de manera informativa y útil, con un tono conversacional y cercano", # Versión concisa del sistema
+    r"tu propósito es asistir en el estudio y el aprendizaje",
+    r"proporcionando información detallada",
+    r"también eres amigable y puedes mantener conversaciones informales y agradables",
+    r"responde de manera informativa y útil, con un tono conversacional y cercano",
 
     # Fragmento exacto que se repite
     r"tu propósito principal es asistir en el estudio y el aprendizaje, Sin embargo, también eres amigable y puedes mantener conversaciones informales y agradables. Responde de manera informativa y útil, pero con un tono conversacional y cercano.",
@@ -77,7 +75,7 @@ PHRASES_TO_REMOVE = [
     r"por supuesto",
     r"en que puedo asistirte",
     r"cómo te puedo ayudar",
-    r"me llamo soy una inteligencia artificial desarrollada por la empresa Hodelygil", # Añadido el saludo nuevo
+    r"me llamo soy una inteligencia artificial desarrollada por la empresa Hodelygil",
     r"mi papel principal es ayudarte a estudiar y a aprender, ofreciendo información y explicaciones detalladas",
     r"estoy programado para ser útil y eficaz, pero también quiero que tu experiencia sea divertida y genial",
     r"deja nos comunicamos a través de este mensaje y empieza a descubrir todo lo que yo puedo hacer por ti",
@@ -85,7 +83,7 @@ PHRASES_TO_REMOVE = [
     r"learn with amsideai",
     r"happy learning",
     r"saludos cordiales",
-    r"🤗", # emoticonos también
+    r"🤗",
     r"🚀"
 ]
 
@@ -130,7 +128,7 @@ def generate_text():
     # Al final, añadir el token de inicio del asistente para que el modelo complete la respuesta
     formatted_prompt_parts.append("<|assistant|>")
 
-    full_prompt_string = "".join(formatted_prompt_parts) # Unimos sin \n para una cadena más compacta
+    full_prompt_string = "".join(formatted_prompt_parts)
 
     payload = {
         "inputs": full_prompt_string,
@@ -160,34 +158,25 @@ def generate_text():
         ai_response_text = re.sub(r"<\/?s>", "", ai_response_text)
         ai_response_text = re.sub(r"<\|system\|>", "", ai_response_text)
         ai_response_text = re.sub(r"<\|user\|>", "", ai_response_text)
-        ai_response_text = re.sub(r"<\|assistant\|>", "", ai_response_text) # Elimina todas las ocurrencias
+        ai_response_text = re.sub(r"<\|assistant\|>", "", ai_response_text)
 
         # 2. Eliminar las frases de auto-descripción y saludos genéricos muy agresivamente
-        # Iterar sobre las frases y eliminarlas usando regex más flexible.
-        # Primero una limpieza general de la respuesta
-        ai_response_text_lower = ai_response_text.lower() # Trabajar en minúsculas para coincidir
-
         for phrase_pattern in PHRASES_TO_REMOVE:
             # Crear un patrón regex que sea más flexible con espacios y puntuación alrededor de la frase
             # re.escape() asegura que la frase literal no se interprete como regex.
             # \s* para 0 o más espacios
             # [.,;!?]* para 0 o más signos de puntuación
-            # \b para límites de palabra, aunque a veces puede ser contraproducente con fragmentos
+            # El uso de \b (word boundary) es opcional y a veces puede ser muy restrictivo,
+            # lo quito para ser más agresivo si la frase es un fragmento.
             
-            # Intentar primero una coincidencia exacta de la frase con espacios/puntuación opcionales
+            # Se reemplaza por un espacio para evitar concatenaciones extrañas
             pattern = r'\s*' + re.escape(phrase_pattern) + r'[\s.,;!?]*'
             ai_response_text = re.sub(pattern, ' ', ai_response_text, flags=re.IGNORECASE)
             
-            # Si la frase en sí tiene puntuación, esta es otra forma de intentarlo
-            ai_response_text = ai_response_text.replace(phrase_pattern, ' ', flags=re.IGNORECASE) # No funciona así con flags
-
-            # Re-aplicar con re.sub si el .replace no tiene flags
-            ai_response_text = re.sub(re.escape(phrase_pattern), ' ', ai_response_text, flags=re.IGNORECASE)
-
         # 3. Limpieza final de espacios extra, comas/puntuación al inicio y normalización.
-        ai_response_text = ai_response_text.strip() # Elimina espacios al inicio/fin
-        ai_response_text = re.sub(r'^[.,;!?\s]+', '', ai_response_text) # Elimina puntuación/espacios iniciales
-        ai_response_text = ' '.join(ai_response_text.split()) # Normaliza múltiples espacios a uno solo
+        ai_response_text = ai_response_text.strip()
+        ai_response_text = re.sub(r'^[.,;!?\s]+', '', ai_response_text)
+        ai_response_text = ' '.join(ai_response_text.split())
 
         # Asegúrate de que la primera letra sea mayúscula si es una oración
         if ai_response_text and ai_response_text[0].islower():
@@ -196,7 +185,6 @@ def generate_text():
         # Si la limpieza dejó la respuesta vacía, proporcionar un mensaje predeterminado
         if not ai_response_text:
             ai_response_text = "¡Hola! Soy Amside AI, un asistente de estudio. ¿En qué puedo ayudarte hoy?"
-            # Añadido "un asistente de estudio" para darle un poco más de contexto si se limpia todo.
 
         # --- FIN MEJORA DE LIMPIEZA DEL TEXTO GENERADO ---
 
