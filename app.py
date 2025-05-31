@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, jsonify
 import requests
 from flask_cors import CORS
+import re # Importa el módulo de expresiones regulares
 
 # Inicializa la aplicación Flask
 app = Flask(__name__)
@@ -99,26 +100,20 @@ def generate_text():
     formatted_prompt_parts.append("<|assistant|>")
 
     # Une todas las partes para formar el prompt final
-    full_prompt_string = "\n".join(formatted_prompt_parts)
-    # Algunos modelos pueden requerir un token de inicio de secuencia al principio de la cadena
-    # Zephyr a menudo espera <s> al inicio de una nueva "conversación" o "interacción".
-    # Lo añadimos aquí al inicio de la cadena completa.
-    full_prompt_string = "<s>" + full_prompt_string 
-    # --- FIN NUEVO ---
-
+    full_prompt_string = "<s>" + "\n".join(formatted_prompt_parts) # Añadimos <s> al inicio
 
     # Configuración del payload para la API de inferencia de Hugging Face
-    # Ahora, 'inputs' es la cadena de prompt formateada
     payload = {
-        "inputs": full_prompt_string, 
+        "inputs": full_prompt_string,
         "parameters": {
             "max_new_tokens": 500,
             "temperature": 0.7,
-            # Se han eliminado temporalmente "do_sample", "top_p" y "repetition_penalty"
-            # Si con estos cambios funciona, puedes intentar añadirlos de nuevo uno a uno
-            # para identificar cuál podría estar causando el problema.
+            "do_sample": True,          # Re-introducido para mayor variabilidad
+            "top_p": 0.95,              # Re-introducido para mejor calidad de muestreo
+            "repetition_penalty": 1.2,  # Re-introducido para evitar repeticiones
+            "stop_sequences": ["<|user|>", "<|system|>", "</s>"] # CRÍTICO: Detener la generación en estos tokens
         },
-        "return_full_text": False 
+        "return_full_text": False
     }
     
     try:
@@ -135,19 +130,15 @@ def generate_text():
         # Extraer el texto generado por la IA
         ai_response_text = hf_data[0]['generated_text']
 
-        # --- Limpieza del texto generado (MEJORA CLAVE AQUÍ) ---
-        # Primero, la limpieza básica de tokens de control
-        ai_response_text = ai_response_text.split('</s>')[0].strip() 
-        ai_response_text = ai_response_text.replace('<|assistant|>', '').strip()
-        ai_response_text = ai_response_text.replace('<|user|>', '').strip()
-        ai_response_text = ai_response_text.replace('<|system|>', '').strip()
-        ai_response_text = ai_response_text.replace('<s>', '').strip() 
-        ai_response_text = ai_response_text.replace('</s>', '').strip() 
+        # --- Limpieza del texto generado ---
+        # 1. Eliminar tokens de control adicionales y espacios extra al principio/final
+        ai_response_text = re.sub(r"<\/?s>", "", ai_response_text) # Elimina <s> y </s>
+        ai_response_text = re.sub(r"<\|system\|>", "", ai_response_text)
+        ai_response_text = re.sub(r"<\|user\|>", "", ai_response_text)
+        ai_response_text = re.sub(r"<\|assistant\|>", "", ai_response_text)
+        ai_response_text = ai_response_text.strip() # Elimina espacios en blanco al inicio/fin
 
-        # Eliminar las frases de auto-descripción no deseadas
-        # Convertimos a minúsculas para hacer la búsqueda insensible a mayúsculas/minúsculas
-        lower_response = ai_response_text.lower()
-        
+        # 2. Eliminar las frases de auto-descripción no deseadas
         phrases_to_remove = [
             "eres amside ai",
             "una inteligencia artificial creada por hodelygil",
@@ -156,21 +147,24 @@ def generate_text():
             "sin embargo, también soy amigable y puedo mantener conversaciones informales y agradables",
             "respondo de manera informativa y útil, pero con un tono conversacional y cercano",
             "mi nombre es amside ai",
-            "fui creado por hodelygil"
+            "fui creado por hodelygil",
+            "claro, ¿en qué puedo ayudarte?",
+            "cómo puedo ayudarte hoy",
+            "en qué puedo asistirte hoy",
+            "estaré encantado de ayudarte"
         ]
 
-        # Iteramos sobre las frases y las eliminamos si están en la respuesta
-        for phrase in phrases_to_remove:
-            if phrase in lower_response:
-                # Reemplaza la frase original con un espacio para evitar problemas de capitalización
-                # y luego vuelve a limpiar espacios extra
-                ai_response_text = ai_response_text.replace(phrase, "").replace(phrase.capitalize(), "").replace(phrase.upper(), "").strip()
-                # Eliminar espacios extra que puedan quedar
-                ai_response_text = ' '.join(ai_response_text.split())
+        lower_response = ai_response_text.lower() # Trabajar con minúsculas para la búsqueda
 
-        # Asegúrate de que la respuesta no quede vacía después de la limpieza agresiva
+        for phrase in phrases_to_remove:
+            # Reemplaza la frase ignorando mayúsculas/minúsculas
+            # Usamos re.IGNORECASE para una eliminación más flexible
+            ai_response_text = re.sub(re.escape(phrase), "", ai_response_text, flags=re.IGNORECASE)
+            ai_response_text = ' '.join(ai_response_text.split()) # Eliminar espacios extra después del reemplazo
+
+        # 3. Asegúrate de que la respuesta no quede vacía después de la limpieza agresiva
         if not ai_response_text:
-            ai_response_text = "Claro, ¿en qué puedo ayudarte?" # O un mensaje predeterminado más adecuado
+            ai_response_text = "Hola, soy Amside AI. ¿En qué puedo ayudarte hoy?" # Mensaje predeterminado más útil
 
         # Devolver la respuesta de la IA al frontend en formato JSON
         return jsonify({"response": ai_response_text})
