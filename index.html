@@ -543,6 +543,7 @@
             padding: 15px;
             border-top: 1px solid #444d57;
             display: flex;
+            flex-direction: column; /* Cambiado a columna para apilar elementos */
             align-items: center;
             background-color: var(--secondary-color);
             border-bottom-left-radius: var(--border-radius);
@@ -558,7 +559,9 @@
             padding: 12px 16px; /* Más padding */
             border: 1px solid #555e68;
             border-radius: var(--border-radius);
-            margin-right: 12px; /* Más espacio */
+            margin-right: 0; /* Eliminado margin-right para ocupar todo el ancho */
+            margin-bottom: 12px; /* Espacio entre input y botón de enviar */
+            width: calc(100% - 32px); /* Ajusta por padding */
             font-size: 1em; /* Ligeramente más grande */
             color: var(--text-color-primary);
             background-color: #2c343c;
@@ -589,6 +592,8 @@
             align-items: center;
             gap: 6px; /* Menos espacio */
             font-weight: 500;
+            width: 100%; /* El botón ocupa todo el ancho */
+            justify-content: center; /* Centrar el contenido del botón */
         }
 
         .send-button .material-symbols-outlined {
@@ -823,6 +828,48 @@
             transform: translateY(-2px);
         }
 
+        /* Estilos para los nuevos botones de Gemini */
+        .gemini-action-button {
+            background-color: #3f51b5; /* Azul índigo */
+            color: var(--text-color-primary);
+            border: none;
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color var(--transition), transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+            margin: 5px; /* Añade un poco de margen */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            flex-grow: 1; /* Permite que los botones crezcan */
+            justify-content: center; /* Centra el contenido del botón */
+        }
+
+        .gemini-action-button:hover {
+            background-color: #303f9f; /* Azul índigo más oscuro para hover */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .gemini-action-button:disabled {
+            background-color: #9e9e9e;
+            cursor: not-allowed;
+            transform: none;
+            opacity: 0.7;
+        }
+
+        /* Contenedor para los botones de acción de Gemini */
+        .gemini-actions-container {
+            display: flex;
+            flex-wrap: wrap; /* Permite que los botones se envuelvan en pantallas más pequeñas */
+            justify-content: center; /* Centra los botones */
+            width: 100%;
+            margin-bottom: 10px; /* Espacio entre los botones y el campo de entrada */
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             body {
@@ -895,14 +942,18 @@
                 max-width: 90%; /* Más ancho en pantallas pequeñas */
             }
 
+            .message::before, .user-message::before {
+                display: none; /* Oculta las colas de burbuja en móviles para simplificar */
+            }
+
             .input-area {
                 padding: 10px;
-                flex-direction: row; /* Vuelve a poner input y botón en fila en chat activo */
+                flex-direction: column; /* Apila el input y los botones verticalmente */
             }
 
             .input-area .input-field {
                 padding: 10px 12px;
-                margin-right: 8px;
+                margin-right: 0; /* Asegura que ocupe todo el ancho */
                 font-size: 0.95em;
                 min-height: 35px;
             }
@@ -910,6 +961,7 @@
             .input-area .send-button {
                 padding: 8px 12px;
                 font-size: 0.85em;
+                width: 100%; /* Ocupa todo el ancho */
             }
 
             .welcome-screen h1 {
@@ -964,6 +1016,11 @@
             .dynamic-prompt-suggestions .suggest-item {
                 font-size: 0.85em;
                 padding: 6px 10px;
+            }
+
+            .gemini-action-button {
+                width: calc(50% - 10px); /* Dos botones por fila */
+                margin: 5px; /* Ajusta el margen para móvil */
             }
         }
     </style>
@@ -1028,6 +1085,16 @@
         </div>
 
         <div class="input-area" id="inputArea">
+            <div class="gemini-actions-container">
+                <button id="summarizeChatButton" class="gemini-action-button">
+                    <span class="material-symbols-outlined">summarize</span>
+                    Resumir Chat ✨
+                </button>
+                <button id="generateIdeaButton" class="gemini-action-button">
+                    <span class="material-symbols-outlined">lightbulb</span>
+                    Idea Creativa ✨
+                </button>
+            </div>
             <div class="dynamic-prompt-suggestions hidden" id="dynamicPromptSuggestions">
                 </div>
             <textarea id="userInput" class="input-field" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
@@ -1040,7 +1107,8 @@
 
     <script>
         // --- Constantes y Elementos del DOM ---
-        const BACKEND_URL = "https://amside-ai-backend.onrender.com"; // ¡TU URL DE BACKEND DE RENDER!
+        // ¡IMPORTANTE! Asegúrate de que esta URL sea la de tu backend de Render
+        const BACKEND_URL = "https://amside-ai-backend.onrender.com"; 
 
         const chatContainer = document.getElementById('chatContainer');
         const sidebar = document.querySelector('.sidebar');
@@ -1062,11 +1130,18 @@
         const sendButton = document.getElementById('sendButton');
         const dynamicPromptSuggestions = document.getElementById('dynamicPromptSuggestions');
 
+        // New elements for Gemini features
+        const summarizeChatButton = document.getElementById('summarizeChatButton');
+        const generateIdeaButton = document.getElementById('generateIdeaButton');
+
         // --- Variables de Estado Globales ---
         let currentChatId = null; // ID del chat actualmente activo
-        let chats = JSON.parse(localStorage.getItem('chats')) || {}; // Carga chats de localStorage
-        let chatCounter = parseInt(localStorage.getItem('chatCounter')) || 0; // Para IDs únicos
+        // Carga chats de localStorage. Si no hay, inicializa un objeto vacío.
+        let chats = JSON.parse(localStorage.getItem('chats')) || {}; 
+        // Para IDs únicos, asegura que el contador no se reinicie si ya hay chats.
+        let chatCounter = parseInt(localStorage.getItem('chatCounter')) || 0; 
 
+        // Prompts predefinidos para las sugerencias
         const defaultPrompts = [
             "Dame una idea para un proyecto de IA.",
             "Explica la computación cuántica de forma sencilla.",
@@ -1095,9 +1170,9 @@
 
         /**
          * Añade un mensaje al área de chat.
-         * @param {string} sender 'user' o 'ai'
+         * @param {string} sender 'user' o 'assistant'
          * @param {string} text El contenido del mensaje
-         * @param {boolean} isError Indica si es un mensaje de error
+         * @param {boolean} [isError=false] Indica si es un mensaje de error
          * @param {boolean} [save=true] Indica si el mensaje debe guardarse en el chat activo.
          */
         function appendMessage(sender, text, isError = false, save = true) {
@@ -1109,7 +1184,7 @@
                 messageDiv.classList.add('user-message');
                 userContainer.appendChild(messageDiv);
                 chatBody.appendChild(userContainer);
-            } else {
+            } else { // sender === 'assistant'
                 messageDiv.classList.add('ai-message');
                 if (isError) {
                     messageDiv.classList.add('error-message');
@@ -1120,19 +1195,23 @@
             chatBody.scrollTop = chatBody.scrollHeight; // Auto-scroll al final
 
             if (save && currentChatId) {
-                chats[currentChatId].messages.push({ sender, text, isError });
+                // Guardar el mensaje en el historial del chat activo
+                chats[currentChatId].messages.push({ role: sender, content: text });
                 saveChats();
             }
         }
 
         /**
          * Muestra u oculta el indicador de carga y deshabilita/habilita el input/botón.
+         * También deshabilita/habilita los botones de Gemini.
          * @param {boolean} show True para mostrar, false para ocultar
          */
         function showLoading(show) {
             loadingIndicator.style.display = show ? 'flex' : 'none';
             sendButton.disabled = show;
             userInput.disabled = show;
+            summarizeChatButton.disabled = show; // Deshabilita los botones de Gemini
+            generateIdeaButton.disabled = show;   // Deshabilita los botones de Gemini
             userInput.placeholder = show ? 'La IA está pensando...' : 'Escribe tu mensaje aquí...';
         }
 
@@ -1146,6 +1225,7 @@
             chatContainer.classList.remove('centered-input');
             inputArea.classList.remove('centered-input'); // Asegura que el input vuelva a su posición normal
             userInput.focus();
+            updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
         }
 
         /**
@@ -1155,22 +1235,27 @@
             welcomeScreen.classList.remove('hidden');
             chatHeader.classList.add('hidden');
             chatBody.classList.add('hidden');
+            
             // Determina si el input debe estar centrado (si no hay chats o no hay mensajes en el chat actual)
-            const hasMessages = currentChatId && chats[currentChatId] && chats[currentChatId].messages.length > 0;
-            if (!hasMessages) {
+            const hasMessagesInCurrentChat = currentChatId && chats[currentChatId] && chats[currentChatId].messages.length > 0;
+            const totalChatsExist = Object.keys(chats).length > 0;
+
+            if (!totalChatsExist || !hasMessagesInCurrentChat) {
                 chatContainer.classList.add('centered-input');
                 inputArea.classList.add('centered-input');
             } else {
                 chatContainer.classList.remove('centered-input');
                 inputArea.classList.remove('centered-input');
             }
-            currentChatId = null;
+            
+            currentChatId = null; // Deseleccionar chat
+            saveChats(); // Guardar el estado de deselección
             renderChatList(); // Para desmarcar el chat activo si lo hubiera
-            // Ocultar sugerencias dinámicas al volver a la vista de bienvenida
-            dynamicPromptSuggestions.classList.add('hidden');
+            dynamicPromptSuggestions.classList.add('hidden'); // Ocultar sugerencias dinámicas al volver a la vista de bienvenida
             userInput.value = ''; // Limpiar input
             userInput.style.height = 'auto'; // Resetear altura del input
             userInput.focus();
+            updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
         }
 
         /**
@@ -1187,8 +1272,8 @@
                 // Crear nuevo chat
                 currentChatId = generateUniqueId();
                 newChat = {
-                    title: `Conversación ${chatCounter}`,
-                    messages: []
+                    title: `Conversación ${chatCounter}`, // Título inicial
+                    messages: [] // Historial de mensajes vacío para el nuevo chat
                 };
                 chats[currentChatId] = newChat;
                 saveChats();
@@ -1198,7 +1283,8 @@
             chatBody.innerHTML = ''; // Limpia los mensajes anteriores
 
             // Renderiza los mensajes del chat cargado
-            newChat.messages.forEach(msg => appendMessage(msg.sender, msg.text, msg.isError, false)); // No guardar de nuevo al cargar
+            // No guardar de nuevo al cargar (save=false)
+            newChat.messages.forEach(msg => appendMessage(msg.role, msg.content, msg.isError, false)); 
 
             showChatView();
             renderChatList(); // Actualiza la lista para marcar el chat activo
@@ -1208,12 +1294,12 @@
             if (newChat.messages.length === 0) {
                 chatContainer.classList.add('centered-input');
                 inputArea.classList.add('centered-input');
-                // Ocultar sugerencias dinámicas ya que las de bienvenida son más relevantes aquí
-                dynamicPromptSuggestions.classList.add('hidden');
+                dynamicPromptSuggestions.classList.add('hidden'); // Ocultar sugerencias dinámicas aquí
             } else {
                 chatContainer.classList.remove('centered-input');
                 inputArea.classList.remove('centered-input');
             }
+            updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
         }
 
         /**
@@ -1221,14 +1307,19 @@
          */
         function renderChatList() {
             chatList.innerHTML = '';
-            // Convertir el objeto de chats a un array para poder ordenarlo por fecha o ID si se quiere
-            const sortedChatIds = Object.keys(chats).sort((a, b) => {
-                // Ejemplo: Ordenar por el número del ID (chat-10, chat-2) para que "chat-10" vaya después de "chat-2"
+            const chatIds = Object.keys(chats);
+
+            if (chatIds.length === 0) {
+                chatList.innerHTML = '<li style="text-align: center; color: var(--text-color-secondary); padding: 20px;">No hay conversaciones.</li>';
+                return;
+            }
+
+            // Ordenar los chats por el número del ID de forma descendente (más recientes primero)
+            const sortedChatIds = chatIds.sort((a, b) => {
                 const numA = parseInt(a.split('-')[1]);
                 const numB = parseInt(b.split('-')[1]);
-                return numA - numB;
+                return numB - numA; // Orden descendente
             });
-
 
             sortedChatIds.forEach(id => {
                 const chat = chats[id];
@@ -1261,27 +1352,54 @@
         async function sendMessage() {
             const message = userInput.value.trim();
             if (!message) {
-                // Ocultar sugerencias si el input está vacío y el usuario intenta enviar
                 dynamicPromptSuggestions.classList.add('hidden');
                 return;
             }
 
-            // Asegura que hay un chat activo antes de añadir el mensaje
+            // Si no hay un chat activo, crea uno nuevo.
             if (!currentChatId) {
-                startNewConversation(); // Crea un nuevo chat si no hay uno activo
+                startNewConversation();
             }
 
-            // Si estaba en la vista centrada, cambia a la vista de chat normal
+            // Si el chat estaba en la vista centrada, cambia a la vista de chat normal
             if (chatContainer.classList.contains('centered-input')) {
                 showChatView();
             }
 
-            appendMessage('user', message); // Añadir mensaje del usuario al chat
+            // Construir el historial de mensajes para enviar al backend
+            // Incluye los mensajes existentes del chat actual y el nuevo mensaje del usuario
+            const messagesToSend = [];
+
+            // Añadir mensajes existentes del chat actual (si los hay)
+            // Asegurarse de que chats[currentChatId] y chats[currentChatId].messages existen
+            if (currentChatId && chats[currentChatId] && Array.isArray(chats[currentChatId].messages)) {
+                chats[currentChatId].messages.forEach(msg => {
+                    messagesToSend.push({ role: msg.role, content: msg.content });
+                });
+            }
+
+            // Añadir el mensaje actual del usuario a la lista que se enviará al backend
+            messagesToSend.push({ role: 'user', content: message });
+
+            // Ahora, añadir el mensaje del usuario a la UI y guardarlo en localStorage
+            // (esto actualiza chats[currentChatId].messages para futuras llamadas)
+            appendMessage('user', message);
+
             userInput.value = ''; // Limpiar el input
-            userInput.style.height = 'auto'; // Restablecer la altura del input si se ajustó
+            userInput.style.height = 'auto'; // Restablecer la altura del input
             dynamicPromptSuggestions.classList.add('hidden'); // Ocultar sugerencias dinámicas
 
             showLoading(true); // Mostrar indicador de carga
+
+            // Si es el primer mensaje en un chat nuevo, actualizar el título
+            // Ahora se basa en messagesToSend.length (que incluye el mensaje actual del usuario)
+            if (messagesToSend.length === 1) { // Solo el mensaje del usuario
+                const firstWords = message.split(' ').slice(0, 5).join(' ');
+                chats[currentChatId].title = firstWords + (message.split(' ').length > 5 ? '...' : '');
+                currentChatTitle.textContent = chats[currentChatId].title;
+                saveChats();
+                renderChatList(); // Actualizar la lista del sidebar con el nuevo título
+            }
 
             try {
                 const response = await fetch(`${BACKEND_URL}/generate`, {
@@ -1289,7 +1407,8 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ message: message }) // Enviar el mensaje como JSON
+                    // Enviar el historial completo de mensajes al backend
+                    body: JSON.stringify({ messages: messagesToSend })
                 });
 
                 if (!response.ok) {
@@ -1298,27 +1417,140 @@
                 }
 
                 const data = await response.json();
-                appendMessage('ai', data.response); // Mostrar la respuesta de la IA
+                // Añadir la respuesta de la IA al chat (y la guarda en localStorage)
+                appendMessage('assistant', data.response); 
 
             } catch (error) {
                 console.error("Error al obtener respuesta de la IA:", error);
-                appendMessage('ai', `Error: ${error.message}`, true); // Mostrar mensaje de error con estilo
+                // Mostrar mensaje de error con estilo
+                appendMessage('assistant', `Lo siento, hubo un error al procesar tu solicitud: ${error.message}. Por favor, inténtalo de nuevo.`, true); 
             } finally {
                 showLoading(false); // Ocultar indicador de carga
                 userInput.focus(); // Devolver el foco al campo de entrada
+                updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
             }
         }
+
+        // --- Gemini API Call Function ---
+        async function callGeminiAPI(prompt, chatHistory = []) {
+            const apiKey = ""; // Canvas proporcionará automáticamente esta clave en tiempo de ejecución
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            // Construir el historial de chat para la API de Gemini
+            // La API de Gemini espera roles 'user' y 'model'.
+            // Mapeamos 'assistant' a 'model'.
+            let geminiChatHistory = chatHistory.map(msg => ({
+                role: msg.role === 'assistant' ? 'model' : msg.role,
+                parts: [{ text: msg.content }]
+            }));
+
+            // Añadir el prompt actual como el último mensaje del usuario
+            geminiChatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+            const payload = { contents: geminiChatHistory };
+
+            showLoading(true); // Mostrar indicador de carga para las llamadas a la API de Gemini
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Error de la API de Gemini: ${response.status} - ${errorData.error?.message || 'Desconocido'}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error("Respuesta inesperada de la API de Gemini: no se encontró texto.");
+                }
+            } finally {
+                showLoading(false); // Ocultar indicador de carga
+            }
+        }
+
+        // --- Nuevas Funcionalidades de Gemini ---
+
+        /**
+         * Resume el chat actual usando la API de Gemini.
+         */
+        async function summarizeChat() {
+            if (!currentChatId || chats[currentChatId].messages.length === 0) {
+                appendMessage('assistant', 'No hay mensajes en el chat actual para resumir.', true);
+                return;
+            }
+
+            const messages = chats[currentChatId].messages;
+            // Construir una representación de texto simple del historial de chat para el resumen
+            let chatText = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
+
+            const prompt = `Por favor, resume la siguiente conversación de chat de forma concisa:\n\n${chatText}`;
+
+            try {
+                const summary = await callGeminiAPI(prompt, messages); // Pasa los mensajes completos para el contexto
+                appendMessage('assistant', `✨ Resumen del Chat:\n\n${summary}`);
+            } catch (error) {
+                console.error("Error al resumir el chat con Gemini:", error);
+                appendMessage('assistant', `Lo siento, no pude generar un resumen: ${error.message}`, true);
+            }
+        }
+
+        /**
+         * Genera una idea creativa basada en el último mensaje del usuario o en el contexto general.
+         */
+        async function generateCreativeIdea() {
+            let context = "";
+            if (currentChatId && chats[currentChatId].messages.length > 0) {
+                // Encuentra el último mensaje del usuario para el contexto
+                const lastUserMessage = chats[currentChatId].messages.slice().reverse().find(msg => msg.role === 'user');
+                if (lastUserMessage) {
+                    context = `Basándome en el último mensaje del usuario: "${lastUserMessage.content}", dame una idea creativa o una sugerencia relacionada.`;
+                } else {
+                    // Si no hay mensajes de usuario, usa un prompt general
+                    context = "Dame una idea creativa o una sugerencia interesante sobre cualquier tema.";
+                }
+            } else {
+                context = "Dame una idea creativa o una sugerencia interesante sobre cualquier tema.";
+            }
+
+            const prompt = `Eres una IA creativa. ${context}`;
+
+            try {
+                const idea = await callGeminiAPI(prompt, currentChatId ? chats[currentChatId].messages : []); // Pasa los mensajes completos para el contexto
+                appendMessage('assistant', `✨ Idea Creativa:\n\n${idea}`);
+            } catch (error) {
+                console.error("Error al generar idea creativa con Gemini:", error);
+                appendMessage('assistant', `Lo siento, no pude generar una idea creativa: ${error.message}`, true);
+            }
+        }
+
+        /**
+         * Actualiza el estado de los botones de Gemini (habilitado/deshabilitado)
+         * basado en si hay un chat activo con mensajes.
+         */
+        function updateGeminiButtonsState() {
+            const isChatActiveAndHasMessages = currentChatId && chats[currentChatId] && chats[currentChatId].messages.length > 0;
+            summarizeChatButton.disabled = !isChatActiveAndHasMessages;
+            generateIdeaButton.disabled = !isChatActiveAndHasMessages;
+        }
+
 
         // --- Event Listeners ---
 
         // Botón "Nueva Conversación" en el sidebar
         newChatButton.addEventListener('click', (e) => {
-            // Efecto de onda
             newChatButton.classList.add('clicked');
             newChatButton.addEventListener('animationend', () => {
                 newChatButton.classList.remove('clicked');
             }, { once: true });
-
             startNewConversation();
         });
 
@@ -1330,14 +1562,15 @@
             const chatId = listItem.dataset.chatId;
 
             if (e.target.classList.contains('delete-icon')) {
-                // Confirmar y eliminar chat
-                if (confirm('¿Estás seguro de que quieres eliminar esta conversación?')) {
+                // Usar un modal personalizado en lugar de confirm() si es posible en tu entorno
+                if (window.confirm('¿Estás seguro de que quieres eliminar esta conversación?')) {
                     delete chats[chatId];
                     saveChats();
                     if (currentChatId === chatId) {
                         showWelcomeView(); // Si eliminamos el chat activo, volvemos a la pantalla de bienvenida
                     }
                     renderChatList(); // Actualizar la lista
+                    updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
                 }
             } else if (e.target.classList.contains('edit-icon')) {
                 // Entrar en modo de edición
@@ -1349,9 +1582,9 @@
                 input.value = originalTitle;
                 input.classList.add('edit-title-input');
 
-                // Reemplazar el título con el input
-                titleSpan.replaceWith(input);
+                titleSpan.replaceWith(input); // Reemplazar el título con el input
                 input.focus();
+                input.select(); // Seleccionar todo el texto para facilitar la edición
 
                 // Ocultar acciones mientras se edita
                 listItem.querySelector('.chat-actions').style.display = 'none';
@@ -1393,10 +1626,11 @@
         welcomePromptSuggestions.addEventListener('click', (e) => {
             const button = e.target.closest('.suggest-prompt-button');
             if (button) {
-                const promptText = button.textContent.replace(/(\r\n|\n|\r)/gm, "").trim().split(' ').slice(1).join(' '); // Elimina el icono y espacios extra
+                // Extrae el texto del prompt, eliminando el icono y el espacio extra
+                const promptText = button.textContent.trim().replace(/^\S+\s*/, ''); 
                 userInput.value = promptText;
-                userInput.style.height = 'auto'; // Restablecer altura para el auto-ajuste
-                userInput.style.height = userInput.scrollHeight + 'px'; // Ajustar altura
+                userInput.style.height = 'auto'; 
+                userInput.style.height = userInput.scrollHeight + 'px'; 
                 startNewConversation(); // Inicia un nuevo chat
                 sendMessage(); // Envía el prompt directamente
             }
@@ -1416,13 +1650,14 @@
             }
         });
 
-        // Auto-ajuste de la altura del textarea
+        // Auto-ajuste de la altura del textarea y mostrar/ocultar sugerencias dinámicas
         userInput.addEventListener('input', () => {
             userInput.style.height = 'auto'; // Restablece la altura para calcular correctamente
             userInput.style.height = userInput.scrollHeight + 'px';
 
             // Mostrar/ocultar sugerencias dinámicas
-            if (userInput.value.trim() === '' && !loadingIndicator.style.display.includes('flex')) {
+            const hasMessagesInCurrentChat = currentChatId && chats[currentChatId] && chats[currentChatId].messages.length > 0;
+            if (userInput.value.trim() === '' && hasMessagesInCurrentChat && !loadingIndicator.style.display.includes('flex')) {
                 renderDynamicPromptSuggestions();
                 dynamicPromptSuggestions.classList.remove('hidden');
             } else {
@@ -1436,6 +1671,10 @@
                 dynamicPromptSuggestions.classList.add('hidden');
             }
         });
+
+        // Event listeners para los nuevos botones de Gemini
+        summarizeChatButton.addEventListener('click', summarizeChat);
+        generateIdeaButton.addEventListener('click', generateCreativeIdea);
 
 
         // --- Funciones de Sugerencias Dinámicas ---
@@ -1451,14 +1690,17 @@
                     userInput.style.height = userInput.scrollHeight + 'px';
                     dynamicPromptSuggestions.classList.add('hidden');
                     userInput.focus();
+                    // Opcional: enviar el mensaje automáticamente al seleccionar una sugerencia
+                    // sendMessage(); 
                 });
                 dynamicPromptSuggestions.appendChild(button);
             });
         }
         
-        // Mostrar sugerencias dinámicas al enfocar el input si está vacío
+        // Mostrar sugerencias dinámicas al enfocar el input si está vacío y hay un chat activo con mensajes
         userInput.addEventListener('focus', () => {
-            if (userInput.value.trim() === '' && currentChatId && chats[currentChatId].messages.length > 0 && !loadingIndicator.style.display.includes('flex')) {
+            const hasMessagesInCurrentChat = currentChatId && chats[currentChatId] && chats[currentChatId].messages.length > 0;
+            if (userInput.value.trim() === '' && hasMessagesInCurrentChat && !loadingIndicator.style.display.includes('flex')) {
                 renderDynamicPromptSuggestions();
                 dynamicPromptSuggestions.classList.remove('hidden');
             }
@@ -1468,12 +1710,23 @@
         // --- Inicialización al cargar la página ---
         document.addEventListener('DOMContentLoaded', () => {
             renderChatList();
-            // Si hay chats guardados, pero ninguno activo, muestra la pantalla de bienvenida.
-            // Si no hay chats, por defecto también muestra la pantalla de bienvenida.
-            if (!currentChatId || !chats[currentChatId]) {
-                showWelcomeView();
+            // Si hay chats guardados, intenta cargar el último activo.
+            // Si no hay chats o el último activo no existe, muestra la pantalla de bienvenida.
+            const lastActiveChatId = localStorage.getItem('lastActiveChatId');
+            if (lastActiveChatId && chats[lastActiveChatId]) {
+                startNewConversation(lastActiveChatId);
             } else {
-                startNewConversation(currentChatId); // Recarga el último chat activo
+                showWelcomeView();
+            }
+            updateGeminiButtonsState(); // Asegura que los botones de Gemini estén en el estado correcto al cargar
+        });
+
+        // Guarda el ID del chat activo cuando se cierra la página
+        window.addEventListener('beforeunload', () => {
+            if (currentChatId) {
+                localStorage.setItem('lastActiveChatId', currentChatId);
+            } else {
+                localStorage.removeItem('lastActiveChatId');
             }
         });
     </script>
