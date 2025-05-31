@@ -43,8 +43,19 @@ def query_huggingface_model(payload):
     """
     Función auxiliar para enviar la solicitud a la API de Hugging Face.
     """
+    # --- DEBUGGING: Imprime el payload antes de enviar ---
+    print(f"DEBUG: Enviando a Hugging Face URL: {MODEL_URL}")
+    print(f"DEBUG: Enviando a Hugging Face Headers: {HEADERS}")
+    print(f"DEBUG: Enviando a Hugging Face Payload: {payload}")
+    # --- FIN DEBUGGING ---
+
     response = requests.post(MODEL_URL, headers=HEADERS, json=payload)
     response.raise_for_status()  # Lanza una excepción para respuestas HTTP 4xx/5xx (errores)
+    
+    # --- DEBUGGING: Imprime la respuesta cruda después de recibir ---
+    print(f"DEBUG: Raw response from Hugging Face (status {response.status_code}): {response.text}")
+    # --- FIN DEBUGGING ---
+    
     return response.json()
 
 @app.route('/generate', methods=['POST'])
@@ -59,6 +70,9 @@ def generate_text():
 
     # Validación básica de la entrada
     if not messages_from_frontend:
+        # --- DEBUGGING: Mensaje si los mensajes están vacíos ---
+        print("DEBUG: 'messages' no encontrado o vacío en la solicitud del frontend.")
+        # --- FIN DEBUGGING ---
         return jsonify({"error": "No se proporcionaron mensajes en la solicitud."}), 400
 
     # Construir el array de mensajes para la API de Hugging Face
@@ -71,27 +85,30 @@ def generate_text():
             hf_messages.append(msg)
 
     # Configuración del payload para la API de inferencia de Hugging Face
-payload = {
-    "inputs": hf_messages,
-    "parameters": {
-        "max_new_tokens": 500,
-        "temperature": 0.7,
-        # "do_sample": True,          # <-- Try commenting these out
-        # "top_p": 0.95,              # <-- Try commenting these out
-        # "repetition_penalty": 1.2   # <-- Try commenting these out
+    # Se han simplificado los parámetros para evitar posibles conflictos con el modelo Zephyr.
+    payload = {
+        "inputs": hf_messages,
+        "parameters": {
+            "max_new_tokens": 500,
+            "temperature": 0.7,
+            # Se han eliminado temporalmente "do_sample", "top_p" y "repetition_penalty"
+            # Si con estos cambios funciona, puedes intentar añadirlos de nuevo uno a uno
+            # para identificar cuál podría estar causando el problema.
+        },
+        # Añade return_full_text: False si quieres que la API solo devuelva la respuesta del modelo,
+        # sin el prompt o el historial previo, lo cual es útil para modelos de chat.
+        "return_full_text": False 
     }
-}
+    
     try:
         # Realizar la solicitud POST a la API de inferencia de Hugging Face
-        response = requests.post(MODEL_URL, headers=HEADERS, json=payload)
-        response.raise_for_status()  # Esto lanzará una excepción si la respuesta no es 200 OK
-
-        hf_data = response.json()
+        hf_data = query_huggingface_model(payload) # Usamos la función auxiliar
 
         # Validar la estructura de la respuesta de Hugging Face
-        # Para modelos de chat, la respuesta suele ser un array con un diccionario que contiene 'generated_text'
         if not hf_data or not isinstance(hf_data, list) or not hf_data[0].get('generated_text'):
-            print(f"Respuesta inesperada de Hugging Face: {hf_data}")
+            # --- DEBUGGING: Registra la respuesta inesperada ---
+            print(f"DEBUG: Respuesta inesperada de Hugging Face: {hf_data}")
+            # --- FIN DEBUGGING ---
             return jsonify({"error": "Respuesta inesperada de Hugging Face API.", "hf_response": hf_data}), 500
 
         # Extraer el texto generado por la IA
@@ -99,6 +116,8 @@ payload = {
 
         # Limpieza adicional: algunos modelos pueden incluir las etiquetas de turno o el prompt
         # Asegurarse de que solo se devuelva la respuesta del asistente.
+        # Estas limpiezas son importantes si return_full_text no funciona como se espera,
+        # o si el modelo genera tokens de control adicionales.
         ai_response_text = ai_response_text.split('</s>')[0].strip() # Eliminar cualquier terminador de conversación
         if ai_response_text.startswith('<|assistant|>'):
             ai_response_text = ai_response_text.replace('<|assistant|>', '').strip()
@@ -107,12 +126,12 @@ payload = {
         if ai_response_text.startswith('<|system|>'): # En caso de que el modelo "imite" al sistema
             ai_response_text = ai_response_text.replace('<|system|>', '').strip()
 
-
         # Devolver la respuesta de la IA al frontend en formato JSON
         return jsonify({"response": ai_response_text})
 
     except requests.exceptions.RequestException as e:
         # Captura errores relacionados con la conexión HTTP (red, DNS, etc.)
+        # El raise_for_status() ya manejará los 4xx/5xx específicos de HF
         print(f"Error al conectar con Hugging Face API: {e}")
         return jsonify({"error": f"Error al conectar con la IA: {e}. Por favor, inténtalo de nuevo más tarde."}), 500
     except Exception as e:
