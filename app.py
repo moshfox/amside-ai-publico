@@ -75,19 +75,42 @@ def generate_text():
         # --- FIN DEBUGGING ---
         return jsonify({"error": "No se proporcionaron mensajes en la solicitud."}), 400
 
-    # Construir el array de mensajes para la API de Hugging Face
-    # Añadimos el mensaje del sistema al principio para definir la personalidad.
-    # Luego, añadimos el historial de la conversación del frontend.
-    hf_messages = [{"role": "system", "content": SYSTEM_MESSAGE_CONTENT}]
+    # --- NUEVO: Construir la cadena de prompt con el formato específico de Zephyr ---
+    # El modelo Zephyr-7b-beta espera un formato ChatML-like con <s> y </s>
+    # Ejemplo: <s><|system|>system_message</s><|user|>user_message</s><|assistant|>
+    
+    formatted_prompt_parts = []
+
+    # Inicia con el mensaje del sistema
+    formatted_prompt_parts.append(f"<|system|>\n{SYSTEM_MESSAGE_CONTENT}</s>")
+
     for msg in messages_from_frontend:
-        # Asegurarse de que no estamos duplicando el mensaje de sistema si el frontend ya lo envía
-        if msg.get('role') != 'system':
-            hf_messages.append(msg)
+        role = msg.get('role')
+        content = msg.get('content', '')
+
+        if role == 'user':
+            formatted_prompt_parts.append(f"<|user|>\n{content}</s>")
+        elif role == 'assistant': # Mapeamos 'assistant' a '<|assistant|>' para el modelo
+            formatted_prompt_parts.append(f"<|assistant|>\n{content}</s>")
+        # Ignoramos otros roles o mensajes de sistema si ya los hemos añadido
+    
+    # Al final, añadir el token de inicio del asistente para que el modelo complete la respuesta
+    # Este es el último token que el modelo debería generar después de procesar todo el historial
+    formatted_prompt_parts.append("<|assistant|>")
+
+    # Une todas las partes para formar el prompt final
+    full_prompt_string = "\n".join(formatted_prompt_parts)
+    # Algunos modelos pueden requerir un token de inicio de secuencia al principio de la cadena
+    # Zephyr a menudo espera <s> al inicio de una nueva "conversación" o "interacción".
+    # Lo añadimos aquí al inicio de la cadena completa.
+    full_prompt_string = "<s>" + full_prompt_string 
+    # --- FIN NUEVO ---
+
 
     # Configuración del payload para la API de inferencia de Hugging Face
-    # Se han simplificado los parámetros para evitar posibles conflictos con el modelo Zephyr.
+    # Ahora, 'inputs' es la cadena de prompt formateada
     payload = {
-        "inputs": hf_messages,
+        "inputs": full_prompt_string, # <--- CAMBIO AQUÍ
         "parameters": {
             "max_new_tokens": 500,
             "temperature": 0.7,
@@ -95,8 +118,9 @@ def generate_text():
             # Si con estos cambios funciona, puedes intentar añadirlos de nuevo uno a uno
             # para identificar cuál podría estar causando el problema.
         },
-        # Añade return_full_text: False si quieres que la API solo devuelva la respuesta del modelo,
-        # sin el prompt o el historial previo, lo cual es útil para modelos de chat.
+        # Cuando envías una cadena pre-formateada, a veces return_full_text puede ser True
+        # o incluso omitirse. Si el modelo devuelve todo, ajustaremos la limpieza.
+        # Por ahora, vamos a intentar con False, esperando que la API de HF haga la limpieza.
         "return_full_text": False 
     }
     
@@ -105,6 +129,7 @@ def generate_text():
         hf_data = query_huggingface_model(payload) # Usamos la función auxiliar
 
         # Validar la estructura de la respuesta de Hugging Face
+        # Para modelos de texto a texto, la respuesta suele ser un array con un diccionario que contiene 'generated_text'
         if not hf_data or not isinstance(hf_data, list) or not hf_data[0].get('generated_text'):
             # --- DEBUGGING: Registra la respuesta inesperada ---
             print(f"DEBUG: Respuesta inesperada de Hugging Face: {hf_data}")
@@ -114,17 +139,17 @@ def generate_text():
         # Extraer el texto generado por la IA
         ai_response_text = hf_data[0]['generated_text']
 
-        # Limpieza adicional: algunos modelos pueden incluir las etiquetas de turno o el prompt
-        # Asegurarse de que solo se devuelva la respuesta del asistente.
-        # Estas limpiezas son importantes si return_full_text no funciona como se espera,
-        # o si el modelo genera tokens de control adicionales.
-        ai_response_text = ai_response_text.split('</s>')[0].strip() # Eliminar cualquier terminador de conversación
-        if ai_response_text.startswith('<|assistant|>'):
-            ai_response_text = ai_response_text.replace('<|assistant|>', '').strip()
-        if ai_response_text.startswith('<|user|>'): # En caso de que el modelo "imite" al usuario
-            ai_response_text = ai_response_text.replace('<|user|>', '').strip()
-        if ai_response_text.startswith('<|system|>'): # En caso de que el modelo "imite" al sistema
-            ai_response_text = ai_response_text.replace('<|system|>', '').strip()
+        # --- Limpieza del texto generado ---
+        # Si return_full_text es False, la API de HF ya debería haber limpiado el prompt.
+        # Pero a veces los modelos aún pueden repetir partes o añadir tokens.
+        # Quitamos cualquier token de finalización o de turno que el modelo pueda haber generado.
+        ai_response_text = ai_response_text.split('</s>')[0].strip() 
+        ai_response_text = ai_response_text.replace('<|assistant|>', '').strip()
+        ai_response_text = ai_response_text.replace('<|user|>', '').strip()
+        ai_response_text = ai_response_text.replace('<|system|>', '').strip()
+        ai_response_text = ai_response_text.replace('<s>', '').strip() # Eliminar token de inicio de secuencia
+        ai_response_text = ai_response_text.replace('</s>', '').strip() # Eliminar token de fin de secuencia
+        # --- FIN Limpieza ---
 
         # Devolver la respuesta de la IA al frontend en formato JSON
         return jsonify({"response": ai_response_text})
