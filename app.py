@@ -2,20 +2,16 @@ import os
 from flask import Flask, request, jsonify
 import requests
 from flask_cors import CORS
-import re # Importa el módulo de expresiones regulares
-import traceback # Para ver la traza completa de errores
+import re
+import traceback
 
-# Inicializa la aplicación Flask
 app = Flask(__name__)
-# Habilita CORS para permitir que tu frontend (ej. desde GitHub Pages)
-# pueda hacer solicitudes a este backend.
 CORS(app)
 
-# Obtiene el token de Hugging Face y la URL del modelo de las variables de entorno.
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-MODEL_URL = os.getenv("MODEL_URL", "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta")
+# ¡CAMBIO A MISTRAL-7B-INSTRUCT-V0.2!
+MODEL_URL = os.getenv("MODEL_URL", "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2")
 
-# --- ¡¡¡VERIFICACIÓN CRÍTICA!!! ---
 if not HF_API_TOKEN:
     raise ValueError("Error: La variable de entorno 'HF_API_TOKEN' no está configurada. "
                      "Asegúrate de definirla en Render.")
@@ -26,6 +22,9 @@ if not MODEL_URL:
 HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
 
 # --- Definición de la Personalidad de la IA ---
+# Para Mistral, el SYSTEM_MESSAGE_CONTENT suele ir al inicio del primer mensaje de usuario
+# o como parte del mensaje del usuario con un formato específico.
+# Mantendremos el mismo system message por ahora, pero lo integraremos de forma diferente.
 SYSTEM_MESSAGE_CONTENT = (
     "Eres Amside AI, una inteligencia artificial creada por Hodelygil. "
     "Tu propósito es asistir en el estudio y el aprendizaje, "
@@ -50,7 +49,7 @@ PHRASES_TO_REMOVE = [
     r"también eres amigable y puedes mantener conversaciones informales y agradables",
     r"responde de manera informativa y útil, con un tono conversacional y cercano",
 
-    # Fragmento exacto que se repite
+    # Fragmentos específicos de Zephyr (puede que no aparezcan con Mistral, pero los dejamos por si acaso)
     r"tu propósito principal es asistir en el estudio y el aprendizaje, Sin embargo, también eres amigable y puedes mantener conversaciones informales y agradables. Responde de manera informativa y útil, pero con un tono conversacional y cercano.",
 
     # Saludos y frases introductorias
@@ -84,14 +83,16 @@ PHRASES_TO_REMOVE = [
     r"happy learning",
     r"saludos cordiales",
     r"🤗",
-    r"🚀"
+    r"🚀",
+    r"#AIforStudents", # El Mistral también puede generar hashtags
+    r"#LearnwithAmsideAI",
+    r"#HappyLearning",
+    r"🤝", # Otros emoticonos que podrían aparecer
+    r"😊"
 ]
 
 
 def query_huggingface_model(payload):
-    """
-    Función auxiliar para enviar la solicitud a la API de Hugging Face.
-    """
     print(f"DEBUG: Enviando a Hugging Face URL: {MODEL_URL}")
     print(f"DEBUG: Enviando a Hugging Face Payload: {payload}")
 
@@ -111,24 +112,57 @@ def generate_text():
         print("DEBUG: 'messages' no encontrado o vacío en la solicitud del frontend.")
         return jsonify({"error": "No se proporcionaron mensajes en la solicitud."}), 400
 
+    # --- CAMBIO IMPORTANTE EN LA CONSTRUCCIÓN DEL PROMPT PARA MISTRAL ---
+    # Mistral-7B-Instruct-v0.2 usa un formato de chat específico:
+    # <s>[INST] {user_message} [/INST] {assistant_response}</s>[INST] {next_user_message} [/INST]
+    # El system message se suele integrar en el primer [INST]
+    
     formatted_prompt_parts = []
-
-    # Siempre empezamos con el mensaje del sistema
-    formatted_prompt_parts.append(f"<s><|system|>\n{SYSTEM_MESSAGE_CONTENT}</s>")
-
-    for msg in messages_from_frontend:
-        role = msg.get('role')
-        content = msg.get('content', '')
-
-        if role == 'user':
-            formatted_prompt_parts.append(f"<|user|>\n{content}</s>")
-        elif role == 'assistant':
-            formatted_prompt_parts.append(f"<|assistant|>\n{content}</s>")
+    
+    # El primer mensaje (que es del usuario) debe incluir el SYSTEM_MESSAGE_CONTENT
+    # Esto es crucial para Mistral. Lo ponemos como una "pregunta" del usuario.
+    # Si el historial está vacío, o solo tiene el último mensaje del usuario, construimos el inicio.
+    if not messages_from_frontend or messages_from_frontend[0].get('role') == 'user':
+        # Asume que el primer mensaje que procesaremos es el del usuario.
+        # Si ya hay un historial, lo reconstruimos.
+        
+        # El primer turno debe empezar con <s>
+        # Si el primer mensaje del historial es de usuario, le añadimos el system message
+        # Si no hay historial, o el primer es assistant, el primer user message es el que empieza la conversación.
+        
+        # Construye el historial para Mistral
+        # <s>[INST] System message + user_message_1 [/INST] assistant_response_1 </s> [INST] user_message_2 [/INST]
+        
+        # Empezamos con el "inst" del primer usuario y su mensaje.
+        # El system message lo ponemos como parte de la instrucción inicial.
+        
+        # Formato de Mistral
+        # <s>[INST] {prompt} [/INST]
+        # {completion}
+        # Para chats, es: <s>[INST] User Message [/INST] Assistant Response </s> [INST] User Message 2 [/INST]
+        
+        # Si es el inicio de la conversación y el primer mensaje es del usuario
+        # O si queremos que el system message SIEMPRE esté al inicio de la conversación completa para el modelo.
+        # Lo más común es ponerlo en el primer [INST] del usuario.
+        
+        # Reconstruimos el historial completo para Mistral
+        current_prompt = "<s>"
+        for i, msg in enumerate(messages_from_frontend):
+            role = msg.get('role')
+            content = msg.get('content', '').strip() # Strip para limpiar espacios iniciales/finales
             
-    # Al final, añadir el token de inicio del asistente para que el modelo complete la respuesta
-    formatted_prompt_parts.append("<|assistant|>")
+            if role == 'user':
+                if i == 0: # Si es el primer mensaje de usuario, añadir el system message
+                    current_prompt += f"[INST] {SYSTEM_MESSAGE_CONTENT}\n\n{content} [/INST]"
+                else:
+                    current_prompt += f"[INST] {content} [/INST]"
+            elif role == 'assistant':
+                current_prompt += f" {content}</s>" # La respuesta del asistente no tiene tags, y termina con </s>
+                
+        # El prompt final no termina con </s> porque esperamos la respuesta del asistente.
+        full_prompt_string = current_prompt
 
-    full_prompt_string = "".join(formatted_prompt_parts)
+    # --- FIN CAMBIO IMPORTANTE EN LA CONSTRUCCIÓN DEL PROMPT PARA MISTRAL ---
 
     payload = {
         "inputs": full_prompt_string,
@@ -138,7 +172,9 @@ def generate_text():
             "do_sample": True,
             "top_p": 0.95,
             "repetition_penalty": 1.2,
-            "stop_sequences": ["<|user|>", "<|system|>"]
+            # Stop sequences para Mistral. Importante: [/INST] para evitar que el modelo se meta en el turno del usuario.
+            # </s> para detenerlo si termina su frase.
+            "stop_sequences": ["</s>", "[INST]", "[/INST]"] 
         },
         "return_full_text": False
     }
@@ -152,24 +188,18 @@ def generate_text():
 
         ai_response_text = hf_data[0]['generated_text']
 
-        # --- INICIO MEJORA DE LIMPIEZA DEL TEXTO GENERADO (ULTRA-AGRESIVA) ---
+        # --- INICIO MEJORA DE LIMPIEZA DEL TEXTO GENERADO (ADAPTADO A MISTRAL) ---
 
-        # 1. Eliminar tokens de control y secuencias de ChatML
-        ai_response_text = re.sub(r"<\/?s>", "", ai_response_text)
-        ai_response_text = re.sub(r"<\|system\|>", "", ai_response_text)
-        ai_response_text = re.sub(r"<\|user\|>", "", ai_response_text)
-        ai_response_text = re.sub(r"<\|assistant\|>", "", ai_response_text)
+        # 1. Eliminar tokens de control específicos de Mistral si aparecen (y otros que no deberían)
+        ai_response_text = re.sub(r"<s>", "", ai_response_text) # Inicio de secuencia
+        ai_response_text = re.sub(r"</s>", "", ai_response_text) # Fin de secuencia
+        ai_response_text = re.sub(r"\[INST\]", "", ai_response_text) # Tokens de instrucción
+        ai_response_text = re.sub(r"\[/INST\]", "", ai_response_text) # Tokens de fin de instrucción
+        ai_response_text = ai_response_text.strip() # Eliminar espacios en blanco al inicio/fin después de los tokens
 
         # 2. Eliminar las frases de auto-descripción y saludos genéricos muy agresivamente
         for phrase_pattern in PHRASES_TO_REMOVE:
             # Crear un patrón regex que sea más flexible con espacios y puntuación alrededor de la frase
-            # re.escape() asegura que la frase literal no se interprete como regex.
-            # \s* para 0 o más espacios
-            # [.,;!?]* para 0 o más signos de puntuación
-            # El uso de \b (word boundary) es opcional y a veces puede ser muy restrictivo,
-            # lo quito para ser más agresivo si la frase es un fragmento.
-            
-            # Se reemplaza por un espacio para evitar concatenaciones extrañas
             pattern = r'\s*' + re.escape(phrase_pattern) + r'[\s.,;!?]*'
             ai_response_text = re.sub(pattern, ' ', ai_response_text, flags=re.IGNORECASE)
             
@@ -184,7 +214,7 @@ def generate_text():
 
         # Si la limpieza dejó la respuesta vacía, proporcionar un mensaje predeterminado
         if not ai_response_text:
-            ai_response_text = "¡Hola! Soy Amside AI, un asistente de estudio. ¿En qué puedo ayudarte hoy?"
+            ai_response_text = "¡Hola! Soy Amside AI, tu asistente de estudio. ¿En qué puedo ayudarte hoy?"
 
         # --- FIN MEJORA DE LIMPIEZA DEL TEXTO GENERADO ---
 
