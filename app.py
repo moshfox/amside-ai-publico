@@ -130,15 +130,15 @@ def generate_text():
         # Extraer el texto generado por la IA
         ai_response_text = hf_data[0]['generated_text']
 
-        # --- Limpieza del texto generado ---
-        # 1. Eliminar tokens de control adicionales y espacios extra al principio/final
+        # --- INICIO MEJORA DE LIMPIEZA DEL TEXTO GENERADO ---
+        # 1. Eliminar tokens de control adicionales y asegurar que no haya "<|assistant|>" al inicio
         ai_response_text = re.sub(r"<\/?s>", "", ai_response_text) # Elimina <s> y </s>
         ai_response_text = re.sub(r"<\|system\|>", "", ai_response_text)
         ai_response_text = re.sub(r"<\|user\|>", "", ai_response_text)
-        ai_response_text = re.sub(r"<\|assistant\|>", "", ai_response_text)
+        ai_response_text = re.sub(r"^<\|assistant\|>\s*", "", ai_response_text) # Elimina <|assistant|> solo si está al inicio
         ai_response_text = ai_response_text.strip() # Elimina espacios en blanco al inicio/fin
 
-        # 2. Eliminar las frases de auto-descripción no deseadas
+        # 2. Eliminar las frases de auto-descripción no deseadas (más robusto)
         phrases_to_remove = [
             "eres amside ai",
             "una inteligencia artificial creada por hodelygil",
@@ -147,24 +147,55 @@ def generate_text():
             "sin embargo, también soy amigable y puedo mantener conversaciones informales y agradables",
             "respondo de manera informativa y útil, pero con un tono conversacional y cercano",
             "mi nombre es amside ai",
-            "fui creado por hodelygil",
-            "claro, ¿en qué puedo ayudarte?",
-            "cómo puedo ayudarte hoy",
-            "en qué puedo asistirte hoy",
-            "estaré encantado de ayudarte"
+            "fui creado por hodelygil"
         ]
 
-        lower_response = ai_response_text.lower() # Trabajar con minúsculas para la búsqueda
-
+        # Convertir a minúsculas y añadir una bandera para búsqueda sin distinción de mayúsculas y minúsculas
+        # El patrón re.escape() escapa caracteres especiales para que sean tratados literalmente
         for phrase in phrases_to_remove:
-            # Reemplaza la frase ignorando mayúsculas/minúsculas
-            # Usamos re.IGNORECASE para una eliminación más flexible
-            ai_response_text = re.sub(re.escape(phrase), "", ai_response_text, flags=re.IGNORECASE)
-            ai_response_text = ' '.join(ai_response_text.split()) # Eliminar espacios extra después del reemplazo
+            ai_response_text = re.sub(r'\b' + re.escape(phrase) + r'\b', '', ai_response_text, flags=re.IGNORECASE)
+            # También eliminamos las frases seguidas de puntuación para ser más agresivos
+            ai_response_text = re.sub(r'\b' + re.escape(phrase) + r'[.,;!?]+\b', '', ai_response_text, flags=re.IGNORECASE)
 
-        # 3. Asegúrate de que la respuesta no quede vacía después de la limpieza agresiva
+        # 3. Eliminar saludos o frases introductorias genéricas que el modelo pueda generar
+        # y que se repiten con el saludo del usuario.
+        generic_intros = [
+            r"hola", # solo la palabra "hola" al inicio, para no eliminarlo de otras partes
+            r"me alegra poder ayudarte hoy",
+            r"cómo me pueden servir",
+            r"estais buscando información sobre algún tema específico o quieré practicar habilidades específicas",
+            r"o simplemente queréis chatear sobre algo interesante",
+            r"deja que sepa mi programador cómo ser más útil para ustedes",
+            r"espero que estemos juntos durante este tiempo",
+            r"qué tal",
+            r"cómo estás",
+            r"en qué puedo ayudarte",
+            r"qué deseas saber",
+            r"bienvenido",
+            r"un gusto saludarte",
+            r"mucho gusto",
+            r"claro que sí",
+            r"por supuesto",
+            r"en que puedo asistirte",
+            r"cómo te puedo ayudar"
+        ]
+
+        for intro_phrase in generic_intros:
+             # Utiliza 'r' antes de la cadena para asegurar que se trate como expresión regular raw
+             # Eliminar la frase y cualquier signo de puntuación o espacio que la siga.
+             ai_response_text = re.sub(intro_phrase + r'[\s.,;!?]*', '', ai_response_text, flags=re.IGNORECASE)
+
+        # 4. Limpieza final de espacios extra y puntuación inicial/final redundante
+        ai_response_text = ai_response_text.strip() # Elimina espacios al inicio/fin
+        # Elimina cualquier puntuación inicial que pueda haber quedado
+        ai_response_text = re.sub(r'^[.,;!?\s]+', '', ai_response_text)
+        ai_response_text = ' '.join(ai_response_text.split()) # Normaliza múltiples espacios a uno solo
+
+        # Asegúrate de que la respuesta no quede vacía después de la limpieza agresiva
         if not ai_response_text:
-            ai_response_text = "Hola, soy Amside AI. ¿En qué puedo ayudarte hoy?" # Mensaje predeterminado más útil
+            ai_response_text = "¡Hola! Soy Amside AI. ¿En qué puedo ayudarte hoy?" # Mensaje predeterminado más útil
+            # Si el usuario solo dice "Hola", la limpieza podría dejarlo vacío.
+            # En ese caso, damos un saludo más natural por defecto.
 
         # Devolver la respuesta de la IA al frontend en formato JSON
         return jsonify({"response": ai_response_text})
@@ -176,6 +207,7 @@ def generate_text():
     except Exception as e:
         # Captura cualquier otro error inesperado en el servidor
         print(f"Error interno del servidor: {e}")
+        print(f"Traza completa del error: {traceback.format_exc()}") # Añade un traceback para más detalles
         return jsonify({"error": f"Ocurrió un error inesperado en el servidor: {e}. Por favor, contacta al soporte."}), 500
 
 # Punto de entrada para ejecutar la aplicación Flask
