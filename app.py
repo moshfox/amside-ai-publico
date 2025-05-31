@@ -19,7 +19,7 @@ if not MODEL_URL:
 HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
 
 SYSTEM_MESSAGE_CONTENT = (
-    "Eres Amside AI, creada por Hodelygil. Tu objetivo es ayudar en el aprendizaje con respuestas útiles y precisas."
+    "Responde siempre con precisión y claridad. No te describas. No incluyas presentaciones."
 )
 
 PHRASES_TO_REMOVE = [
@@ -49,7 +49,12 @@ PHRASES_TO_REMOVE = [
     r"mucho gusto",
     r"claro que sí",
     r"por supuesto",
-    r"🤗", r"🚀", r"#AIforStudents", r"#LearnwithAmsideAI", r"#HappyLearning", r"🤝", r"😊"
+    r"🤗", r"🚀", r"#AIforStudents", r"#LearnwithAmsideAI", r"#HappyLearning", r"🤝", r"😊",
+    r".*creada por hodelygil.*",
+    r".*tu objetivo es ayudar.*",
+    r".*soy amside.*",
+    r".*tu asistente de aprendizaje.*",
+    r".*siempre estaré encantado.*"
 ]
 
 def query_huggingface_model(payload):
@@ -71,7 +76,7 @@ def generate_text():
         content = msg.get("content", "").strip()
 
         if role == "user":
-            if i == 0:
+            if i == 0 and len(messages_from_frontend) == 1:
                 current_prompt += f"<s>[INST] {SYSTEM_MESSAGE_CONTENT}\n\n{content} [/INST]"
             else:
                 current_prompt += f"<s>[INST] {content} [/INST]"
@@ -100,11 +105,12 @@ def generate_text():
         ai_response_text = hf_data[0]['generated_text']
         ai_response_text = re.sub(r"<s>|</s>|\[INST\]|\[/INST\]", "", ai_response_text).strip()
 
-        # Eliminar repeticiones literales de mensajes anteriores
         for msg in messages_from_frontend:
             content = msg.get("content", "").strip()
             if content and content in ai_response_text:
                 ai_response_text = ai_response_text.replace(content, "")
+
+        ai_response_text = re.sub(r"creada por hodelygil.*?precisas[.!]*", "", ai_response_text, flags=re.IGNORECASE)
 
         for phrase_pattern in PHRASES_TO_REMOVE:
             pattern = r'\s*' + re.escape(phrase_pattern) + r'[\s.,;!?]*'
