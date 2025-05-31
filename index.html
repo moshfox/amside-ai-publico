@@ -1,1578 +1,1643 @@
 <!DOCTYPE html>
+
 <html lang="es">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amside AI - Interfaz con IA Real</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
-    <style>
-        /* Variables CSS para facilitar la gestión de colores y estilos */
-        :root {
-            --primary-color: #22272b; /* Fondo oscuro principal */
-            --secondary-color: #37404a; /* Gris oscuro para barras y elementos */
-            --accent-color: #00bcd4; /* Cian para elementos interactivos */
-            --accent-color-hover: #00838f; /* Cian más oscuro al pasar el ratón */
-            --text-color-primary: #eee; /* Texto claro principal */
-            --text-color-secondary: #ccc; /* Texto gris claro secundario */
-            --text-color-dark: #333; /* Para elementos sobre fondos claros si los hubiera */
-            --error-color: #f44336; /* Rojo para mensajes de error */
-            --border-radius: 10px; /* Bordes redondeados ligeramente más grandes */
-            --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Sombra para profundidad */
-            --transition: all 0.3s ease-in-out; /* Transiciones suaves */
-            --sidebar-width: 300px; /* Ancho del sidebar */
-            --accent-color-rgb: 0, 188, 212; /* Color cian en RGB para sombras */
-            --glitch-color-1: #ff00c1; /* Color para efecto glitch 1 (si se vuelve a usar) */
-            --glitch-color-2: #00ffff; /* Color para efecto glitch 2 (si se vuelve a usar) */
-        }
-
-        /* Estilos generales del cuerpo de la página */
-        body {
-            font-family: 'Roboto Mono', monospace; /* Fuente estilo consola */
-            background-color: var(--primary-color);
-            color: var(--text-color-primary);
-            margin: 0;
-            display: flex; /* Contenedor principal usa flexbox */
-            min-height: 100vh; /* Altura mínima del viewport */
-            padding: 0;
-            overflow: hidden; /* Evita scroll no deseado en el body */
-            /* Animación de fondo sutil (partículas o gradiente pulsante) */
-            background-image: radial-gradient(circle at top left, rgba(var(--accent-color-rgb), 0.1) 0%, transparent 50%),
-                                  radial-gradient(circle at bottom right, rgba(var(--glitch-color-2), 0.1) 0%, transparent 50%);
-            background-size: 200% 200%;
-            animation: gradient-shift 15s ease infinite alternate;
-        }
-
-        @keyframes gradient-shift {
-            0% { background-position: 0% 0%; }
-            100% { background-position: 100% 100%; }
-        }
-
-        /* Estilos del sidebar (barra lateral izquierda) */
-        .sidebar {
-            background-color: var(--secondary-color);
-            width: var(--sidebar-width);
-            border-right: 1px solid #444d57; /* Separador */
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            flex-shrink: 0; /* No se encoge */
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 15px rgba(var(--accent-color-rgb), 0.2); /* Sombra más compleja */
-            z-index: 10; /* Para que esté por encima de otros elementos si hay solapamiento */
-            transition: width var(--transition); /* Para redimensionamiento dinámico */
-        }
-
-        .sidebar-header {
-            color: var(--text-color-primary);
-            margin-bottom: 30px;
-            text-align: left;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 10px; /* Espacio entre el ícono y el texto */
-        }
-
-        .sidebar-header .icon {
-            font-size: 2.5em; /* Tamaño del ícono, un poco más grande */
-            color: var(--accent-color);
-            text-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.7); /* Efecto neón más marcado */
-            position: relative;
-            /* Eliminada la animación 'pulse-icon' */
-        }
-
-        .sidebar-header h2 {
-            margin: 0;
-            font-size: 2em; /* Fuente más grande */
-            font-weight: 700; /* Más audaz */
-            background: linear-gradient(45deg, var(--accent-color), #00e5ff); /* Degradado en el texto */
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.6); /* Sombra para el texto */
-            position: relative;
-            /* Eliminadas las animaciones 'glitch-anim' */
-        }
-
-        /* Eliminadas las reglas para h2::before y h2::after para quitar el glitch */
-        /* Eliminado @keyframes glitch-anim-1 y glitch-anim-2 */
-        /* Eliminado @keyframes pulse-icon */
-
-        /* Estilo del botón "Nueva Conversación" */
-        .new-chat-button {
-            background-color: var(--accent-color);
-            color: var(--text-color-primary);
-            border: none;
-            padding: 12px 18px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 1.05em; /* Un poco más grande */
-            margin-bottom: 20px;
-            transition: background-color var(--transition), transform 0.2s ease, box-shadow var(--transition);
-            width: 100%;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            font-weight: 500;
-            box-shadow: 0 4px 10px rgba(var(--accent-color-rgb), 0.3);
-            position: relative; /* Para el efecto de onda */
-            overflow: hidden; /* Para que la onda no se salga */
-        }
-
-        .new-chat-button .material-symbols-outlined {
-            margin-right: 10px;
-            font-size: 1.2em;
-            transition: transform 0.2s ease; /* Transición para el icono */
-        }
-
-        .new-chat-button:hover {
-            background-color: var(--accent-color-hover);
-            transform: translateY(-2px); /* Pequeño efecto de elevación */
-            box-shadow: 0 6px 15px rgba(var(--accent-color-rgb), 0.4);
-        }
-
-        .new-chat-button:hover .material-symbols-outlined {
-            transform: rotate(15deg); /* Pequeña rotación del icono */
-        }
-
-        /* Efecto de onda al clickear el botón */
-        .new-chat-button.clicked::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            opacity: 1;
-            animation: click-wave 0.6s forwards;
-        }
-
-        @keyframes click-wave {
-            to {
-                transform: translate(-50%, -50%) scale(2);
-                opacity: 0;
-            }
-        }
-
-        /* Título del historial de chat */
-        .chat-list-title {
-            font-size: 0.95em; /* Ligeramente más grande */
-            color: var(--text-color-secondary);
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px; /* Más espacio entre letras */
-            font-weight: 500;
-            padding-bottom: 5px;
-            border-bottom: 1px dashed rgba(var(--accent-color-rgb), 0.3); /* Línea punteada */
-            width: 100%;
-        }
-
-        /* Lista de chats en el historial */
-        .chat-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            width: 100%;
-            overflow-y: auto; /* Para permitir scroll si hay muchos chats */
-            flex-grow: 1; /* Ocupa el espacio restante en el sidebar */
-            scrollbar-width: thin; /* Firefox */
-            scrollbar-color: var(--accent-color) var(--secondary-color); /* Firefox */
-        }
-
-        .chat-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .chat-list::-webkit-scrollbar-track {
-            background: var(--secondary-color);
-        }
-
-        .chat-list::-webkit-scrollbar-thumb {
-            background-color: var(--accent-color);
-            border-radius: 10px;
-            border: 2px solid var(--secondary-color);
-        }
-
-        .chat-list li {
-            padding: 10px 15px;
-            border-radius: var(--border-radius);
-            margin-bottom: 8px; /* Más espacio entre elementos */
-            cursor: pointer;
-            background-color: #2c343c;
-            color: var(--text-color-secondary);
-            transition: background-color var(--transition), color var(--transition), transform 0.2s ease, box-shadow 0.2s ease;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            justify-content: space-between; /* Para separar el texto de los íconos */
-            gap: 8px; /* Espacio para el ícono de chat */
-            position: relative; /* Para posicionar los íconos de acción */
-        }
-
-        .chat-list li .chat-title-content {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .chat-list li .material-symbols-outlined {
-            font-size: 1.1em;
-            color: var(--text-color-secondary);
-            flex-shrink: 0;
-        }
-
-        .chat-list li:hover {
-            background-color: #3f4a56; /* Un gris más claro al pasar el ratón */
-            color: var(--text-color-primary);
-            transform: translateX(5px); /* Pequeño desplazamiento a la derecha */
-            box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.2); /* Resplandor sutil */
-        }
-
-        .chat-list li:hover .material-symbols-outlined {
-            color: var(--text-color-primary);
-        }
-
-        .chat-list li.active {
-            background-color: var(--accent-color); /* Cian para el chat activo */
-            color: var(--text-color-primary);
-            font-weight: 500;
-            box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.3), 0 0 15px rgba(var(--accent-color-rgb), 0.5); /* Resplandor más fuerte */
-            transform: scale(1.02); /* Ligeramente más grande */
-        }
-
-        .chat-list li.active .material-symbols-outlined {
-            color: var(--text-color-primary);
-        }
-
-        /* Estilos para los íconos de acción (editar/borrar) */
-        .chat-list li .chat-actions {
-            display: none; /* Ocultos por defecto */
-            gap: 5px;
-            flex-shrink: 0;
-        }
-        .chat-list li:hover .chat-actions,
-        .chat-list li.active .chat-actions { /* Mostrar también cuando está activo */
-            display: flex;
-        }
-
-        .chat-list li .chat-actions .material-symbols-outlined {
-            font-size: 1em;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 5px;
-            transition: background-color 0.2s ease, transform 0.2s ease;
-        }
-
-        .chat-list li .chat-actions .material-symbols-outlined:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            transform: scale(1.1);
-        }
-        
-        .chat-list li .chat-actions .material-symbols-outlined.delete-icon:hover {
-            color: var(--error-color);
-            background-color: rgba(244, 67, 54, 0.2);
-        }
-        
-        .chat-list li .chat-actions .material-symbols-outlined.edit-icon:hover {
-            color: #ffeb3b; /* Amarillo para editar */
-            background-color: rgba(255, 235, 59, 0.2);
-        }
-
-        /* Estilo para el input de edición del título */
-        .chat-list li .edit-title-input {
-            background-color: #444d57;
-            border: 1px solid var(--accent-color);
-            color: var(--text-color-primary);
-            border-radius: 5px;
-            padding: 5px 8px;
-            font-size: 1em;
-            flex-grow: 1;
-            margin-right: 5px;
-            outline: none;
-        }
-
-
-        /* Contenedor principal del chat */
-        .chat-container {
-            background-color: var(--primary-color);
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            flex-grow: 1; /* Ocupa el espacio restante */
-            margin: 20px;
-            border: 1px solid #333a40;
-            position: relative; /* Para posicionar el welcome-screen y el input-area centrado */
-        }
-
-        /* Encabezado del chat */
-        .chat-header {
-            background-color: var(--secondary-color);
-            color: var(--text-color-primary);
-            padding: 15px 20px;
-            text-align: left;
-            border-bottom: 1px solid #444d57;
-            border-top-left-radius: var(--border-radius);
-            border-top-right-radius: var(--border-radius);
-            display: flex;
-            align-items: center;
-            gap: 15px; /* Espacio entre el botón y el título */
-            flex-shrink: 0; /* Evita que se encoja */
-            z-index: 20; /* Asegura que esté por encima del welcome-screen y input centrado */
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        .chat-header.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .chat-header button {
-            background: none;
-            border: none;
-            color: var(--text-color-primary);
-            font-size: 1em;
-            cursor: pointer;
-            padding: 8px 12px;
-            border-radius: var(--border-radius);
-            transition: background-color var(--transition), transform 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: 500;
-        }
-
-        .chat-header button .material-symbols-outlined {
-            font-size: 1.2em;
-        }
-
-        .chat-header button:hover {
-            background-color: #444d57;
-            transform: translateY(-1px);
-        }
-
-        .chat-header h2 {
-            margin: 0;
-            font-size: 1.5em; /* Un poco más grande */
-            font-weight: 500;
-            color: var(--accent-color);
-            text-shadow: 0 0 3px rgba(var(--accent-color-rgb), 0.3);
-        }
-
-        /* Cuerpo del chat (donde aparecen los mensajes) */
-        .chat-body {
-            padding: 20px;
-            overflow-y: auto; /* Habilita el scroll vertical */
-            flex-grow: 1; /* Ocupa todo el espacio disponible */
-            display: flex;
-            flex-direction: column;
-            gap: 15px; /* Más espacio entre mensajes */
-            scrollbar-width: thin; /* Firefox */
-            scrollbar-color: var(--accent-color) var(--primary-color); /* Firefox */
-            z-index: 10; /* Por debajo del header, por encima del welcome-screen */
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .chat-body.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            position: absolute; /* Para que no ocupe espacio cuando está oculto */
-            width: 100%;
-            height: 100%;
-        }
-
-
-        .chat-body::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .chat-body::-webkit-scrollbar-track {
-            background: var(--primary-color);
-        }
-
-        .chat-body::-webkit-scrollbar-thumb {
-            background-color: var(--accent-color);
-            border-radius: 10px;
-            border: 2px solid var(--primary-color);
-        }
-
-        /* Estilo general para los mensajes de la IA */
-        .message {
-            background-color: #2c343c;
-            color: var(--text-color-secondary);
-            border-radius: var(--border-radius);
-            padding: 12px 16px; /* Más padding */
-            word-break: break-word;
-            align-self: flex-start;
-            max-width: 75%; /* Ancho máximo del mensaje */
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            font-size: 0.98em; /* Ligeramente más grande */
-            line-height: 1.6; /* Mejor legibilidad */
-            border: 1px solid #3f4a56; /* Borde sutil */
-            animation: fadeInMessage 0.5s ease-out; /* Animación de entrada */
-            position: relative; /* Para la cola de la burbuja */
-        }
-
-        /* Cola de la burbuja de mensaje de IA */
-        .message::before {
-            content: '';
-            position: absolute;
-            left: -8px; /* Ajusta según el padding */
-            top: 10px;
-            border: 8px solid transparent;
-            border-right-color: #2c343c;
-            filter: drop-shadow(-1px 0px 1px rgba(0,0,0,0.1)); /* Sombra para la cola */
-        }
-
-        /* Estilo específico para mensajes de error */
-        .error-message {
-            background-color: #422b2b; /* Fondo rojizo oscuro */
-            color: var(--error-color);
-            border-radius: var(--border-radius);
-            padding: 12px 16px;
-            word-break: break-word;
-            align-self: flex-start;
-            max-width: 75%;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            font-size: 0.98em;
-            border: 1px solid #5a3232; /* Borde rojo */
-            animation: fadeInMessage 0.5s ease-out; /* Animación de entrada */
-            position: relative;
-        }
-        .error-message::before {
-            content: '';
-            position: absolute;
-            left: -8px;
-            top: 10px;
-            border: 8px solid transparent;
-            border-right-color: #422b2b;
-            filter: drop-shadow(-1px 0px 1px rgba(0,0,0,0.1));
-        }
-
-        /* Contenedor para mensajes de usuario (para alinear a la derecha) */
-        .user-message-container {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end; /* Alinea el contenido a la derecha */
-            max-width: 75%;
-            align-self: flex-end;
-        }
-
-        /* Estilo específico para mensajes del usuario */
-        .user-message {
-            background-color: var(--accent-color);
-            color: var(--text-color-primary);
-            border-radius: var(--border-radius);
-            padding: 12px 16px;
-            word-break: break-word;
-            box-shadow: 0 2px 6px rgba(var(--accent-color-rgb), 0.25);
-            font-size: 0.98em;
-            line-height: 1.6;
-            margin-bottom: 5px;
-            border: 1px solid var(--accent-color-hover); /* Borde acentuado */
-            animation: fadeInMessage 0.5s ease-out; /* Animación de entrada */
-            position: relative; /* Para la cola de la burbuja */
-        }
-
-        /* Cola de la burbuja de mensaje de usuario */
-        .user-message::before {
-            content: '';
-            position: absolute;
-            right: -8px; /* Ajusta según el padding */
-            top: 10px;
-            border: 8px solid transparent;
-            border-left-color: var(--accent-color);
-            filter: drop-shadow(1px 0px 1px rgba(0,0,0,0.1)); /* Sombra para la cola */
-        }
-
-        @keyframes fadeInMessage {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Indicador de carga (spinner y texto) */
-        .loading-indicator {
-            display: flex;
-            align-self: flex-start; /* Se alinea a la izquierda como un mensaje de IA */
-            margin-top: 5px;
-            align-items: center;
-            font-size: 0.85em;
-            color: var(--text-color-secondary);
-            gap: 6px;
-            padding: 12px 16px; /* Para que coincida con el padding del mensaje */
-            display: none; /* Oculto por defecto */
-            background-color: #2c343c; /* Fondo similar al mensaje de IA */
-            border-radius: var(--border-radius);
-            max-width: fit-content; /* Se ajusta al contenido */
-        }
-
-        /* Indicador de "typing" (tres puntos) */
-        .typing-indicator span {
-            animation: blink-dots 1s infinite steps(1, end);
-        }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes blink-dots {
-            0%, 60% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-
-        .loading-spinner {
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-top: 2px solid var(--accent-color);
-            border-radius: 50%;
-            width: 16px; /* Más grande */
-            height: 16px;
-            animation: spin 1s linear infinite;
-        }
-
-        /* Animación para el spinner */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Área de entrada de texto y botón de enviar */
-        .input-area {
-            padding: 15px;
-            border-top: 1px solid #444d57;
-            display: flex;
-            align-items: center;
-            background-color: var(--secondary-color);
-            border-bottom-left-radius: var(--border-radius);
-            border-bottom-right-radius: var(--border-radius);
-            flex-shrink: 0; /* Evita que se encoja */
-            z-index: 20; /* Asegura que esté por encima del welcome-screen y input centrado */
-            transition: all 0.5s ease; /* Transición para el movimiento */
-            position: relative; /* Para las sugerencias de prompt */
-        }
-
-        .input-field {
-            flex-grow: 1;
-            padding: 12px 16px; /* Más padding */
-            border: 1px solid #555e68;
-            border-radius: var(--border-radius);
-            margin-right: 12px; /* Más espacio */
-            font-size: 1em; /* Ligeramente más grande */
-            color: var(--text-color-primary);
-            background-color: #2c343c;
-            resize: none; /* Evita redimensionamiento por el usuario */
-            min-height: 40px; /* Altura mínima para una línea */
-            max-height: 120px; /* Altura máxima antes de scroll */
-            overflow-y: auto; /* Permite scroll vertical si el texto es largo */
-            line-height: 1.5;
-            transition: border-color var(--transition), box-shadow var(--transition);
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: var(--accent-color);
-            box-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.4);
-        }
-
-        .send-button {
-            background-color: var(--accent-color);
-            color: var(--text-color-primary);
-            border: none;
-            padding: 10px 15px; /* Menos padding para hacerlo más pequeño */
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 0.9em; /* Fuente más pequeña */
-            transition: background-color var(--transition), transform 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px; /* Menos espacio */
-            font-weight: 500;
-        }
-
-        .send-button .material-symbols-outlined {
-            font-size: 1.1em; /* Ajustar tamaño del ícono */
-            transition: transform 0.2s ease; /* Transición para el ícono */
-        }
-
-        .send-button:hover {
-            background-color: var(--accent-color-hover);
-            transform: translateY(-2px);
-        }
-
-        .send-button:hover .material-symbols-outlined {
-            transform: translateX(3px); /* Pequeño "vuelo" del icono */
-        }
-
-        .send-button:disabled {
-            background-color: #607d8b; /* Color gris para deshabilitado */
-            cursor: not-allowed;
-            transform: none;
-            opacity: 0.7;
-        }
-
-        /* --- Pantalla de bienvenida (New Conversation Screen) --- */
-        .welcome-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--primary-color);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-            z-index: 30; /* Aumentado para que esté por encima de TODO */
-            opacity: 1;
-            visibility: visible;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-
-        .welcome-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none; /* No permite clics cuando está oculto */
-        }
-
-        .welcome-screen h1 {
-            font-size: 3.5em; /* Título más grande */
-            color: var(--accent-color);
-            margin-bottom: 25px;
-            font-weight: 700;
-            text-shadow: 0 0 12px rgba(var(--accent-color-rgb), 0.7);
-            letter-spacing: 2px;
-        }
-
-        .welcome-screen p {
-            font-size: 1.3em;
-            color: var(--text-color-secondary);
-            margin-bottom: 30px; /* Reducido para dejar espacio a las sugerencias */
-            max-width: 700px;
-            line-height: 1.6;
-        }
-
-        /* Nuevo: Botón para empezar a chatear desde la pantalla de bienvenida */
-        .welcome-screen .start-chat-button {
-            background-color: var(--accent-color);
-            color: var(--text-color-primary);
-            border: none;
-            padding: 18px 35px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 1.4em;
-            font-weight: 700;
-            transition: background-color var(--transition), transform 0.2s ease, box-shadow var(--transition);
-            box-shadow: 0 5px 20px rgba(var(--accent-color-rgb), 0.5);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 40px; /* Espacio antes de las sugerencias */
-        }
-
-        .welcome-screen .start-chat-button .material-symbols-outlined {
-            font-size: 1.6em;
-        }
-
-        .welcome-screen .start-chat-button:hover {
-            background-color: var(--accent-color-hover);
-            transform: translateY(-4px) scale(1.03);
-            box-shadow: 0 8px 25px rgba(var(--accent-color-rgb), 0.7);
-        }
-
-        /* Contenedor para sugerencias de prompts en welcome screen */
-        .prompt-suggestions {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            max-width: 800px;
-        }
-
-        .prompt-suggestions .suggest-prompt-button {
-            background-color: #2c343c;
-            color: var(--text-color-secondary);
-            border: 1px solid #3f4a56;
-            padding: 10px 20px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .prompt-suggestions .suggest-prompt-button:hover {
-            background-color: #3f4a56;
-            border-color: var(--accent-color);
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.2);
-        }
-        
-        .prompt-suggestions .suggest-prompt-button .material-symbols-outlined {
-            font-size: 1.1em;
-            color: var(--accent-color);
-        }
-
-
-        /* --- Estilo para el input-area centrado (cuando no hay mensajes y la pantalla de bienvenida está oculta) --- */
-        /* Oculta el chat-body cuando está el input centrado */
-        .chat-container.centered-input .chat-body {
-            display: none; /* Se oculta completamente */
-        }
-
-        /* Posiciona y estiliza el input-area cuando está centrado */
-        .chat-container.centered-input .input-area {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 85%; /* Ancho apropiado para centrar */
-            max-width: 750px; /* Evitar que sea demasiado ancho */
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            flex-direction: column; /* Apila el input y el botón verticalmente */
-            gap: 20px; /* Espacio entre input y botón */
-            padding: 30px; /* Más padding */
-            z-index: 18; /* Por debajo del welcome-screen, por encima del chat-body */
-            border: none; /* Eliminar borde superior para el modo centrado */
-            background-color: var(--secondary-color); /* Fondo sólido para la caja centrada */
-            transition: all 0.5s ease; /* Transición para el movimiento */
-        }
-        
-        .chat-container.centered-input .input-area .input-field {
-            width: calc(100% - 32px); /* Ajusta por padding */
-            max-width: none; /* Asegura que el textarea ocupe el ancho completo */
-            margin-right: 0;
-            min-height: 60px; /* Más alto para el input centrado */
-            font-size: 1.1em;
-        }
-
-        .chat-container.centered-input .input-area .send-button {
-            width: 100%; /* El botón ocupa todo el ancho */
-            padding: 15px 20px; /* Más padding para el botón centrado */
-            font-size: 1.1em;
-        }
-        
-        /* Asegurarse de que el input-area no se muestre como parte del layout principal si la welcome-screen está visible */
-        .welcome-screen:not(.hidden) ~ .input-area {
-            display: none !important;
-        }
-
-        /* --- Sugerencias de prompt debajo del input (cuando el chat está activo) --- */
-        .dynamic-prompt-suggestions {
-            position: absolute;
-            bottom: calc(100% + 10px); /* Posicionado encima del input-area */
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 30px); /* Ancho del input-area - padding */
-            max-width: 750px;
-            background-color: var(--secondary-color);
-            border-radius: var(--border-radius);
-            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
-            padding: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            opacity: 0;
-            visibility: hidden;
-            transform-origin: bottom;
-            animation: slideUpFadeIn 0.3s ease forwards;
-            z-index: 10; /* Para que esté sobre el chat-body si es necesario */
-        }
-        .dynamic-prompt-suggestions.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            animation: none; /* Desactivar animación si está oculto */
-        }
-
-        @keyframes slideUpFadeIn {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-        
-        .dynamic-prompt-suggestions .suggest-item {
-            background-color: #2c343c;
-            color: var(--text-color-secondary);
-            border: 1px solid #3f4a56;
-            padding: 8px 12px;
-            border-radius: 20px; /* Más redondeado para parecer "tags" */
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .dynamic-prompt-suggestions .suggest-item:hover {
-            background-color: #3f4a56;
-            border-color: var(--accent-color);
-            transform: translateY(-2px);
-        }
-        .dynamic-prompt-suggestions .suggest-item .material-symbols-outlined {
-            font-size: 1em;
-            color: var(--accent-color);
-        }
-
-
-        /* Ajustes para pantallas pequeñas */
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column;
-                overflow-y: auto; /* Permitir scroll en el body si es necesario */
-            }
-
-            .sidebar {
-                width: 100%;
-                min-height: auto;
-                border-right: none;
-                border-bottom: 1px solid #444d57;
-                padding: 15px 20px;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-                transition: height 0.3s ease; /* Transición para colapsar/expandir */
-            }
-
-            .sidebar-header {
-                margin-bottom: 15px;
-            }
-
-            .new-chat-button {
-                width: auto; /* El botón puede ser más pequeño en móvil */
-                align-self: center; /* Centrar en el sidebar */
-                padding: 10px 15px;
-            }
-
-            .chat-list-title {
-                display: none; /* Ocultar el título del historial en móvil */
-            }
-
-            .chat-list {
-                display: flex; /* Mostrar historial horizontalmente si cabe */
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 8px;
-                overflow-x: auto; /* Scroll horizontal si hay muchos */
-                padding-bottom: 10px;
-                scrollbar-width: none; /* Ocultar scrollbar de Firefox */
-            }
-            .chat-list::-webkit-scrollbar {
-                display: none; /* Ocultar scrollbar de Webkit */
-            }
-
-            .chat-list li {
-                flex-shrink: 0; /* No se encogen */
-                width: auto; /* Ancho automático para los ítems */
-                max-width: 150px; /* Limitar el ancho */
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                padding: 8px 12px;
-                margin-bottom: 0; /* Eliminar margen vertical */
-            }
-
-            .chat-container {
-                margin: 15px;
-                width: calc(100% - 30px); /* Ajustar el ancho */
-                flex-grow: 1; /* Ocupar el resto del espacio vertical */
-            }
-
-            .chat-header {
-                padding: 12px 15px;
-            }
-
-            .chat-header h2 {
-                font-size: 1.2em;
-            }
-
-            .chat-body {
-                padding: 15px;
-                gap: 10px;
-            }
-
-            .message, .user-message, .error-message {
-                padding: 10px 14px;
-                font-size: 0.9em;
-                max-width: 90%; /* Más ancho en pantallas pequeñas */
-            }
-            .message::before, .user-message::before, .error-message::before {
-                left: -6px; /* Ajuste de cola */
-                right: -6px; /* Ajuste de cola */
-                border-width: 6px;
-            }
-
-            .input-area {
-                padding: 10px;
-                flex-direction: row; /* Volver a una fila si es posible */
-                flex-wrap: wrap; /* Permitir que los elementos se envuelvan */
-                gap: 8px;
-            }
-
-            .input-field {
-                padding: 10px 12px;
-                margin-right: 0; /* Eliminar margen derecho si el botón está debajo */
-                width: 100%; /* Ocupar todo el ancho disponible */
-                min-height: 35px;
-                font-size: 0.95em;
-            }
-
-            .send-button {
-                width: 100%; /* Ocupar todo el ancho disponible */
-                padding: 8px 12px;
-                font-size: 0.9em;
-            }
-            
-            /* Ajustes para la pantalla de bienvenida en móvil */
-            .welcome-screen h1 {
-                font-size: 2.5em;
-                margin-bottom: 15px;
-            }
-            .welcome-screen p {
-                font-size: 1em;
-                margin-bottom: 20px;
-            }
-            .welcome-screen .start-chat-button {
-                padding: 15px 25px;
-                font-size: 1.2em;
-                margin-bottom: 25px;
-            }
-            .prompt-suggestions {
-                flex-direction: column;
-                max-width: 90%;
-            }
-            .prompt-suggestions .suggest-prompt-button {
-                width: 100%;
-            }
-
-            /* Ajustes para el input centrado en móvil */
-            .chat-container.centered-input .input-area {
-                width: calc(100% - 30px);
-                padding: 20px;
-                gap: 15px;
-            }
-            .chat-container.centered-input .input-area .input-field {
-                min-height: 50px;
-                font-size: 1em;
-            }
-            .chat-container.centered-input .input-area .send-button {
-                font-size: 1em;
-            }
-
-            .dynamic-prompt-suggestions {
-                width: calc(100% - 20px); /* Ajustar por padding del input-area */
-                left: 50%; /* Mantener centrado */
-                transform: translateX(-50%);
-                padding: 8px;
-                gap: 6px;
-            }
-            .dynamic-prompt-suggestions .suggest-item {
-                font-size: 0.85em;
-                padding: 6px 10px;
-            }
-
-            /* Esconder sidebar si no es necesario (por ejemplo, con un botón de toggle) */
-            /* Esto es un ejemplo, se necesitaría JS para manejarlo */
-            .sidebar.collapsed {
-                width: 0;
-                padding: 0;
-                overflow: hidden;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <span class="material-symbols-outlined icon">smart_toy</span>
-            <h2>Amside AI</h2>
-        </div>
-        <button class="new-chat-button" id="new-chat-button">
-            <span class="material-symbols-outlined">add_comment</span>
-            Nueva Conversación
-        </button>
-        <div class="chat-list-title">Historial</div>
-        <ul class="chat-list" id="chat-list">
-            </ul>
-    </div>
-
-    <div class="chat-container" id="chat-container">
-        <div class="welcome-screen" id="welcome-screen">
-            <h1>Bienvenido a Amside AI</h1>
-            <p>Soy tu asistente personal impulsado por IA, diseñado para ayudarte a explorar conceptos complejos, aprender más rápido y mantener conversaciones estimulantes.</p>
-            <button class="start-chat-button" id="start-chat-button">
-                <span class="material-symbols-outlined">chat</span>
-                Empezar a Chatear
-            </button>
-            <div class="prompt-suggestions">
-                <button class="suggest-prompt-button" data-prompt="Explícame la teoría de la relatividad especial.">
-                    <span class="material-symbols-outlined">lightbulb</span>
-                    Relatividad Especial
-                </button>
-                <button class="suggest-prompt-button" data-prompt="¿Cómo funciona la IA generativa?">
-                    <span class="material-symbols-outlined">auto_awesome</span>
-                    IA Generativa
-                </button>
-                <button class="suggest-prompt-button" data-prompt="Dame consejos para mejorar mis hábitos de estudio.">
-                    <span class="material-symbols-outlined">school</span>
-                    Hábitos de Estudio
-                </button>
-                <button class="suggest-prompt-button" data-prompt="¿Cuál es la importancia de la ciberseguridad hoy en día?">
-                    <span class="material-symbols-outlined">security</span>
-                    Ciberseguridad
-                </button>
-            </div>
-        </div>
-
-        <div class="chat-header" id="chat-header">
-            <button id="back-to-history-button">
-                <span class="material-symbols-outlined">arrow_back</span>
-                Historial
-            </button>
-            <h2 id="current-chat-title">Nueva Conversación</h2>
-        </div>
-
-        <div class="chat-body" id="chat-box">
-            </div>
-
-        <div class="input-area" id="input-area">
-            <div class="dynamic-prompt-suggestions" id="dynamic-prompt-suggestions">
-                </div>
-            <textarea id="user-input" class="input-field" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
-            <button id="send-button" class="send-button">
-                <span class="material-symbols-outlined">send</span>
-                Enviar
-            </button>
-        </div>
-    </div>
-
-    <script>
-        // --- Variables y elementos del DOM ---
-        const chatBox = document.getElementById('chat-box');
-        const userInput = document.getElementById('user-input');
-        const sendButton = document.getElementById('send-button');
-        const newChatButton = document.getElementById('new-chat-button');
-        const chatList = document.getElementById('chat-list');
-        const welcomeScreen = document.getElementById('welcome-screen');
-        const startChatButton = document.getElementById('start-chat-button');
-        const chatHeader = document.getElementById('chat-header');
-        const currentChatTitle = document.getElementById('current-chat-title');
-        const backToHistoryButton = document.getElementById('back-to-history-button');
-        const chatContainer = document.getElementById('chat-container');
-        const promptSuggestionButtons = document.querySelectorAll('.prompt-suggestions .suggest-prompt-button');
-        const dynamicPromptSuggestions = document.getElementById('dynamic-prompt-suggestions');
-
-        let currentChatId = null; // ID del chat actual (null para nueva conversación)
-        let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || {}; // { chatId: { title: "", messages: [] } }
-        let currentMessages = []; // Mensajes del chat actual
-
-        // --- Funciones de Utilidad ---
-
-        // Función para ajustar la altura del textarea dinámicamente
-        function adjustTextareaHeight() {
-            userInput.style.height = 'auto'; // Resetear la altura
-            userInput.style.height = Math.min(userInput.scrollHeight, 120) + 'px'; // Ajustar hasta 120px
-        }
-
-        // Función para mostrar mensajes en la UI
-        function addMessage(sender, text, isError = false) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'ai'}`;
-            if (isError) {
-                messageDiv.classList.add('error-message');
-                messageDiv.textContent = text; // Para errores, el texto es simple
-            } else {
-                messageDiv.textContent = text;
-            }
-            
-            // Si es un mensaje de usuario, lo envolvemos en un contenedor para alineación
-            if (sender === 'user') {
-                const userMessageContainer = document.createElement('div');
-                userMessageContainer.className = 'user-message-container';
-                userMessageContainer.appendChild(messageDiv);
-                chatBox.appendChild(userMessageContainer);
-            } else {
-                chatBox.appendChild(messageDiv);
-            }
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll al final
-            return messageDiv; // Devuelve el div del mensaje para futuras actualizaciones
-        }
-
-        // Función para mostrar errores en la UI
-        function displayError(message) {
-            addMessage('error', message, true); // Usamos la misma función, marcando como error
-        }
-
-        // Función para mostrar/ocultar el indicador de carga
-        let loadingIndicatorDiv = null;
-        function showLoadingIndicator() {
-            if (!loadingIndicatorDiv) {
-                loadingIndicatorDiv = document.createElement('div');
-                loadingIndicatorDiv.className = 'loading-indicator message';
-                loadingIndicatorDiv.innerHTML = `
-                    <div class="loading-spinner"></div>
-                    <div class="typing-indicator"><span>.</span><span>.</span><span>.</span></div>
-                `;
-                chatBox.appendChild(loadingIndicatorDiv);
-            }
-            loadingIndicatorDiv.style.display = 'flex'; // Mostrar el indicador
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function hideLoadingIndicator() {
-            if (loadingIndicatorDiv) {
-                loadingIndicatorDiv.style.display = 'none'; // Ocultar el indicador
-            }
-        }
-
-        // Función para cargar el historial de chats del localStorage
-        function loadChatList() {
-            chatList.innerHTML = ''; // Limpiar lista actual
-            const sortedChatIds = Object.keys(chatHistory).sort((a, b) => {
-                const lastMessageA = chatHistory[a].messages[chatHistory[a].messages.length - 1];
-                const lastMessageB = chatHistory[b].messages[chatHistory[b].messages.length - 1];
-                return (lastMessageB?.timestamp || 0) - (lastMessageA?.timestamp || 0);
-            });
-
-            sortedChatIds.forEach(id => {
-                const chat = chatHistory[id];
-                const li = document.createElement('li');
-                li.dataset.chatId = id;
-                li.innerHTML = `
-                    <span class="chat-title-content">
-                        <span class="material-symbols-outlined">chat_bubble</span>
-                        <span class="title-text">${chat.title}</span>
-                    </span>
-                    <div class="chat-actions">
-                        <span class="material-symbols-outlined edit-icon">edit</span>
-                        <span class="material-symbols-outlined delete-icon">delete</span>
-                    </div>
-                `;
-                
-                if (id === currentChatId) {
-                    li.classList.add('active');
-                }
-
-                li.addEventListener('click', (event) => {
-                    // Prevenir que el clic en los iconos active el chat
-                    if (event.target.classList.contains('edit-icon') || event.target.classList.contains('delete-icon')) {
-                        return;
-                    }
-                    loadChat(id);
-                });
-
-                // Event listener para editar el título
-                li.querySelector('.edit-icon').addEventListener('click', (event) => {
-                    event.stopPropagation(); // Evitar que se active el chat
-                    editChatTitle(id, li);
-                });
-
-                // Event listener para borrar el chat
-                li.querySelector('.delete-icon').addEventListener('click', (event) => {
-                    event.stopPropagation(); // Evitar que se active el chat
-                    deleteChat(id);
-                });
-
-                chatList.appendChild(li);
-            });
-        }
-
-        // Función para crear un nuevo chat
-        function newChat() {
-            currentChatId = null;
-            currentMessages = [];
-            chatBox.innerHTML = ''; // Limpiar mensajes de la UI
-            updateChatHeader('Nueva Conversación');
-            toggleChatView(true); // Mostrar chat
-            loadChatList(); // Actualizar lista de chats para desmarcar el activo
-            userInput.focus();
-        }
-
-        // Función para cargar un chat existente
-        function loadChat(chatId) {
-            currentChatId = chatId;
-            currentMessages = chatHistory[chatId].messages;
-            chatBox.innerHTML = ''; // Limpiar mensajes de la UI
-            currentMessages.forEach(msg => {
-                addMessage(msg.role, msg.content);
-            });
-            updateChatHeader(chatHistory[chatId].title);
-            toggleChatView(true); // Mostrar chat
-            loadChatList(); // Actualizar lista de chats para marcar el activo
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll al final
-            userInput.focus();
-        }
-
-        // Función para guardar el chat actual
-        function saveChat() {
-            if (currentMessages.length === 0) return; // No guardar chats vacíos
-
-            if (!currentChatId) {
-                // Si es un chat nuevo, generar un ID y un título
-                currentChatId = Date.now().toString(); // ID único basado en timestamp
-                // Intentar generar un título basado en el primer mensaje de usuario
-                const firstUserMessage = currentMessages.find(msg => msg.role === 'user');
-                const defaultTitle = firstUserMessage ? firstUserMessage.content.substring(0, 30) + '...' : 'Conversación sin título';
-                chatHistory[currentChatId] = {
-                    title: defaultTitle,
-                    messages: currentMessages
-                };
-            } else {
-                // Actualizar mensajes y timestamp del chat existente
-                chatHistory[currentChatId].messages = currentMessages;
-                const lastMessage = currentMessages[currentMessages.length - 1];
-                if (lastMessage) {
-                    lastMessage.timestamp = Date.now(); // Actualizar timestamp del último mensaje para ordenar
-                }
-            }
-            localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-            loadChatList(); // Recargar la lista para que se muestre el nuevo/actualizado chat
-        }
-
-        // Función para editar el título del chat
-        function editChatTitle(chatId, listItem) {
-            const currentTitleSpan = listItem.querySelector('.title-text');
-            const currentTitle = currentTitleSpan.textContent;
-
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'edit-title-input';
-            input.value = currentTitle;
-
-            // Reemplazar el span del título con el input
-            const chatTitleContent = listItem.querySelector('.chat-title-content');
-            chatTitleContent.replaceChild(input, currentTitleSpan);
-            input.focus();
-
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    input.blur(); // Perder el foco para guardar
-                }
-            });
-
-            input.addEventListener('blur', () => {
-                const newTitle = input.value.trim();
-                if (newTitle && newTitle !== currentTitle) {
-                    chatHistory[chatId].title = newTitle;
-                    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-                    currentTitleSpan.textContent = newTitle; // Actualizar el span original
-                    if (chatId === currentChatId) {
-                        currentChatTitle.textContent = newTitle; // Actualizar el título del encabezado si es el chat activo
-                    }
-                } else {
-                    currentTitleSpan.textContent = currentTitle; // Restaurar el título original si está vacío o es igual
-                }
-                chatTitleContent.replaceChild(currentTitleSpan, input); // Reemplazar el input con el span
-                loadChatList(); // Recargar por si el orden ha cambiado al actualizar
-            });
-        }
-
-        // Función para borrar un chat
-        function deleteChat(chatId) {
-            if (confirm('¿Estás seguro de que quieres eliminar esta conversación?')) {
-                delete chatHistory[chatId];
-                localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
-                loadChatList();
-                if (chatId === currentChatId) {
-                    newChat(); // Si se borra el chat actual, iniciar una nueva conversación
-                }
-            }
-        }
-
-        // Función para actualizar el título del encabezado del chat
-        function updateChatHeader(title) {
-            currentChatTitle.textContent = title;
-        }
-
-        // Función para mostrar/ocultar la vista de chat vs. pantalla de bienvenida
-        function toggleChatView(showChat) {
-            if (showChat) {
-                welcomeScreen.classList.add('hidden');
-                chatContainer.classList.remove('centered-input');
-                chatHeader.classList.remove('hidden');
-                chatBox.classList.remove('hidden');
-                // userInput y sendButton se muestran/ocultan por el contenedor input-area,
-                // que es gestionado por la clase centered-input en chat-container.
-                // Si hay mensajes, aseguramos que el input-area no esté centrado
-                if (currentMessages.length > 0) {
-                     chatContainer.classList.remove('centered-input');
-                } else {
-                     // Si no hay mensajes, y venimos de la bienvenida, centramos el input
-                     chatContainer.classList.add('centered-input');
-                }
-            } else {
-                welcomeScreen.classList.remove('hidden');
-                chatContainer.classList.add('centered-input'); // Siempre centrar input si no hay chat activo o no hay mensajes
-                chatHeader.classList.add('hidden');
-                chatBox.classList.add('hidden');
-            }
-        }
-
-        // --- Lógica principal para enviar mensajes (con streaming) ---
-        async function sendMessage() {
-            const message = userInput.value.trim();
-
-            if (message === '') return;
-
-            // Añadir mensaje del usuario a la UI y al historial
-            addMessage('user', message);
-            currentMessages.push({ role: 'user', content: message, timestamp: Date.now() });
-            userInput.value = ''; // Limpiar input
-            adjustTextareaHeight(); // Ajustar altura tras limpiar
-
-            // Guardar el chat inmediatamente después del mensaje del usuario
-            saveChat();
-
-            // Ocultar sugerencias dinámicas
-            dynamicPromptSuggestions.classList.add('hidden');
-
-            // Mostrar indicador de carga
-            showLoadingIndicator();
-            userInput.disabled = true; // Deshabilitar input
-            sendButton.disabled = true; // Deshabilitar botón de enviar
-
-            // Preparar el div del mensaje de la IA para streaming
-            const aiMessageDiv = document.createElement('div');
-            aiMessageDiv.className = 'message ai';
-            aiMessageDiv.style.backgroundColor = '#2c343c'; // Estilo base
-            const aiTextSpan = document.createElement('span'); // Span para actualizar el texto
-            aiMessageDiv.appendChild(aiTextSpan);
-            chatBox.appendChild(aiMessageDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            let fullAiResponse = ''; // Para almacenar la respuesta completa de la IA
-
-            try {
-                // La URL de tu backend en Render. Asegúrate de que sea la correcta.
-                // Por ejemplo: 'https://tu-backend-amside-ai.onrender.com/api/chat'
-                const backendUrl = '/api/chat'; // Si tu frontend y backend están en el mismo dominio o si Render gestiona la URL
-
-                const response = await fetch(backendUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ messages: currentMessages }), // Enviar todos los mensajes del chat
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `Error del servidor: ${response.status} ${response.statusText}`);
-                }
-
-                if (!response.body) {
-                    throw new Error('Error: La respuesta del servidor no es un stream o está vacía.');
-                }
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder('utf-8');
-                let done = false;
-                let buffer = ''; // Buffer para manejar chunks incompletos de SSE
-
-                while (!done) {
-                    const { value, done: readerDone } = await reader.read();
-                    done = readerDone;
-                    buffer += decoder.decode(value, { stream: !done }); // Decodificar y añadir al buffer
-
-                    // Procesar el buffer línea por línea
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop(); // La última línea puede estar incompleta, la dejamos en el buffer
-
-                    for (const line of lines) {
-                        if (line.startsWith('data:')) {
-                            const jsonPart = line.substring(5).trim(); // Quitar "data:"
-                            if (jsonPart) {
-                                try {
-                                    const data = JSON.parse(jsonPart);
-                                    if (data.token && data.token.text) {
-                                        fullAiResponse += data.token.text;
-                                        aiTextSpan.textContent = fullAiResponse; // Actualizar el span en tiempo real
-                                        chatBox.scrollTop = chatBox.scrollHeight; // Scroll al final
-                                    } else if (data.error) { // Si el backend envía un error en el stream
-                                        displayError(`Error de la IA: ${data.error}`);
-                                        done = true; // Terminar el stream en caso de error
-                                    } else if (data.generated_text !== undefined) {
-                                        // Este es el chunk final de Hugging Face si return_full_text fue true
-                                        // o para asegurar que se capture todo el texto.
-                                        // Si ya estamos reconstruyendo con 'token.text', podemos ignorar o usar para validación final.
-                                        // Asegurarse de que el texto final coincida o se use.
-                                        // Por ahora, asumimos que 'token.text' lo construye bien.
-                                    }
-                                } catch (e) {
-                                    // console.warn('Error al parsear chunk JSON:', e, jsonPart);
-                                    // Puede que el JSON esté incompleto en este chunk, se procesará en el siguiente
-                                }
-                            }
-                        }
-                    }
-                }
-                // Si hay texto restante en el buffer al final del stream
-                if (buffer.startsWith('data:')) {
-                     const jsonPart = buffer.substring(5).trim();
-                     if (jsonPart) {
-                         try {
-                             const data = JSON.parse(jsonPart);
-                             if (data.token && data.token.text) {
-                                 fullAiResponse += data.token.text;
-                                 aiTextSpan.textContent = fullAiResponse;
-                                 chatBox.scrollTop = chatBox.scrollTop;
-                             } else if (data.error) {
-                                 displayError(`Error de la IA: ${data.error}`);
-                             }
-                         } catch (e) {
-                             // console.warn('Error final al parsear chunk JSON:', e, jsonPart);
-                         }
-                     }
-                }
-
-                // Asegurar que el texto final esté presente
-                aiTextSpan.textContent = fullAiResponse;
-
-                // Añadir respuesta completa al historial
-                currentMessages.push({ role: 'assistant', content: fullAiResponse, timestamp: Date.now() });
-                saveChat(); // Guardar el chat con la respuesta de la IA
-
-            } catch (error) {
-                console.error('Error al obtener respuesta de la IA:', error);
-                displayError(`Error al obtener respuesta de la IA: ${error.message}. Por favor, inténtalo de nuevo.`);
-                // Si hubo un error, eliminar el div del mensaje de IA vacío si no se llenó
-                if (fullAiResponse === '' && aiMessageDiv.parentNode) {
-                    aiMessageDiv.parentNode.removeChild(aiMessageDiv);
-                }
-            } finally {
-                hideLoadingIndicator(); // Ocultar indicador de carga
-                userInput.disabled = false; // Habilitar input
-                sendButton.disabled = false; // Habilitar botón de enviar
-                userInput.focus(); // Volver a enfocar el input
-                // Si el chat ahora tiene mensajes, asegurar que no está centrado
-                if (currentMessages.length > 0) {
-                    chatContainer.classList.remove('centered-input');
-                }
-            }
-        }
-
-        // --- Gestión de Sugerencias Dinámicas ---
-        const commonSuggestions = [
-            "¿Qué es la computación cuántica?",
-            "Explícame la teoría de la relatividad.",
-            "Dame un resumen de la historia de la inteligencia artificial.",
-            "¿Cuáles son los principios de la programación orientada a objetos?",
-            "Háblame sobre la importancia de la educación en el futuro.",
-            "¿Cómo puedo mejorar mi memoria y concentración?",
-            "Consejos para aprender un nuevo idioma.",
-            "¿Qué es el aprendizaje automático y cómo funciona?",
-            "Definición y ejemplos de energía renovable.",
-            "¿Cuál es el proceso de desarrollo de software?"
-        ];
-
-        function displayDynamicSuggestions() {
-            dynamicPromptSuggestions.innerHTML = ''; // Limpiar sugerencias anteriores
-            const filteredSuggestions = commonSuggestions.filter(s =>
-                s.toLowerCase().includes(userInput.value.toLowerCase()) && !userInput.value.trim().endsWith(s)
-            ).slice(0, 5); // Mostrar hasta 5 sugerencias relevantes
-
-            if (userInput.value.trim() !== '' && filteredSuggestions.length > 0) {
-                dynamicPromptSuggestions.classList.remove('hidden');
-                filteredSuggestions.forEach(suggestion => {
-                    const button = document.createElement('button');
-                    button.className = 'suggest-item';
-                    button.innerHTML = `<span class="material-symbols-outlined">lightbulb</span> ${suggestion}`;
-                    button.onclick = () => {
-                        userInput.value = suggestion;
-                        adjustTextareaHeight();
-                        dynamicPromptSuggestions.classList.add('hidden'); // Ocultar después de seleccionar
-                        userInput.focus();
-                    };
-                    dynamicPromptSuggestions.appendChild(button);
-                });
-            } else {
-                dynamicPromptSuggestions.classList.add('hidden');
-            }
-        }
-
-        // --- Event Listeners ---
-        sendButton.addEventListener('click', sendMessage);
-        userInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault(); // Prevenir salto de línea
-                sendMessage();
-            }
-        });
-        userInput.addEventListener('input', () => {
-            adjustTextareaHeight();
-            displayDynamicSuggestions(); // Mostrar sugerencias dinámicas al escribir
-        });
-        userInput.addEventListener('focus', () => {
-            displayDynamicSuggestions(); // Mostrar sugerencias al enfocar
-        });
-        userInput.addEventListener('blur', () => {
-            // Un pequeño retraso para permitir clics en las sugerencias antes de ocultar
-            setTimeout(() => {
-                dynamicPromptSuggestions.classList.add('hidden');
-            }, 100);
-        });
-
-        newChatButton.addEventListener('click', newChat);
-        startChatButton.addEventListener('click', newChat); // Botón "Empezar a Chatear" hace lo mismo
-
-        // Asignar eventos a los botones de sugerencia de la pantalla de bienvenida
-        promptSuggestionButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const prompt = button.dataset.prompt;
-                userInput.value = prompt;
-                adjustTextareaHeight();
-                newChat(); // Inicia un nuevo chat
-                sendMessage(); // Envía el prompt
-            });
-        });
-
-        backToHistoryButton.addEventListener('click', () => {
-            if (currentMessages.length > 0) { // Si hay mensajes en el chat actual, guardarlo antes de volver
-                saveChat();
-            }
-            toggleChatView(false); // Volver a la pantalla de bienvenida/historial
-            loadChatList(); // Asegurar que la lista esté actualizada
-        });
-
-        // --- Inicialización ---
-        document.addEventListener('DOMContentLoaded', () => {
-            loadChatList();
-            // Si no hay chats guardados, o el último chat está vacío, mostrar pantalla de bienvenida
-            if (Object.keys(chatHistory).length === 0 || currentMessages.length === 0) {
-                toggleChatView(false); // Mostrar pantalla de bienvenida
-            } else {
-                // Si hay chats, cargar el último modificado
-                const sortedChatIds = Object.keys(chatHistory).sort((a, b) => {
-                    const lastMessageA = chatHistory[a].messages[chatHistory[a].messages.length - 1];
-                    const lastMessageB = chatHistory[b].messages[chatHistory[b].messages.length - 1];
-                    return (lastMessageB?.timestamp || 0) - (lastMessageA?.timestamp || 0);
-                });
-                if (sortedChatIds.length > 0) {
-                    loadChat(sortedChatIds[0]);
-                } else {
-                    toggleChatView(false); // Si no hay chats, volver a la pantalla de bienvenida
-                }
-            }
-            adjustTextareaHeight(); // Ajustar altura inicial del textarea
-        });
-
-    </script>
-</body>
-</html>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Amside AI - Interfaz con IA Real</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+    <style>
+
+        /* Variables CSS para facilitar la gestión de colores y estilos */
+
+        :root {
+
+            --primary-color: #22272b; /* Fondo oscuro principal */
+
+            --secondary-color: #37404a; /* Gris oscuro para barras y elementos */
+
+            --accent-color: #00bcd4; /* Cian para elementos interactivos */
+
+            --accent-color-hover: #00838f; /* Cian más oscuro al pasar el ratón */
+
+            --text-color-primary: #eee; /* Texto claro principal */
+
+            --text-color-secondary: #ccc; /* Texto gris claro secundario */
+
+            --text-color-dark: #333; /* Para elementos sobre fondos claros si los hubiera */
+
+            --error-color: #f44336; /* Rojo para mensajes de error */
+
+            --border-radius: 10px; /* Bordes redondeados ligeramente más grandes */
+
+            --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Sombra para profundidad */
+
+            --transition: all 0.3s ease-in-out; /* Transiciones suaves */
+
+            --sidebar-width: 300px; /* Ancho del sidebar */
+
+            --accent-color-rgb: 0, 188, 212; /* Color cian en RGB para sombras */
+
+            --glitch-color-1: #ff00c1; /* Color para efecto glitch 1 (si se vuelve a usar) */
+
+            --glitch-color-2: #00ffff; /* Color para efecto glitch 2 (si se vuelve a usar) */
+
+        }
+
+
+
+        /* Estilos generales del cuerpo de la página */
+
+        body {
+
+            font-family: 'Roboto Mono', monospace; /* Fuente estilo consola */
+
+            background-color: var(--primary-color);
+
+            color: var(--text-color-primary);
+
+            margin: 0;
+
+            display: flex; /* Contenedor principal usa flexbox */
+
+            min-height: 100vh; /* Altura mínima del viewport */
+
+            padding: 0;
+
+            overflow: hidden; /* Evita scroll no deseado en el body */
+
+            /* Animación de fondo sutil (partículas o gradiente pulsante) */
+
+            background-image: radial-gradient(circle at top left, rgba(var(--accent-color-rgb), 0.1) 0%, transparent 50%),
+
+                              radial-gradient(circle at bottom right, rgba(var(--glitch-color-2), 0.1) 0%, transparent 50%);
+
+            background-size: 200% 200%;
+
+            animation: gradient-shift 15s ease infinite alternate;
+
+        }
+
+
+
+        @keyframes gradient-shift {
+
+            0% { background-position: 0% 0%; }
+
+            100% { background-position: 100% 100%; }
+
+        }
+
+
+
+        /* Estilos del sidebar (barra lateral izquierda) */
+
+        .sidebar {
+
+            background-color: var(--secondary-color);
+
+            width: var(--sidebar-width);
+
+            border-right: 1px solid #444d57; /* Separador */
+
+            padding: 25px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: flex-start;
+
+            flex-shrink: 0; /* No se encoge */
+
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 15px rgba(var(--accent-color-rgb), 0.2); /* Sombra más compleja */
+
+            z-index: 10; /* Para que esté por encima de otros elementos si hay solapamiento */
+
+            transition: width var(--transition); /* Para redimensionamiento dinámico */
+
+        }
+
+
+
+        .sidebar-header {
+
+            color: var(--text-color-primary);
+
+            margin-bottom: 30px;
+
+            text-align: left;
+
+            width: 100%;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px; /* Espacio entre el ícono y el texto */
+
+        }
+
+
+
+        .sidebar-header .icon {
+
+            font-size: 2.5em; /* Tamaño del ícono, un poco más grande */
+
+            color: var(--accent-color);
+
+            text-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.7); /* Efecto neón más marcado */
+
+            position: relative;
+
+            /* Eliminada la animación 'pulse-icon' */
+
+        }
+
+
+
+        .sidebar-header h2 {
+
+            margin: 0;
+
+            font-size: 2em; /* Fuente más grande */
+
+            font-weight: 700; /* Más audaz */
+
+            background: linear-gradient(45deg, var(--accent-color), #00e5ff); /* Degradado en el texto */
+
+            -webkit-background-clip: text;
+
+            -webkit-text-fill-color: transparent;
+
+            text-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.6); /* Sombra para el texto */
+
+            position: relative;
+
+            /* Eliminadas las animaciones 'glitch-anim' */
+
+        }
+
+
+
+        /* Eliminadas las reglas para h2::before y h2::after para quitar el glitch */
+
+        /* Eliminado @keyframes glitch-anim-1 y glitch-anim-2 */
+
+        /* Eliminado @keyframes pulse-icon */
+
+
+
+        /* Estilo del botón "Nueva Conversación" */
+
+        .new-chat-button {
+
+            background-color: var(--accent-color);
+
+            color: var(--text-color-primary);
+
+            border: none;
+
+            padding: 12px 18px;
+
+            border-radius: var(--border-radius);
+
+            cursor: pointer;
+
+            font-size: 1.05em; /* Un poco más grande */
+
+            margin-bottom: 20px;
+
+            transition: background-color var(--transition), transform 0.2s ease, box-shadow var(--transition);
+
+            width: 100%;
+
+            text-align: left;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: flex-start;
+
+            font-weight: 500;
+
+            box-shadow: 0 4px 10px rgba(var(--accent-color-rgb), 0.3);
+
+            position: relative; /* Para el efecto de onda */
+
+            overflow: hidden; /* Para que la onda no se salga */
+
+        }
+
+
+
+        .new-chat-button .material-symbols-outlined {
+
+            margin-right: 10px;
+
+            font-size: 1.2em;
+
+            transition: transform 0.2s ease; /* Transición para el icono */
+
+        }
+
+
+
+        .new-chat-button:hover {
+
+            background-color: var(--accent-color-hover);
+
+            transform: translateY(-2px); /* Pequeño efecto de elevación */
+
+            box-shadow: 0 6px 15px rgba(var(--accent-color-rgb), 0.4);
+
+        }
+
+
+
+        .new-chat-button:hover .material-symbols-outlined {
+
+            transform: rotate(15deg); /* Pequeña rotación del icono */
+
+        }
+
+
+
+        /* Efecto de onda al clickear el botón */
+
+        .new-chat-button.clicked::after {
+
+            content: '';
+
+            position: absolute;
+
+            width: 100%;
+
+            height: 100%;
+
+            background-color: rgba(255, 255, 255, 0.2);
+
+            border-radius: 50%;
+
+            top: 50%;
+
+            left: 50%;
+
+            transform: translate(-50%, -50%) scale(0);
+
+            opacity: 1;
+
+            animation: click-wave 0.6s forwards;
+
+        }
+
+
+
+        @keyframes click-wave {
+
+            to {
+
+                transform: translate(-50%, -50%) scale(2);
+
+                opacity: 0;
+
+            }
+
+        }
+
+
+
+        /* Título del historial de chat */
+
+        .chat-list-title {
+
+            font-size: 0.95em; /* Ligeramente más grande */
+
+            color: var(--text-color-secondary);
+
+            margin-bottom: 12px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px; /* Más espacio entre letras */
+
+            font-weight: 500;
+
+            padding-bottom: 5px;
+
+            border-bottom: 1px dashed rgba(var(--accent-color-rgb), 0.3); /* Línea punteada */
+
+            width: 100%;
+
+        }
+
+
+
+        /* Lista de chats en el historial */
+
+        .chat-list {
+
+            list-style: none;
+
+            padding: 0;
+
+            margin: 0;
+
+            width: 100%;
+
+            overflow-y: auto; /* Para permitir scroll si hay muchos chats */
+
+            flex-grow: 1; /* Ocupa el espacio restante en el sidebar */
+
+            scrollbar-width: thin; /* Firefox */
+
+            scrollbar-color: var(--accent-color) var(--secondary-color); /* Firefox */
+
+        }
+
+
+
+        .chat-list::-webkit-scrollbar {
+
+            width: 8px;
+
+        }
+
+
+
+        .chat-list::-webkit-scrollbar-track {
+
+            background: var(--secondary-color);
+
+        }
+
+
+
+        .chat-list::-webkit-scrollbar-thumb {
+
+            background-color: var(--accent-color);
+
+            border-radius: 10px;
+
+            border: 2px solid var(--secondary-color);
+
+        }
+
+
+
+        .chat-list li {
+
+            padding: 10px 15px;
+
+            border-radius: var(--border-radius);
+
+            margin-bottom: 8px; /* Más espacio entre elementos */
+
+            cursor: pointer;
+
+            background-color: #2c343c;
+
+            color: var(--text-color-secondary);
+
+            transition: background-color var(--transition), color var(--transition), transform 0.2s ease, box-shadow 0.2s ease;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+
+            white-space: nowrap;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between; /* Para separar el texto de los íconos */
+
+            gap: 8px; /* Espacio para el ícono de chat */
+
+            position: relative; /* Para posicionar los íconos de acción */
+
+        }
+
+
+
+        .chat-list li .chat-title-content {
+
+            flex-grow: 1;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+
+            white-space: nowrap;
+
+        }
+
+
+
+        .chat-list li .material-symbols-outlined {
+
+            font-size: 1.1em;
+
+            color: var(--text-color-secondary);
+
+            flex-shrink: 0;
+
+        }
+
+
+
+        .chat-list li:hover {
+
+            background-color: #3f4a56; /* Un gris más claro al pasar el ratón */
+
+            color: var(--text-color-primary);
+
+            transform: translateX(5px); /* Pequeño desplazamiento a la derecha */
+
+            box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.2); /* Resplandor sutil */
+
+        }
+
+
+
+        .chat-list li:hover .material-symbols-outlined {
+
+            color: var(--text-color-primary);
+
+        }
+
+
+
+        .chat-list li.active {
+
+            background-color: var(--accent-color); /* Cian para el chat activo */
+
+            color: var(--text-color-primary);
+
+            font-weight: 500;
+
+            box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.3), 0 0 15px rgba(var(--accent-color-rgb), 0.5); /* Resplandor más fuerte */
+
+            transform: scale(1.02); /* Ligeramente más grande */
+
+        }
+
+
+
+        .chat-list li.active .material-symbols-outlined {
+
+            color: var(--text-color-primary);
+
+        }
+
+
+
+        /* Estilos para los íconos de acción (editar/borrar) */
+
+        .chat-list li .chat-actions {
+
+            display: none; /* Ocultos por defecto */
+
+            gap: 5px;
+
+            flex-shrink: 0;
+
+        }
+
+        .chat-list li:hover .chat-actions,
+
+        .chat-list li.active .chat-actions { /* Mostrar también cuando está activo */
+
+            display: flex;
+
+        }
+
+
+
+        .chat-list li .chat-actions .material-symbols-outlined {
+
+            font-size: 1em;
+
+            cursor: pointer;
+
+            padding: 4px;
+
+            border-radius: 5px;
+
+            transition: background-color 0.2s ease, transform 0.2s ease;
+
+        }
+
+
+
+        .chat-list li .chat-actions .material-symbols-outlined:hover {
+
+            background-color: rgba(255, 255, 255, 0.1);
+
+            transform: scale(1.1);
+
+        }
+
+        
+
+        .chat-list li .chat-actions .material-symbols-outlined.delete-icon:hover {
+
+            color: var(--error-color);
+
+            background-color: rgba(244, 67, 54, 0.2);
+
+        }
+
+        
+
+        .chat-list li .chat-actions .material-symbols-outlined.edit-icon:hover {
+
+            color: #ffeb3b; /* Amarillo para editar */
+
+            background-color: rgba(255, 235, 59, 0.2);
+
+        }
+
+
+
+        /* Estilo para el input de edición del título */
+
+        .chat-list li .edit-title-input {
+
+            background-color: #444d57;
+
+            border: 1px solid var(--accent-color);
+
+            color: var(--text-color-primary);
+
+            border-radius: 5px;
+
+            padding: 5px 8px;
+
+            font-size: 1em;
+
+            flex-grow: 1;
+
+            margin-right: 5px;
+
+            outline: none;
+
+        }
+
+
+
+
+
+        /* Contenedor principal del chat */
+
+        .chat-container {
+
+            background-color: var(--primary-color);
+
+            border-radius: var(--border-radius);
+
+            box-shadow: var(--box-shadow);
+
+            display: flex;
+
+            flex-direction: column;
+
+            overflow: hidden;
+
+            flex-grow: 1; /* Ocupa el espacio restante */
+
+            margin: 20px;
+
+            border: 1px solid #333a40;
+
+            position: relative; /* Para posicionar el welcome-screen y el input-area centrado */
+
+        }
+
+
+
+        /* Encabezado del chat */
+
+        .chat-header {
+
+            background-color: var(--secondary-color);
+
+            color: var(--text-color-primary);
+
+            padding: 15px 20px;
+
+            text-align: left;
+
+            border-bottom: 1px solid #444d57;
+
+            border-top-left-radius: var(--border-radius);
+
+            border-top-right-radius: var(--border-radius);
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px; /* Espacio entre el botón y el título */
+
+            flex-shrink: 0; /* Evita que se encoja */
+
+            z-index: 20; /* Asegura que esté por encima del welcome-screen y input centrado */
+
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+
+        }
+
+        .chat-header.hidden {
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            pointer-events: none;
+
+        }
+
+
+
+        .chat-header button {
+
+            background: none;
+
+            border: none;
+
+            color: var(--text-color-primary);
+
+            font-size: 1em;
+
+            cursor: pointer;
+
+            padding: 8px 12px;
+
+            border-radius: var(--border-radius);
+
+            transition: background-color var(--transition), transform 0.2s ease;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+            font-weight: 500;
+
+        }
+
+
+
+        .chat-header button .material-symbols-outlined {
+
+            font-size: 1.2em;
+
+        }
+
+
+
+        .chat-header button:hover {
+
+            background-color: #444d57;
+
+            transform: translateY(-1px);
+
+        }
+
+
+
+        .chat-header h2 {
+
+            margin: 0;
+
+            font-size: 1.5em; /* Un poco más grande */
+
+            font-weight: 500;
+
+            color: var(--accent-color);
+
+            text-shadow: 0 0 3px rgba(var(--accent-color-rgb), 0.3);
+
+        }
+
+
+
+        /* Cuerpo del chat (donde aparecen los mensajes) */
+
+        .chat-body {
+
+            padding: 20px;
+
+            overflow-y: auto; /* Habilita el scroll vertical */
+
+            flex-grow: 1; /* Ocupa todo el espacio disponible */
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 15px; /* Más espacio entre mensajes */
+
+            scrollbar-width: thin; /* Firefox */
+
+            scrollbar-color: var(--accent-color) var(--primary-color); /* Firefox */
+
+            z-index: 10; /* Por debajo del header, por encima del welcome-screen */
+
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+
+        }
+
+
+
+        .chat-body.hidden {
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            pointer-events: none;
+
+            position: absolute; /* Para que no ocupe espacio cuando está oculto */
+
+            width: 100%;
+
+            height: 100%;
+
+        }
+
+
+
+
+
+        .chat-body::-webkit-scrollbar {
+
+            width: 8px;
+
+        }
+
+
+
+        .chat-body::-webkit-scrollbar-track {
+
+            background: var(--primary-color);
+
+        }
+
+
+
+        .chat-body::-webkit-scrollbar-thumb {
+
+            background-color: var(--accent-color);
+
+            border-radius: 10px;
+
+            border: 2px solid var(--primary-color);
+
+        }
+
+
+
+        /* Estilo general para los mensajes de la IA */
+
+        .message {
+
+            background-color: #2c343c;
+
+            color: var(--text-color-secondary);
+
+            border-radius: var(--border-radius);
+
+            padding: 12px 16px; /* Más padding */
+
+            word-break: break-word;
+
+            align-self: flex-start;
+
+            max-width: 75%; /* Ancho máximo del mensaje */
+
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+            font-size: 0.98em; /* Ligeramente más grande */
+
+            line-height: 1.6; /* Mejor legibilidad */
+
+            border: 1px solid #3f4a56; /* Borde sutil */
+
+            animation: fadeInMessage 0.5s ease-out; /* Animación de entrada */
+
+            position: relative; /* Para la cola de la burbuja */
+
+        }
+
+
+
+        /* Cola de la burbuja de mensaje de IA */
+
+        .message::before {
+
+            content: '';
+
+            position: absolute;
+
+            left: -8px; /* Ajusta según el padding */
+
+            top: 10px;
+
+            border: 8px solid transparent;
+
+            border-right-color: #2c343c;
+
+            filter: drop-shadow(-1px 0px 1px rgba(0,0,0,0.1)); /* Sombra para la cola */
+
+        }
+
+
+
+        /* Estilo específico para mensajes de error */
+
+        .error-message {
+
+            background-color: #422b2b; /* Fondo rojizo oscuro */
+
+            color: var(--error-color);
+
+            border-radius: var(--border-radius);
+
+            padding: 12px 16px;
+
+            word-break: break-word;
+
+            align-self: flex-start;
+
+            max-width: 75%;
+
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+            font-size: 0.98em;
+
+            border: 1px solid #5a3232; /* Borde rojo */
+
+            animation: fadeInMessage 0.5s ease-out; /* Animación de entrada */
+
+            position: relative;
+
+        }
+
+        .error-message::before {
+
+            content: '';
+
+            position: absolute;
+
+            left: -8px;
+
+            top: 10px;
+
+            border: 8px solid transparent;
+
+            border-right-color: #422b2b;
+
+            filter: drop-shadow(-1px 0px 1px rgba(0,0,0,0.1));
+
+        }
+
+
+
+        /* Contenedor para mensajes de usuario (para alinear a la derecha) */
+
+        .user-message-container {
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: flex-end; /* Alinea el contenido a la derecha */
+
+            max-width: 75%;
+
+            align-self: flex-end;
+
+        }
+
+
+
+        /* Estilo específico para mensajes del usuario */
+
+        .user-message {
+
+            background-color: var(--accent-color);
+
+            color: var(--text-color-primary);
+
+            border-radius: var(--border-radius);
+
+            padding: 12px 16px;
+
+            word-break: break-word;
+
+            box-shadow: 0 2px 6px rgba(var(--accent-color-rgb), 0.25);
+
+            font-size: 0.98em;
+
+            line-height: 1.6;
+
+            margin-bottom: 5px;
+
+            border: 1px solid var(--accent-color-hover); /* Borde acentuado */
+
+            animation: fadeInMessage 0.5s ease-out; /* Animación de entrada */
+
+            position: relative; /* Para la cola de la burbuja */
+
+        }
+
+
+
+        /* Cola de la burbuja de mensaje de usuario */
+
+        .user-message::before {
+
+            content: '';
+
+            position: absolute;
+
+            right: -8px; /* Ajusta según el padding */
+
+            top: 10px;
+
+            border: 8px solid transparent;
+
+            border-left-color: var(--accent-color);
+
+            filter: drop-shadow(1px 0px 1px rgba(0,0,0,0.1)); /* Sombra para la cola */
+
+        }
+
+
+
+        @keyframes fadeInMessage {
+
+            from { opacity: 0; transform: translateY(10px); }
+
+            to { opacity: 1; transform: translateY(0); }
+
+        }
+
+
+
+        /* Indicador de carga (spinner y texto) */
+
+        .loading-indicator {
+
+            display: flex;
+
+            align-self: flex-start; /* Se alinea a la izquierda como un mensaje de IA */
+
+            margin-top: 5px;
+
+            align-items: center;
+
+            font-size: 0.85em;
+
+            color: var(--text-color-secondary);
+
+            gap: 6px;
+
+            padding: 12px 16px; /* Para que coincida con el padding del mensaje */
+
+            display: none; /* Oculto por defecto */
+
+            background-color: #2c343c; /* Fondo similar al mensaje de IA */
+
+            border-radius: var(--border-radius);
+
+            max-width: fit-content; /* Se ajusta al contenido */
+
+        }
+
+
+
+        /* Indicador de "typing" (tres puntos) */
+
+        .typing-indicator span {
+
+            animation: blink-dots 1s infinite steps(1, end);
+
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+
+
+        @keyframes blink-dots {
+
+            0%, 60% { opacity: 0; }
+
+            100% { opacity: 1; }
+
+        }
+
+
+
+        .loading-spinner {
+
+            border: 2px solid rgba(255, 255, 255, 0.1);
+
+            border-top: 2px solid var(--accent-color);
+
+            border-radius: 50%;
+
+            width: 16px; /* Más grande */
+
+            height: 16px;
+
+            animation: spin 1s linear infinite;
+
+        }
+
+
+
+        /* Animación para el spinner */
+
+        @keyframes spin {
+
+            0% { transform: rotate(0deg); }
+
+            100% { transform: rotate(360deg); }
+
+        }
+
+
+
+        /* Área de entrada de texto y botón de enviar */
+
+        .input-area {
+
+            padding: 15px;
+
+            border-top: 1px solid #444d57;
+
+            display: flex;
+
+            align-items: center;
+
+            background-color: var(--secondary-color);
+
+            border-bottom-left-radius: var(--border-radius);
+
+            border-bottom-right-radius: var(--border-radius);
+
+            flex-shrink: 0; /* Evita que se encoja */
+
+            z-index: 20; /* Asegura que esté por encima del welcome-screen y input centrado */
+
+            transition: all 0.5s ease; /* Transición para el movimiento */
+
+            position: relative; /* Para las sugerencias de prompt */
+
+        }
+
+
+
+        .input-field {
+
+            flex-grow: 1;
+
+            padding: 12px 16px; /* Más padding */
+
+            border: 1px solid #555e68;
+
+            border-radius: var(--border-radius);
+
+            margin-right: 12px; /* Más espacio */
+
+            font-size: 1em; /* Ligeramente más grande */
+
+            color: var(--text-color-primary);
+
+            background-color: #2c343c;
+
+            resize: none; /* Evita redimensionamiento por el usuario */
+
+            min-height: 40px; /* Altura mínima para una línea */
+
+            max-height: 120px; /* Altura máxima antes de scroll */
+
+            overflow-y: auto; /* Permite scroll vertical si el texto es largo */
+
+            line-height: 1.5;
+
+            transition: border-color var(--transition), box-shadow var(--transition);
+
+        }
+
+
+
+        .input-field:focus {
+
+            outline: none;
+
+            border-color: var(--accent-color);
+
+            box-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.4);
+
+        }
+
+
+
+        .send-button {
+
+            background-color: var(--accent-color);
+
+            color: var(--text-color-primary);
+
+            border: none;
+
+            padding: 10px 15px; /* Menos padding para hacerlo más pequeño */
+
+            border-radius: var(--border-radius);
+
+            cursor: pointer;
+
+            font-size: 0.9em; /* Fuente más pequeña */
+
+            transition: background-color var(--transition), transform 0.2s ease;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 6px; /* Menos espacio */
+
+            font-weight: 500;
+
+        }
+
+
+
+        .send-button .material-symbols-outlined {
+
+            font-size: 1.1em; /* Ajustar tamaño del ícono */
+
+            transition: transform 0.2s ease; /* Transición para el ícono */
+
+        }
+
+
+
+        .send-button:hover {
+
+            background-color: var(--accent-color-hover);
+
+            transform: translateY(-2px);
+
+        }
+
+
+
+        .send-button:hover .material-symbols-outlined {
+
+            transform: translateX(3px); /* Pequeño "vuelo" del icono */
+
+        }
+
+
+
+        .send-button:disabled {
+
+            background-color: #607d8b; /* Color gris para deshabilitado */
+
+            cursor: not-allowed;
+
+            transform: none;
+
+            opacity: 0.7;
+
+        }
+
+
+
+        /* --- Pantalla de bienvenida (New Conversation Screen) --- */
+
+        .welcome-screen {
+
+            position: absolute;
+
+            top: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            background-color: var(--primary-color);
+
+            display: flex;
+
+            flex-direction: column;
+
+            justify-content: center;
+
+            align-items: center;
+
+            text-align: center;
+
+            padding: 20px;
+
+            box-sizing: border-box;
+
+            z-index: 30; /* Aumentado para que esté por encima de TODO */
+
+            opacity: 1;
+
+            visibility: visible;
+
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+
+        }
+
+
+
+        .welcome-screen.hidden {
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            pointer-events: none; /* No permite clics cuando está oculto */
+
+        }
+
+
+
+        .welcome-screen h1 {
+
+            font-size: 3.5em; /* Título más grande */
+
+            color: var(--accent-color);
+
+            margin-bottom: 25px;
+
+            font-weight: 700;
+
+            text-shadow: 0 0 12px rgba(var(--accent-color-rgb), 0.7);
+
+            letter-spacing: 2px;
+
+        }
+
+
+
+        .welcome-screen p {
+
+            font-size: 1.3em;
+
+            color: var(--text-color-secondary);
+
+            margin-bottom: 30px; /* Reducido para dejar espacio a las sugerencias */
+
+            max-width: 700px;
+
+            line-height: 1.6;
+
+        }
+
+
+
+        /* Nuevo: Botón para empezar a chatear desde la pantalla de bienvenida */
+
+        .welcome-screen .start-chat-button {
+
+            background-color: var(--accent-color);
+
+            color: var(--text-color-primary);
+
+            border: none;
+
+            padding: 18px 35px;
+
+            border-radius: var(--border-radius);
+
+            cursor: pointer;
+
+            font-size: 1.4em;
+
+            font-weight: 700;
+
+            transition: background-color var(--transition), transform 0.2s ease, box-shadow var(--transition);
+
+            box-shadow: 0 5px 20px rgba(var(--accent-color-rgb), 0.5);
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            margin-bottom: 40px; /* Espacio antes de las sugerencias */
+
+        }
+
+
+
+        .welcome-screen .start-chat-button .material-symbols-outlined {
+
+            font-size: 1.6em;
+
+        }
+
+
+
+        .welcome-screen .start-chat-button:hover {
+
+            background-color: var(--accent-color-hover);
+
+            transform: translateY(-4px) scale(1.03);
+
+            box-shadow: 0 8px 25px rgba(var(--accent-color-rgb), 0.7);
+
+        }
+
+
+
+        /* Contenedor para sugerencias de prompts en welcome screen */
+
+        .prompt-suggestions {
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            justify-content: center;
+
+            gap: 15px;
+
+            max-width: 800px;
+
+        }
+
+
+
+        .prompt-suggestions .suggest-prompt-button {
+
+            background-color: #2c343c;
+
+            color: var(--text-color-secondary);
+
+            border: 1px solid #3f4a56;
+
+            padding: 10px 20px;
+
+            border-radius: var(--border-radius);
+
+            cursor: pointer;
+
+            font-size: 1em;
+
+            transition: background-color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+        }
+
+
+
+        .prompt-suggestions .suggest-prompt-button:hover {
+
+            background-color: #3f4a56;
+
+            border-color: var(--accent-color);
+
+            transform: translateY(-2px);
+
+            box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.2);
+
+        }
+
+        
+
+        .prompt-suggestions .suggest-prompt-button .material-symbols-outlined {
+
+            font-size: 1.1em;
+
+            color: var(--accent-color);
+
+        }
+
+
+
+
+
+        /* --- Estilo para el input-area centrado (cuando no hay mensajes y la pantalla de bienvenida está oculta) --- */
+
+        /* Oculta el chat-body cuando está el input centrado */
+
+        .chat-container.centered-input .chat-body {
+
+            display: none; /* Se oculta completamente */
+
+        }
+
+
+
+        /* Posiciona y estiliza el input-area cuando está centrado */
+
+        .chat-container.centered-input .input-area {
+
+            position: absolute;
+
+            top: 50%;
+
+            left: 50%;
+
+            transform: translate(-50%, -50%);
+
+            width: 85%; /* Ancho apropiado para centrar */
+
+            max-width: 750px; /* Evitar que sea demasiado ancho */
+
+            border-radius: var(--border-radius);
+
+            box-shadow: var(--box-shadow);
+
+            flex-direction: column; /* Apila el input y el botón verticalmente */
+
+            gap: 20px; /* Espacio entre input y botón */
+
+            padding: 30px; /* Más padding */
+
+            z-index: 18; /* Por debajo del welcome-screen, por encima del chat-body */
+
+            border: none; /* Eliminar borde superior para el modo centrado */
+
+            background-color: var(--secondary-color); /* Fondo sólido para la caja centrada */
+
+            transition: all 0.5s ease; /* Transición para el movimiento */
+
+        }
+
+        
+
+        .chat-container.centered-input .input-area .input-field {
+
+            width: calc(100% - 32px); /* Ajusta por padding */
+
+            max-width: none; /* Asegura que el textarea ocupe el ancho completo */
+
+            margin-right: 0;
+
+            min-height: 60px; /* Más alto para el input centrado */
+
+            font-size: 1.1em;
+
+        }
+
+
+
+        .chat-container.centered-input .input-area .send-button {
+
+            width: 100%; /* El botón ocupa todo el ancho */
+
+            padding: 15px 20px; /* Más padding para el botón centrado */
+
+            font-size: 1.1em;
+
+        }
+
+        
+
+        /* Asegurarse de que el input-area no se muestre como parte del layout principal si la welcome-screen está visible */
+
+        .welcome-screen:not(.hidden) ~ .input-area {
+
+            display: none !important;
+
+        }
+
+
+
+        /* --- Sugerencias de prompt debajo del input (cuando el chat está activo) --- */
+
+        .dynamic-prompt-suggestions {
+
+            position: absolute;
+
+            bottom: calc(100% + 10px); /* Posicionado encima del input-area */
+
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            width: calc(100% - 30px); /* Ancho del input-area - padding */
+
+            max-width: 750px;
+
+            background-color: var(--secondary-color);
+
+            border-radius: var(--border-radius);
+
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+
+            padding: 10px;
+
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            transform-origin: bottom;
+
+            animation: slideUpFadeIn 0.3s ease forwards;
+
+            z-index: 10; /* Para que esté sobre el chat-body si es necesario */
+
+        }
+
+        .dynamic-prompt-suggestions.hidden {
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            pointer-events: none;
+
+            animation: none; /* Desactivar animación si está oculto */
+
+        }
+
+
+
+        @keyframes slideUpFadeIn {
+
+            from {
+
+                opacity: 0;
+
+                transform: translateX(-50%) translateY(20px);
+
+            }
+
+            to {
+
+                opacity: 1;
+
+                transform: translateX(-50%) translateY(0);
+
+            }
+
+        }
+
+        
+
+        .dynamic-prompt-suggestions .suggest-item {
+
+            background-color: #2c343c;
+
+            color: var(--text-color-secondary);
+
+            border: 1px solid #3f4a56;
+
+            padding: 8px 12px;
+
+            border-radius: 20px; /* Más redondeado para parecer "tags" */
+
+            cursor: pointer;
+
+            font-size: 0.9em;
+
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+
+            display: flex;
+
+            align-items: cen
