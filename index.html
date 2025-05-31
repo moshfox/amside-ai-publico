@@ -1502,54 +1502,61 @@
          * Resume el chat actual usando la API de Gemini.
          */
         async function summarizeChat() {
-            if (!currentChatId || chats[currentChatId].messages.length === 0) {
-                appendMessage('assistant', 'No hay mensajes en el chat actual para resumir.', true);
-                return;
-            }
+    if (!currentChatId || chats[currentChatId].messages.length === 0) {
+        appendMessage('assistant', 'No hay mensajes en el chat actual para resumir.', true);
+        return;
+    }
 
-            const messages = chats[currentChatId].messages;
-            // Construir una representación de texto simple del historial de chat para el resumen
-            let chatText = messages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
+    const messages = chats[currentChatId].messages;
 
-            const prompt = `Por favor, resume la siguiente conversación de chat de forma concisa:\n\n${chatText}`;
+    showLoading(true);
 
-            try {
-                const summary = await callGeminiAPI(prompt, messages); // Pasa los mensajes completos para el contexto
-                appendMessage('assistant', `✨ Resumen del Chat:\n\n${summary}`);
-            } catch (error) {
-                console.error("Error al resumir el chat con Gemini:", error);
-                appendMessage('assistant', `Lo siento, no pude generar un resumen: ${error.message}`, true);
-            }
-        }
+    try {
+        const response = await fetch(`${BACKEND_URL}/summarize`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages })
+        });
+
+        if (!response.ok) throw new Error("Error al resumir el chat");
+
+        const data = await response.json();
+        appendMessage('assistant', `✨ Resumen del Chat:\n\n${data.summary}`);
+    } catch (error) {
+        console.error("Error al resumir:", error);
+        appendMessage('assistant', `No se pudo generar el resumen: ${error.message}`, true);
+    } finally {
+        showLoading(false);
+    }
+}
 
         /**
          * Genera una idea creativa basada en el último mensaje del usuario o en el contexto general.
          */
         async function generateCreativeIdea() {
-            let context = "";
-            if (currentChatId && chats[currentChatId].messages.length > 0) {
-                // Encuentra el último mensaje del usuario para el contexto
-                const lastUserMessage = chats[currentChatId].messages.slice().reverse().find(msg => msg.role === 'user');
-                if (lastUserMessage) {
-                    context = `Basándome en el último mensaje del usuario: "${lastUserMessage.content}", dame una idea creativa o una sugerencia relacionada.`;
-                } else {
-                    // Si no hay mensajes de usuario, usa un prompt general
-                    context = "Dame una idea creativa o una sugerencia interesante sobre cualquier tema.";
-                }
-            } else {
-                context = "Dame una idea creativa o una sugerencia interesante sobre cualquier tema.";
-            }
+    const messages = currentChatId && chats[currentChatId] ? chats[currentChatId].messages : [];
 
-            const prompt = `Eres una IA creativa. ${context}`;
+    showLoading(true);
 
-            try {
-                const idea = await callGeminiAPI(prompt, currentChatId ? chats[currentChatId].messages : []); // Pasa los mensajes completos para el contexto
-                appendMessage('assistant', `✨ Idea Creativa:\n\n${idea}`);
-            } catch (error) {
-                console.error("Error al generar idea creativa con Gemini:", error);
-                appendMessage('assistant', `Lo siento, no pude generar una idea creativa: ${error.message}`, true);
-            }
-        }
+    try {
+        const response = await fetch(`${BACKEND_URL}/creative-idea`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages })
+        });
+
+        if (!response.ok) throw new Error("Error al generar la idea");
+
+        const data = await response.json();
+        appendMessage('assistant', `✨ Idea Creativa:\n\n${data.idea}`);
+    } catch (error) {
+        console.error("Error al generar idea creativa:", error);
+        appendMessage('assistant', `No se pudo generar una idea creativa: ${error.message}`, true);
+    } finally {
+        showLoading(false);
+    }
+}
+
 
         /**
          * Actualiza el estado de los botones de Gemini (habilitado/deshabilitado)
