@@ -17,6 +17,15 @@ if not HUGGINGFACE_API_TOKEN:
 if not MODEL_URL:
     raise ValueError("La variable de entorno MODEL_URL no está configurada.")
 
+# Define el mensaje del sistema fuera de la ruta para que sea fácilmente accesible
+system_message_content = (
+    "Eres Amside AI, una inteligencia artificial creada por Hodelygil. "
+    "Tu propósito principal es asistir en el estudio y el aprendizaje, "
+    "proporcionando información y explicaciones detalladas. "
+    "Sin embargo, también eres amigable y puedes mantener conversaciones informales y agradables. "
+    "Responde de manera informativa y útil, pero con un tono conversacional."
+)
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     data = request.json
@@ -25,32 +34,31 @@ def chat():
     if not messages:
         return jsonify({"error": "No se proporcionaron mensajes en la solicitud."}), 400
 
-    # --- MODIFICACIÓN CLAVE AQUÍ ---
-    # Vamos a construir los mensajes para Hugging Face.
-    # Para Zephyr y modelos similares, a menudo la API de inferencia espera solo 'user'/'assistant' roles
-    # en el array de 'inputs'. El mensaje del sistema puede ser ignorado o causar un 422 si no está formateado
-    # de una manera específica por la API.
-    # Por simplicidad y para solucionar el 422, quitaremos el rol 'system' explícito aquí,
-    # y solo pasaremos los mensajes de 'user' y 'assistant' al modelo.
+    # --- MODIFICACIÓN CLAVE AQUÍ: Construir un único string para 'inputs' ---
 
-    hf_messages_for_api = []
-    for msg in messages:
-        if msg['role'] == 'user' or msg['role'] == 'assistant':
-            hf_messages_for_api.append(msg)
-        # Puedes añadir una lógica aquí si quieres incluir el system_message_content
-        # como parte del primer mensaje de usuario, pero para el 422, simplifiquemos.
+    # Extraer el contenido del último mensaje del usuario
+    last_user_message_content = ""
+    for msg in reversed(messages): # Iterar en reversa para encontrar el último mensaje de usuario
+        if msg['role'] == 'user':
+            last_user_message_content = msg['content']
+            break
+
+    # Construir el prompt final como un único string, siguiendo el formato de chat de Zephyr
+    # Esto incluye el mensaje del sistema y el último mensaje del usuario.
+    prompt_string = (
+        f"<s>[INST] <<SYS>>\n{system_message_content}\n<</SYS>>\n\n"
+        f"{last_user_message_content} [/INST]"
+    )
 
     payload = {
-        "inputs": hf_messages_for_api, # Pasamos la lista filtrada de mensajes
+        "inputs": prompt_string, # Ahora 'inputs' es un único string, como lo exige el error 422
         "parameters": {
             "max_new_tokens": 500,
-            # Vamos a quitar temporalmente los otros parámetros para ver si alguno de ellos
-            # está causando el 422. Si funciona, podemos añadirlos de nuevo uno a uno.
-            # "do_sample": True,
-            # "temperature": 0.7,
-            # "top_p": 0.9,
-            # "repetition_penalty": 1.1,
-            # "return_full_text": False # La API de Zephyr suele funcionar con false
+            "do_sample": True,
+            "temperature": 0.7,
+            "top_p": 0.9,
+            "repetition_penalty": 1.1,
+            "return_full_text": False # Pedimos solo el texto generado nuevo
         }
     }
 
@@ -61,7 +69,7 @@ def chat():
 
     try:
         response = requests.post(MODEL_URL, headers=headers, json=payload)
-        response.raise_for_status()
+        response.raise_for_status() # Esto levantará un HTTPError para respuestas 4xx/5xx
 
         hf_data = response.json()
 
@@ -70,17 +78,21 @@ def chat():
 
         ai_response_text = hf_data[0]['generated_text']
 
-        # Si return_full_text es False, la respuesta debería ser solo el texto del asistente.
-        # Si la API de Zephyr te devuelve la conversación completa (incluyendo tu input),
-        # necesitarías una lógica aquí para extraer solo la última respuesta del asistente.
-        # Pero, por ahora, devolvamos lo que venga.
+        # Zephyr, con return_full_text=False y el formato adecuado, debería devolver
+        # solo la parte de la respuesta del asistente. Si aún incluye el prompt completo,
+        # podríamos necesitar una lógica de extracción más robusta aquí.
+        # Por ahora, si el texto generado empieza con el prompt, lo eliminamos.
+        if ai_response_text.startswith(prompt_string):
+             ai_response_text = ai_response_text[len(prompt_string):].strip()
+
 
         return jsonify({"response": ai_response_text})
 
     except requests.exceptions.RequestException as e:
-        # Esto nos dará más detalle si el 422 trae un mensaje específico de Hugging Face
-        if hasattr(e, 'response') and e.response is not None and e.response.status_code == 422:
-            print(f"Hugging Face API 422 Error Response Content: {e.response.text}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Hugging Face API Error Status: {e.response.status_code}")
+            # Esto es lo que nos dio el error claro
+            print(f"Hugging Face API Error Response Content: {e.response.text}")
         print(f"Error al conectar con Hugging Face API: {e}")
         return jsonify({"error": f"Error al conectar con la IA: {e}. Por favor, inténtalo de nuevo más tarde."}), 500
     except Exception as e:
