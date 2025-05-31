@@ -26,8 +26,9 @@ system_message_content = (
     "Responde de manera informativa y útil, pero con un tono conversacional."
 )
 
-@app.route('/api/chat', methods=['POST'])
-def chat():
+@app.route('/')
+def health_check():
+    return "¡Servidor de Amside AI funcionando correctamente!"
     data = request.json
     messages = data.get('messages')
 
