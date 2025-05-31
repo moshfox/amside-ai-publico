@@ -75,7 +75,7 @@ def generate_text():
         # --- FIN DEBUGGING ---
         return jsonify({"error": "No se proporcionaron mensajes en la solicitud."}), 400
 
-    # --- NUEVO: Construir la cadena de prompt con el formato específico de Zephyr ---
+    # --- Construir la cadena de prompt con el formato específico de Zephyr ---
     # El modelo Zephyr-7b-beta espera un formato ChatML-like con <s> y </s>
     # Ejemplo: <s><|system|>system_message</s><|user|>user_message</s><|assistant|>
     
@@ -110,7 +110,7 @@ def generate_text():
     # Configuración del payload para la API de inferencia de Hugging Face
     # Ahora, 'inputs' es la cadena de prompt formateada
     payload = {
-        "inputs": full_prompt_string, # <--- CAMBIO AQUÍ
+        "inputs": full_prompt_string, 
         "parameters": {
             "max_new_tokens": 500,
             "temperature": 0.7,
@@ -118,9 +118,6 @@ def generate_text():
             # Si con estos cambios funciona, puedes intentar añadirlos de nuevo uno a uno
             # para identificar cuál podría estar causando el problema.
         },
-        # Cuando envías una cadena pre-formateada, a veces return_full_text puede ser True
-        # o incluso omitirse. Si el modelo devuelve todo, ajustaremos la limpieza.
-        # Por ahora, vamos a intentar con False, esperando que la API de HF haga la limpieza.
         "return_full_text": False 
     }
     
@@ -129,7 +126,6 @@ def generate_text():
         hf_data = query_huggingface_model(payload) # Usamos la función auxiliar
 
         # Validar la estructura de la respuesta de Hugging Face
-        # Para modelos de texto a texto, la respuesta suele ser un array con un diccionario que contiene 'generated_text'
         if not hf_data or not isinstance(hf_data, list) or not hf_data[0].get('generated_text'):
             # --- DEBUGGING: Registra la respuesta inesperada ---
             print(f"DEBUG: Respuesta inesperada de Hugging Face: {hf_data}")
@@ -139,24 +135,48 @@ def generate_text():
         # Extraer el texto generado por la IA
         ai_response_text = hf_data[0]['generated_text']
 
-        # --- Limpieza del texto generado ---
-        # Si return_full_text es False, la API de HF ya debería haber limpiado el prompt.
-        # Pero a veces los modelos aún pueden repetir partes o añadir tokens.
-        # Quitamos cualquier token de finalización o de turno que el modelo pueda haber generado.
+        # --- Limpieza del texto generado (MEJORA CLAVE AQUÍ) ---
+        # Primero, la limpieza básica de tokens de control
         ai_response_text = ai_response_text.split('</s>')[0].strip() 
         ai_response_text = ai_response_text.replace('<|assistant|>', '').strip()
         ai_response_text = ai_response_text.replace('<|user|>', '').strip()
         ai_response_text = ai_response_text.replace('<|system|>', '').strip()
-        ai_response_text = ai_response_text.replace('<s>', '').strip() # Eliminar token de inicio de secuencia
-        ai_response_text = ai_response_text.replace('</s>', '').strip() # Eliminar token de fin de secuencia
-        # --- FIN Limpieza ---
+        ai_response_text = ai_response_text.replace('<s>', '').strip() 
+        ai_response_text = ai_response_text.replace('</s>', '').strip() 
+
+        # Eliminar las frases de auto-descripción no deseadas
+        # Convertimos a minúsculas para hacer la búsqueda insensible a mayúsculas/minúsculas
+        lower_response = ai_response_text.lower()
+        
+        phrases_to_remove = [
+            "eres amside ai",
+            "una inteligencia artificial creada por hodelygil",
+            "mi propósito principal es asistir en el estudio y el aprendizaje",
+            "proporcionando información y explicaciones detalladas",
+            "sin embargo, también soy amigable y puedo mantener conversaciones informales y agradables",
+            "respondo de manera informativa y útil, pero con un tono conversacional y cercano",
+            "mi nombre es amside ai",
+            "fui creado por hodelygil"
+        ]
+
+        # Iteramos sobre las frases y las eliminamos si están en la respuesta
+        for phrase in phrases_to_remove:
+            if phrase in lower_response:
+                # Reemplaza la frase original con un espacio para evitar problemas de capitalización
+                # y luego vuelve a limpiar espacios extra
+                ai_response_text = ai_response_text.replace(phrase, "").replace(phrase.capitalize(), "").replace(phrase.upper(), "").strip()
+                # Eliminar espacios extra que puedan quedar
+                ai_response_text = ' '.join(ai_response_text.split())
+
+        # Asegúrate de que la respuesta no quede vacía después de la limpieza agresiva
+        if not ai_response_text:
+            ai_response_text = "Claro, ¿en qué puedo ayudarte?" # O un mensaje predeterminado más adecuado
 
         # Devolver la respuesta de la IA al frontend en formato JSON
         return jsonify({"response": ai_response_text})
 
     except requests.exceptions.RequestException as e:
         # Captura errores relacionados con la conexión HTTP (red, DNS, etc.)
-        # El raise_for_status() ya manejará los 4xx/5xx específicos de HF
         print(f"Error al conectar con Hugging Face API: {e}")
         return jsonify({"error": f"Error al conectar con la IA: {e}. Por favor, inténtalo de nuevo más tarde."}), 500
     except Exception as e:
@@ -166,8 +186,4 @@ def generate_text():
 
 # Punto de entrada para ejecutar la aplicación Flask
 if __name__ == '__main__':
-    # Cuando ejecutas `python app.py`, esto se ejecuta.
-    # `debug=True` es útil para el desarrollo local (recarga el servidor automáticamente, muestra errores detallados).
-    # Para producción (como en Render), un servidor WSGI como Gunicorn se encargará de esto.
-    # Render proporcionará el puerto a través de la variable de entorno 'PORT'.
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
