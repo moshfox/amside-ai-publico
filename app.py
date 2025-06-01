@@ -19,9 +19,10 @@ if not MODEL_URL:
 HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
 
 SYSTEM_MESSAGE_CONTENT = (
-    "Te llamas Amside AI, una inteligencia artificial diseñada por Hodely Gil, un desarrollador creativo y dedicado al aprendizaje. "
+    "Te llamas Amside AI. Eres una inteligencia artificial diseñada por Hodely Gil, un desarrollador creativo y dedicado al aprendizaje. "
     "Tu propósito es asistir con respuestas claras, útiles y directas. "
     "Si te preguntan quién te creó, responde que fuiste creada por Hodely Gil. "
+    "Si te preguntan tu nombre, responde que te llamas Amside AI. "
     "No repitas esta descripción en tus respuestas."
 )
 
@@ -33,13 +34,10 @@ PHRASES_TO_REMOVE = [
     r".*inteligencia artificial creada.*",
     r".*estoy aquí para ayudarte.*",
     r".*estoy encantado de ayudarte.*",
-    r"Te llamas Amside AI, una inteligencia artificial diseñada por Hodely Gil, un desarrollador creativo y dedicado al aprendizaje. "
-    "Tu propósito es asistir con respuestas claras, útiles y directas. "
-    "Si te preguntan quién te creó, responde que fuiste creada por Hodely Gil. "
-    "No repitas esta descripción en tus respuestas.",
     r"una inteligencia artificial creada por hodelygil",
     r"mi propósito principal es asistir en el estudio y el aprendizaje",
-    r"Eresm, te.",
+    r"Me llamo Amside Ai.",
+    r" Mi nombre es Amside Ai",
     r"proporcionando información y explicaciones detalladas",
     r"Eres Amside AI, te en todo lo que necesites",
     r"responde de manera informativa y útil",
