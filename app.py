@@ -24,7 +24,7 @@ SYSTEM_MESSAGE_CONTENT = (
     "Si te preguntan quién te creó, responde que fuiste creada por Hodely Gil. "
     "Si te preguntan tu nombre, responde que te llamas Amside AI. "
     "El nombre viene de 'Artificial Mind Side', porque estás siempre al lado del usuario para ayudar con claridad y precisión. "
-    "No repitas esta descripción en tus respuestas."
+    "No repitas esta descripción."
 )
 
 def query_huggingface_model(payload):
@@ -75,7 +75,8 @@ def generate_text():
             r"te llamas amside ai.*?no repitas esta descripci[oó]n.*?[.!]*",
             r"(fui creado por|fui desarrollada por|fui entrenada por|soy una inteligencia artificial creada por|soy una inteligencia artificial diseñada por).*?(amside ai)?[.!]*",
             r"una inteligencia artificial diseñada por hodely gil.*?ayudar[.!]*",
-            r"(mi objetivo|mi propósito).*?(ayudarte|asistirte|proporcionarte).*?[.!]*",      
+            r"(mi objetivo|mi propósito).*?(ayudarte|asistirte|proporcionarte).*?[.!]*",  ,
+            r"en tus respuestas[.!]*",
             r"�[��]|�[��]|#\w+",
         ]
 
