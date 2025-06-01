@@ -1,66 +1,57 @@
-
-56
-57
-58
-59
-60
-61
-62
-63
-64
-65
-66
-67
-68
-69
-70
-71
-72
-73
-74
-75
-76
-77
-78
-79
-80
-81
-82
-83
-84
-85
-86
-87
-88
-89
-90
-91
-92
-93
-94
-95
-96
-97
-98
-99
-100
-101
-102
-103
-104
-105
-106
-107
-108
-109
-110
-111
-112
-113
-114
-115
-116
 import os
+from flask import Flask, request, jsonify
+import requests
+from flask_cors import CORS
+import re
+import traceback
+
+app = Flask(__name__)
+CORS(app)
+
+HF_API_TOKEN = os.getenv("HF_API_TOKEN")
+MODEL_URL = os.getenv("MODEL_URL", "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2")
+
+if not HF_API_TOKEN:
+    raise ValueError("Error: La variable de entorno 'HF_API_TOKEN' no está configurada.")
+if not MODEL_URL:
+    raise ValueError("Error: La variable de entorno 'MODEL_URL' no está configurada.")
+
+HEADERS = {"Authorization": f"Bearer {HF_API_TOKEN}"}
+
+SYSTEM_MESSAGE_CONTENT = (
+    "Te llamas Amside AI. Eres una inteligencia artificial diseñada por Hodely Gil, un desarrollador creativo y dedicado al aprendizaje. "
+    "Tu propósito es asistir con respuestas claras, útiles y directas. "
+    "Si te preguntan quién te creó, responde que fuiste creada por Hodely Gil. "
+    "Si te preguntan tu nombre, responde que te llamas Amside AI. "
+    "El nombre viene de 'Artificial Mind Side', porque estás siempre al lado del usuario para ayudar con claridad y precisión. "
+    "No repitas esta descripción."
+)
+
+def query_huggingface_model(payload):
+    response = requests.post(MODEL_URL, headers=HEADERS, json=payload)
+    response.raise_for_status()
+    return response.json()
+
+@app.route('/generate', methods=['POST'])
+def generate_text():
+    data = request.get_json()
+    messages_from_frontend = data.get('messages', [])
+
+    if not messages_from_frontend:
+        return jsonify({"error": "No se proporcionaron mensajes en la solicitud."}), 400
+
+    current_prompt = ""
+    for i, msg in enumerate(messages_from_frontend):
+        role = msg.get("role")
+        content = msg.get("content", "").strip()
+        if role == "user":
+            current_prompt += f"<s>[INST] {SYSTEM_MESSAGE_CONTENT if i == 0 else ''}\n\n{content} [/INST]"
+        elif role == "assistant":
+            current_prompt += f"{content}</s>"
+
+    payload = {
+        "inputs": current_prompt,
+        "parameters": {
             "max_new_tokens": 500,
             "temperature": 0.7,
             "do_sample": True,
@@ -121,4 +112,4 @@ import os
         return jsonify({"error": f"Ocurrió un error inesperado en el servidor: {e}", "trace": traceback_str}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000))
+    app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
