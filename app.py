@@ -112,6 +112,21 @@ def generate_text():
             return jsonify({"error": "Respuesta inesperada de Hugging Face API.", "hf_response": hf_data}), 500
 
         ai_response_text = hf_data[0]['generated_text']
+        # Eliminar cualquier eco del system message completo
+ai_response_text = re.sub(
+    r"te llamas amside ai.*?no repitas esta descripci[oó]n en tus respuestas[.!]*",
+    "",
+    ai_response_text,
+    flags=re.IGNORECASE | re.DOTALL
+)
+# Eliminar repeticiones extendidas relacionadas
+ai_response_text = re.sub(
+    r"(fui creado por|soy una inteligencia artificial creada por).*?(amside ai)?[.!]*",
+    "",
+    ai_response_text,
+    flags=re.IGNORECASE
+)
+
         ai_response_text = re.sub(
     r"te llamas amside ai\. eres una inteligencia artificial dise\u00f1ada por hodely gil, un desarrollador creativo.*?no repitas esta descripci\u00f3n en tus respuestas\.",
     "",
