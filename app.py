@@ -39,6 +39,7 @@ PHRASES_TO_REMOVE = [
     "No repitas esta descripción en tus respuestas.",
     r"una inteligencia artificial creada por hodelygil",
     r"mi propósito principal es asistir en el estudio y el aprendizaje",
+    r"Eres Amside AI, te.",
     r"proporcionando información y explicaciones detalladas",
     r"Eres Amside AI, te en todo lo que necesites",
     r"responde de manera informativa y útil",
