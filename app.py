@@ -23,48 +23,9 @@ SYSTEM_MESSAGE_CONTENT = (
     "Tu propósito es asistir con respuestas claras, útiles y directas. "
     "Si te preguntan quién te creó, responde que fuiste creada por Hodely Gil. "
     "Si te preguntan tu nombre, responde que te llamas Amside AI. "
-    "Te llamas Amside AI, una inteligencia artificial creada por Hodely Gil. El nombre viene de "Artificial Mind Side", porque estás siempre al lado del usuario para ayudar con claridad y precisión."
+    "El nombre viene de 'Artificial Mind Side', porque estás siempre al lado del usuario para ayudar con claridad y precisión. "
     "No repitas esta descripción en tus respuestas."
 )
-
-PHRASES_TO_REMOVE = [
-    r".*soy amside ai.*",
-    r"Te llamas Amside AI. Eres una inteligencia artificial diseñada por Hodely Gil, un desarrollador creativo y dedicado al aprendizaje. Tu propósito es asistir con respuestas claras, útiles y directas. Si te preguntan quién te creó, responde que fuiste creada por Hodely Gil. Si te preguntan tu nombre, responde que te llamas Amside AI. No repitas esta descripción en tus respuestas.",
-    r".*tambien eres amigable.*",
-    r"Te llamas Amside AI. Eres una inteligencia artificial diseñada por Hodely Gil, un desarrollador creativo y dedicado al aprendizaje. Tu propósito es asistir con respuestas claras, útiles y directas. Si te preguntan quién te creó, responde que fuiste creada por Hodely Gil. Si te preguntan tu nombre, responde que te llamas Amside AI. No repitas esta descripción en tus respuestas. ",
-    r".*fui creada por hodelygil.*",
-    r".*mi nombre es amside.*",
-    r".*inteligencia artificial creada.*",
-    r".*estoy aquí para ayudarte.*",
-    r".*estoy encantado de ayudarte.*",
-    r"una inteligencia artificial creada por hodelygil",
-    r"mi propósito principal es asistir en el estudio y el aprendizaje",
-    r"Me llamo Amside Ai.",
-    r" Mi nombre es Amside Ai",
-    r"proporcionando información y explicaciones detalladas",
-    r"Eres Amside AI, te en todo lo que necesites",
-    r"responde de manera informativa y útil",
-    r"mi nombre es amside ai",
-    r"fui creado por hodelygil",
-    r"claro, ¿en qué puedo ayudarte?",
-    r"cómo puedo ayudarte hoy",
-    r"en qué puedo asistirte hoy",
-    r"estaré encantado de ayudarte",
-    r"¡hola! me alegra poder ayudarte hoy",
-    r"qué tal",
-    r"cómo estás",
-    r"bienvenido",
-    r"un gusto saludarte",
-    r"mucho gusto",
-    r"claro que sí",
-    r"por supuesto",
-    r"🤗", r"🚀", r"#AIforStudents", r"#LearnwithAmsideAI", r"#HappyLearning", r"🤝", r"😊",
-    r".*creada por hodelygil.*",
-    r".*tu objetivo es ayudar.*",
-    r".*soy amside.*",
-    r".*tu asistente de aprendizaje.*",
-    r".*siempre estaré encantado.*"
-]
 
 def query_huggingface_model(payload):
     response = requests.post(MODEL_URL, headers=HEADERS, json=payload)
@@ -83,14 +44,10 @@ def generate_text():
     for i, msg in enumerate(messages_from_frontend):
         role = msg.get("role")
         content = msg.get("content", "").strip()
-
         if role == "user":
-            if i == 0:
-                current_prompt += f"<s>[INST] {SYSTEM_MESSAGE_CONTENT}\n\n{content} [/INST]"
-            else:
-                current_prompt += f"<s>[INST] {content} [/INST]"
+            current_prompt += f"<s>[INST] {SYSTEM_MESSAGE_CONTENT if i == 0 else ''}\n\n{content} [/INST]"
         elif role == "assistant":
-            current_prompt += f"{msg['content']}</s>"
+            current_prompt += f"{content}</s>"
 
     payload = {
         "inputs": current_prompt,
@@ -108,94 +65,45 @@ def generate_text():
     try:
         hf_data = query_huggingface_model(payload)
 
-        if not hf_data or not isinstance(hf_data, list) or not hf_data[0].get('generated_text'):
+        if not isinstance(hf_data, list) or not hf_data or not hf_data[0].get('generated_text'):
             return jsonify({"error": "Respuesta inesperada de Hugging Face API.", "hf_response": hf_data}), 500
 
         ai_response_text = hf_data[0]['generated_text']
-        # Cortar el system message completo si lo repite
-ai_response_text = re.sub(
-    r"te llamas amside ai\. eres una inteligencia artificial dise\u00f1ada por hodely gil.*?no repitas esta descripci[oó]n en tus respuestas[.!]*",
-    "",
-    ai_response_text,
-    flags=re.IGNORECASE | re.DOTALL
-)
-# Eliminar frases derivadas si intenta parafrasear el system message
-ai_response_text = re.sub(
-    r"(fui creado por|fui desarrollada por|soy una inteligencia artificial diseñada por).*?(amside ai)?[.!]*",
-    "",
-    ai_response_text,
-    flags=re.IGNORECASE
-)
-ai_response_text = ai_response_text.strip()
-ai_response_text = re.sub(r'^[.,;!?\\s]+', '', ai_response_text)
-ai_response_text = ' '.join(ai_response_text.split())
 
-if ai_response_text and ai_response_text[0].islower():
-    ai_response_text = ai_response_text[0].upper() + ai_response_text[1:]
+        # --- LIMPIEZA DE RESPUESTA ---
+        patterns = [
+            r"te llamas amside ai.*?no repitas esta descripci[oó]n.*?[.!]*",
+            r"(fui creado por|fui desarrollada por|fui entrenada por|soy una inteligencia artificial creada por|soy una inteligencia artificial diseñada por).*?(amside ai)?[.!]*",
+            r"una inteligencia artificial diseñada por hodely gil.*?ayudar[.!]*",
+            r"(mi objetivo|mi propósito).*?(ayudarte|asistirte|proporcionarte).*?[.!]*",      
+            r"�[��]|�[��]|#\w+",
+        ]
 
-        # Eliminar cualquier eco del system message completo
-ai_response_text = re.sub(
-    r"te llamas amside ai.*?no repitas esta descripci[oó]n en tus respuestas[.!]*",
-    "",
-    ai_response_text,
-    flags=re.IGNORECASE | re.DOTALL
-)
-# Eliminar repeticiones extendidas relacionadas
-ai_response_text = re.sub(
-    r"(fui creado por|soy una inteligencia artificial creada por).*?(amside ai)?[.!]*",
-    "",
-    ai_response_text,
-    flags=re.IGNORECASE
-)
-
-        ai_response_text = re.sub(
-    r"te llamas amside ai\. eres una inteligencia artificial dise\u00f1ada por hodely gil, un desarrollador creativo.*?no repitas esta descripci\u00f3n en tus respuestas\.",
-    "",
-    ai_response_text,
-    flags=re.IGNORECASE | re.DOTALL
-)
-        ai_response_text = re.sub(r"<s>|</s>|\[INST\]|\[/INST\]", "", ai_response_text).strip()
+        for pattern in patterns:
+            ai_response_text = re.sub(pattern, '', ai_response_text, flags=re.IGNORECASE | re.DOTALL)
 
         for msg in messages_from_frontend:
-            content = msg.get("content", "").strip()
-            if content and content in ai_response_text:
-                ai_response_text = ai_response_text.replace(content, "")
+            user_msg = msg.get("content", "").strip()
+            if user_msg:
+                ai_response_text = ai_response_text.replace(user_msg, "")
 
-        # Eliminar mensaje completo si se cuela el system message
-        ai_response_text = re.sub(
-            r"una inteligencia artificial diseñada por hodely gil, un desarrollador creativo.*?estoy aquí para ayudar[.!]*",
-            "",
-            ai_response_text,
-            flags=re.IGNORECASE | re.DOTALL
-        )
-
-        ai_response_text = re.sub(
-            r"(fui creada por|fui desarrollada por|fui entrenada por).*?(\.|!|\?)",
-            "",
-            ai_response_text,
-            flags=re.IGNORECASE
-        )
-
-        for phrase_pattern in PHRASES_TO_REMOVE:
-            pattern = r'\s*' + re.escape(phrase_pattern) + r'[\s.,;!?]*'
-            ai_response_text = re.sub(pattern, ' ', ai_response_text, flags=re.IGNORECASE)
-
-        ai_response_text = ai_response_text.strip()
-        ai_response_text = re.sub(r'^[.,;!?\s]+', '', ai_response_text)
-        ai_response_text = ' '.join(ai_response_text.split())
+        ai_response_text = re.sub(r"<s>|</s>|\[INST\]|\[/INST\]", "", ai_response_text)
+        ai_response_text = re.sub(r"\s+", " ", ai_response_text).strip()
+        ai_response_text = re.sub(r'^[.,;!?\\s]+', '', ai_response_text)
 
         if ai_response_text and ai_response_text[0].islower():
             ai_response_text = ai_response_text[0].upper() + ai_response_text[1:]
 
-        if not ai_response_text:
-            ai_response_text = "\u00a1Hola! Soy Amside AI, tu asistente de estudio. \u00bfEn qué puedo ayudarte hoy?"
+        if not ai_response_text or len(ai_response_text) < 5:
+            ai_response_text = "Claro. ¿Qué necesitas saber o resolver?"
 
         return jsonify({"response": ai_response_text})
 
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Error al conectar con la IA: {e}. Por favor, inténtalo de nuevo más tarde."}), 500
     except Exception as e:
-        return jsonify({"error": f"Ocurrió un error inesperado en el servidor: {e}."}), 500
+        traceback_str = traceback.format_exc()
+        return jsonify({"error": f"Ocurrió un error inesperado en el servidor: {e}", "trace": traceback_str}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
