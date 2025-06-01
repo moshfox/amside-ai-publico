@@ -79,8 +79,9 @@ def generate_text():
         content = msg.get("content", "").strip()
 
         if role == "user":
-            if i == 0 and len(messages_from_frontend) == 1:
-                current_prompt += f"<s>[INST] {SYSTEM_MESSAGE_CONTENT}\n\n{content} [/INST]"
+           if i == 0:
+    current_prompt += f"<s>[INST] {SYSTEM_MESSAGE_CONTENT}\n\n{content} [/INST]"
+
             else:
                 current_prompt += f"<s>[INST] {content} [/INST]"
         elif role == "assistant":
