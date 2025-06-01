@@ -30,6 +30,7 @@ SYSTEM_MESSAGE_CONTENT = (
 PHRASES_TO_REMOVE = [
     r".*soy amside ai.*",
     r".*tambien eres amigable.*",
+    r"Te llamas Amside AI. Eres una inteligencia artificial diseñada por Hodely Gil, un desarrollador creativo y dedicado al aprendizaje. Tu propósito es asistir con respuestas claras, útiles y directas. Si te preguntan quién te creó, responde que fuiste creada por Hodely Gil. Si te preguntan tu nombre, responde que te llamas Amside AI. No repitas esta descripción en tus respuestas. ",
     r".*fui creada por hodelygil.*",
     r".*mi nombre es amside.*",
     r".*inteligencia artificial creada.*",
