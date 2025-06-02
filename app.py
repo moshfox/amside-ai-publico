@@ -139,11 +139,34 @@ def text_to_image():
     if not prompt:
         return jsonify({'error': 'No se recibió ningún prompt'}), 400
 
+   MODEL_IMAGE_URL = os.getenv("MODEL_IMAGE_URL", "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2")
+
+@app.route('/text-to-image', methods=['POST'])
+def text_to_image():
+    data = request.get_json()
+    prompt = data.get("prompt", "")
+    if not prompt:
+        return jsonify({'error': 'No se recibió ningún prompt'}), 400
+
     response = requests.post(
-        "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2",
+        MODEL_IMAGE_URL,
         headers=HEADERS,
         json={"inputs": prompt}
     )
+
+    if not response.ok:
+        return jsonify({'error': 'Error al generar la imagen'}), 500
+
+    image_data = response.content
+    image_name = "generated_image.png"
+    image_path = os.path.join("static", secure_filename(image_name))
+
+    os.makedirs("static", exist_ok=True)
+    with open(image_path, "wb") as f:
+        f.write(image_data)
+
+    return jsonify({'image_url': f"/static/{image_name}"})
+
 
     if not response.ok:
         return jsonify({'error': 'Error al generar la imagen'}), 500
