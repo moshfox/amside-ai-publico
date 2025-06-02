@@ -1105,25 +1105,32 @@
         </div>
 
         <div class="input-area" id="inputArea">
-            <div class="gemini-actions-container">
-                <button id="summarizeChatButton" class="gemini-action-button">
-                    <span class="material-symbols-outlined">summarize</span>
-                    Resumir Chat ✨
-                </button>
-                <button id="generateIdeaButton" class="gemini-action-button">
-                    <span class="material-symbols-outlined">lightbulb</span>
-                    Idea Creativa ✨
-                </button>
-            </div>
-            <div class="dynamic-prompt-suggestions hidden" id="dynamicPromptSuggestions">
-                </div>
-            <textarea id="userInput" class="input-field" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
-    
-            <button id="sendButton" class="send-button">
-                <span class="material-symbols-outlined">send</span>
-                Enviar
-            </button>
-        </div>
+    <div class="gemini-actions-container">
+        <button id="summarizeChatButton" class="gemini-action-button">
+            <span class="material-symbols-outlined">summarize</span>
+            Resumir Chat ✨
+        </button>
+        <button id="generateIdeaButton" class="gemini-action-button">
+            <span class="material-symbols-outlined">lightbulb</span>
+            Idea Creativa ✨
+        </button>
+        <!-- ✅ NUEVO botón para generar imagen -->
+        <button id="generateImageButton" class="gemini-action-button">
+            <span class="material-symbols-outlined">brush</span>
+            Generar Imagen
+        </button>
+    </div>
+
+    <div class="dynamic-prompt-suggestions hidden" id="dynamicPromptSuggestions"></div>
+
+    <textarea id="userInput" class="input-field" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
+
+    <button id="sendButton" class="send-button">
+        <span class="material-symbols-outlined">send</span>
+        Enviar
+    </button>
+</div>
+
     </div>
 
     <script>
@@ -1789,6 +1796,8 @@ generateImageButton.addEventListener("click", async () => {
         return;
     }
 
+    appendMessage('user', prompt);
+    userInput.value = "";
     showLoading(true);
 
     try {
@@ -1803,7 +1812,7 @@ generateImageButton.addEventListener("click", async () => {
         const data = await response.json();
 
         if (data.image_url) {
-            appendMessage('assistant', `🖼 Imagen generada:\n\n<img src="${BACKEND_URL}${data.image_url}" style="max-width: 100%; border-radius: 12px;">`);
+            appendMessage('assistant', `<img src="${BACKEND_URL}${data.image_url}" style="max-width: 100%; border-radius: 12px;">`);
         } else if (data.error) {
             appendMessage('assistant', `⚠️ Error: ${data.error}`, true);
         } else {
@@ -1815,6 +1824,7 @@ generateImageButton.addEventListener("click", async () => {
         showLoading(false);
     }
 });
+
 
 b
         });
