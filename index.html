@@ -1118,6 +1118,18 @@
             <div class="dynamic-prompt-suggestions hidden" id="dynamicPromptSuggestions">
                 </div>
             <textarea id="userInput" class="input-field" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: center; margin-bottom: 10px;">
+  <input type="file" id="imageInput" accept="image/*" />
+  <button class="gemini-action-button" id="imageToTextButton">
+    <span class="material-symbols-outlined">image</span>
+    Imagen a texto
+  </button>
+  <button class="gemini-action-button" id="generateImageButton">
+    <span class="material-symbols-outlined">brush</span>
+    Generar Imagen
+  </button>
+</div>
+
             <button id="sendButton" class="send-button">
                 <span class="material-symbols-outlined">send</span>
                 Enviar
@@ -1755,6 +1767,52 @@
             } else {
                 localStorage.removeItem('lastActiveChatId');
             }
+            const imageInput = document.getElementById('imageInput');
+const imageToTextButton = document.getElementById('imageToTextButton');
+const generateImageButton = document.getElementById('generateImageButton');
+
+imageToTextButton.addEventListener('click', async () => {
+    const file = imageInput.files[0];
+    if (!file) return alert("Sube una imagen primero.");
+    
+    const formData = new FormData();
+    formData.append("image", file);
+
+    showLoading(true);
+    try {
+        const response = await fetch(`${BACKEND_URL}/image-to-text`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        appendMessage('assistant', `🖼 Texto de la imagen:\n\n${data.text}`);
+    } catch (error) {
+        appendMessage('assistant', `Error al procesar la imagen: ${error.message}`, true);
+    } finally {
+        showLoading(false);
+    }
+});
+
+generateImageButton.addEventListener('click', async () => {
+    const prompt = userInput.value.trim();
+    if (!prompt) return alert("Escribe un prompt primero.");
+
+    showLoading(true);
+    try {
+        const response = await fetch(`${BACKEND_URL}/text-to-image`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+        });
+        const data = await response.json();
+        appendMessage('assistant', `🖼 Imagen generada:\n\n<img src="${data.image_url}" style="max-width: 100%; border-radius: 12px;">`);
+    } catch (error) {
+        appendMessage('assistant', `Error al generar imagen: ${error.message}`, true);
+    } finally {
+        showLoading(false);
+    }
+});
+b
         });
     </script>
 </body>
