@@ -1793,25 +1793,40 @@ imageToTextButton.addEventListener('click', async () => {
     }
 });
 
-generateImageButton.addEventListener('click', async () => {
+generateImageButton.addEventListener("click", async () => {
     const prompt = userInput.value.trim();
-    if (!prompt) return alert("Escribe un prompt primero.");
+    if (!prompt) {
+        alert("Escribe una descripción para generar la imagen.");
+        return;
+    }
 
     showLoading(true);
+
     try {
         const response = await fetch(`${BACKEND_URL}/text-to-image`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({ prompt })
         });
+
         const data = await response.json();
-        appendMessage('assistant', `🖼 Imagen generada:\n\n<img src="${data.image_url}" style="max-width: 100%; border-radius: 12px;">`);
+
+        if (data.image_url) {
+            appendMessage('assistant', `🖼 Imagen generada:\n\n<img src="${BACKEND_URL}${data.image_url}" style="max-width: 100%; border-radius: 12px;">`);
+        } else if (data.error) {
+            appendMessage('assistant', `⚠️ Error: ${data.error}`, true);
+        } else {
+            appendMessage('assistant', `⚠️ No se pudo generar la imagen.`, true);
+        }
     } catch (error) {
-        appendMessage('assistant', `Error al generar imagen: ${error.message}`, true);
+        appendMessage('assistant', `🚫 Error al generar imagen: ${error.message}`, true);
     } finally {
         showLoading(false);
     }
 });
+
 b
         });
     </script>
