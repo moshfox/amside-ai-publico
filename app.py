@@ -1,9 +1,10 @@
 import os
-from flask import Flask, request, jsonify
-import requests
-from flask_cors import CORS
 import re
 import traceback
+import requests
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 CORS(app)
@@ -70,20 +71,17 @@ def generate_text():
 
         ai_response_text = hf_data[0]['generated_text']
 
-        # --- LIMPIEZA DE RESPUESTA ---
+        # LIMPIEZA
         patterns = [
             r"te llamas amside ai.*?no repitas esta descripci[oó]n.*?[.!]*",
-            r"(fui creado por|fui desarrollada por|fui entrenada por|soy una inteligencia artificial creada por|soy una inteligencia artificial diseñada por).*?(amside ai)?[.!]*",
-            r"una inteligencia artificial diseñada por hodely gil.*?ayudar[.!]*",
-            r"(mi objetivo|mi propósito).*?(ayudarte|asistirte|proporcionarte).*?[.!]*",
-            r"(lo siento|lamento|me disculpo|mis disculpas).*?[.!]*",
-            r"(podemos empezar de nuevo|puedo ayudarte de nuevo).*?[.!]*",
-            r"no fue mi intención.*?[.!]*",
+            r"(fui creado por|fui desarrollada por|soy una inteligencia artificial creada por).*?[.!]*",
+            r"una inteligencia artificial diseñada por hodely gil.*?[.!]*",
+            r"(mi objetivo|mi propósito).*?(ayudarte|asistirte).*?[.!]*",
+            r"(lo siento|me disculpo).*?[.!]*",
             r"en tus respuestas[.!]*",
             r"\ben tus respuestas\b",
-            r"�[��]|�[��]|#\w+",
+            r"�[��]|#\w+",
         ]
-
         for pattern in patterns:
             ai_response_text = re.sub(pattern, '', ai_response_text, flags=re.IGNORECASE | re.DOTALL)
 
@@ -106,10 +104,66 @@ def generate_text():
         return jsonify({"response": ai_response_text})
 
     except requests.exceptions.RequestException as e:
-        return jsonify({"error": f"Error al conectar con la IA: {e}. Por favor, inténtalo de nuevo más tarde."}), 500
+        return jsonify({"error": f"Error al conectar con la IA: {e}"}), 500
     except Exception as e:
-        traceback_str = traceback.format_exc()
-        return jsonify({"error": f"Ocurrió un error inesperado en el servidor: {e}", "trace": traceback_str}), 500
+        return jsonify({"error": f"Error interno del servidor: {e}", "trace": traceback.format_exc()}), 500
 
+# --- NUEVAS FUNCIONES ---
+
+@app.route('/image-to-text', methods=['POST'])
+def image_to_text():
+    if 'image' not in request.files:
+        return jsonify({'error': 'No se ha enviado ninguna imagen'}), 400
+
+    image_file = request.files['image']
+    image_bytes = image_file.read()
+
+    response = requests.post(
+        "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base",
+        headers=HEADERS,
+        data=image_bytes
+    )
+
+    if not response.ok:
+        return jsonify({'error': 'Error al procesar la imagen'}), 500
+
+    result = response.json()
+    text = result[0].get('generated_text', 'No se pudo generar texto')
+    return jsonify({'text': text})
+
+
+@app.route('/text-to-image', methods=['POST'])
+def text_to_image():
+    data = request.get_json()
+    prompt = data.get("prompt", "")
+    if not prompt:
+        return jsonify({'error': 'No se recibió ningún prompt'}), 400
+
+    response = requests.post(
+        "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2",
+        headers=HEADERS,
+        json={"inputs": prompt}
+    )
+
+    if not response.ok:
+        return jsonify({'error': 'Error al generar la imagen'}), 500
+
+    # Guardar imagen local
+    image_data = response.content
+    image_name = "generated_image.png"
+    image_path = os.path.join("static", secure_filename(image_name))
+
+    os.makedirs("static", exist_ok=True)
+    with open(image_path, "wb") as f:
+        f.write(image_data)
+
+    return jsonify({'image_url': f"/static/{image_name}"})
+
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
+
+# --- EJECUTAR APP ---
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
