@@ -80,6 +80,12 @@
             text-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.7); /* Efecto neón más marcado */
             position: relative;
         }
+.message.assistant img {
+  border-radius: 12px;
+  margin-top: 8px;
+  max-width: 100%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
 
         .sidebar-header h2 {
             margin: 0;
@@ -1138,6 +1144,23 @@
         // ¡IMPORTANTE! Asegúrate de que esta URL sea la de tu backend de Render
         const BACKEND_URL = "https://amside-ai-backend.onrender.com"; 
 
+        function appendMessage(role, content, isError = false, id = null) {
+    const chatBody = document.getElementById("chatBody");
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `message ${role}`;
+    if (isError) messageDiv.classList.add("error");
+    if (id) messageDiv.id = id;
+    messageDiv.innerHTML = content;
+    chatBody.appendChild(messageDiv);
+    chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function updateMessage(id, newContent) {
+    const msg = document.getElementById(id);
+    if (msg) msg.innerHTML = newContent;
+}
+
+
         const chatContainer = document.getElementById('chatContainer');
         const sidebar = document.querySelector('.sidebar');
         const newChatButton = document.getElementById('newChatButton');
@@ -1801,6 +1824,9 @@ generateImageButton.addEventListener("click", async () => {
     showLoading(true);
 
     try {
+        const tempId = `temp-${Date.now()}`;
+        appendMessage('assistant', '🎨 Generando imagen...', false, tempId);
+
         const response = await fetch(`${BACKEND_URL}/text-to-image`, {
             method: "POST",
             headers: {
@@ -1812,11 +1838,12 @@ generateImageButton.addEventListener("click", async () => {
         const data = await response.json();
 
         if (data.image_url) {
-            appendMessage('assistant', `<img src="${BACKEND_URL}${data.image_url}" style="max-width: 100%; border-radius: 12px;">`);
+            const imageHTML = `<img src="${BACKEND_URL}${data.image_url}" style="max-width: 100%; border-radius: 12px;">`;
+            updateMessage(tempId, imageHTML);
         } else if (data.error) {
-            appendMessage('assistant', `⚠️ Error: ${data.error}`, true);
+            updateMessage(tempId, `⚠️ Error: ${data.error}`);
         } else {
-            appendMessage('assistant', `⚠️ No se pudo generar la imagen.`, true);
+            updateMessage(tempId, `⚠️ No se pudo generar la imagen.`);
         }
     } catch (error) {
         appendMessage('assistant', `🚫 Error al generar imagen: ${error.message}`, true);
@@ -1824,6 +1851,45 @@ generateImageButton.addEventListener("click", async () => {
         showLoading(false);
     }
 });
+
+
+    // Mostrar el mensaje del usuario en el chat
+    appendMessage('user', prompt);
+    userInput.value = "";
+
+    // Mostrar "Escribiendo..." con el spinner
+    showLoading(true);
+
+    try {
+        // Mostrar mensaje temporal de carga
+        const tempId = `temp-${Date.now()}`;
+        appendMessage('assistant', '🎨 Generando imagen...', false, tempId);
+
+        const response = await fetch(`${BACKEND_URL}/text-to-image`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ prompt })
+        });
+
+        const data = await response.json();
+
+        if (data.image_url) {
+            const imageHTML = `<img src="${BACKEND_URL}${data.image_url}" style="max-width: 100%; border-radius: 12px;">`;
+            updateMessage(tempId, imageHTML);
+        } else if (data.error) {
+            updateMessage(tempId, `⚠️ Error: ${data.error}`);
+        } else {
+            updateMessage(tempId, `⚠️ No se pudo generar la imagen.`);
+        }
+    } catch (error) {
+        appendMessage('assistant', `🚫 Error al generar imagen: ${error.message}`, true);
+    } finally {
+        showLoading(false);
+    }
+});
+
 
 
 b
