@@ -1,1901 +1,1603 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amside AI </title> 
-<link rel="icon" type="image/png" href="assets/favicon.png">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
-    <style>
-        /* Variables CSS para facilitar la gestión de colores y estilos */
-        :root {
-            --primary-color: #22272b; /* Fondo oscuro principal */
-            --secondary-color: #37404a; /* Gris oscuro para barras y elementos */
-            --accent-color: #00bcd4; /* Cian para elementos interactivos */
-            --accent-color-hover: #00838f; /* Cian más oscuro al pasar el ratón */
-            --text-color-primary: #eee; /* Texto claro principal */
-            --text-color-secondary: #ccc; /* Texto gris claro secundario */
-            --text-color-dark: #333; /* Para elementos sobre fondos claros si los hubiera */
-            --error-color: #f44336; /* Rojo para mensajes de error */
-            --border-radius: 10px; /* Bordes redondeados ligeramente más grandes */
-            --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Sombra para profundidad */
-            --transition: all 0.3s ease-in-out; /* Transiciones suaves */
-            --sidebar-width: 300px; /* Ancho del sidebar */
-            --accent-color-rgb: 0, 188, 212; /* Color cian en RGB para sombras */
-            --glitch-color-1: #ff00c1; /* Color para efecto glitch 1 (si se vuelve a usar) */
-            --glitch-color-2: #00ffff; /* Color para efecto glitch 2 (si se vuelve a usar) */
-        }
-
-        /* Estilos generales del cuerpo de la página */
-        body {
-            font-family: 'Roboto Mono', monospace; /* Fuente estilo consola */
-            background-color: var(--primary-color);
-            color: var(--text-color-primary);
-            margin: 0;
-            display: flex; /* Contenedor principal usa flexbox */
-            min-height: 100vh; /* Altura mínima del viewport */
-            padding: 0;
-            overflow: hidden; /* Evita scroll no deseado en el body */
-            /* Animación de fondo sutil (partículas o gradiente pulsante) */
-            background-image: radial-gradient(circle at top left, rgba(var(--accent-color-rgb), 0.1) 0%, transparent 50%),
-                                    radial-gradient(circle at bottom right, rgba(var(--glitch-color-2), 0.1) 0%, transparent 50%);
-            background-size: 200% 200%;
-            animation: gradient-shift 15s ease infinite alternate;
-        }
-
-        @keyframes gradient-shift {
-            0% { background-position: 0% 0%; }
-            100% { background-position: 100% 100%; }
-        }
-
-        /* Estilos del sidebar (barra lateral izquierda) */
-        .sidebar {
-            background-color: var(--secondary-color);
-            width: var(--sidebar-width);
-            border-right: 1px solid #444d57; /* Separador */
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            flex-shrink: 0; /* No se encoge */
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 15px rgba(var(--accent-color-rgb), 0.2); /* Sombra más compleja */
-            z-index: 10; /* Para que esté por encima de otros elementos si hay solapamiento */
-            transition: width var(--transition); /* Para redimensionamiento dinámico */
-        }
-
-        .sidebar-header {
-            color: var(--text-color-primary);
-            margin-bottom: 30px;
-            text-align: left;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 10px; /* Espacio entre el ícono y el texto */
-        }
-
-        .sidebar-header .icon {
-            font-size: 2.5em; /* Tamaño del ícono, un poco más grande */
-            color: var(--accent-color);
-            text-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.7); /* Efecto neón más marcado */
-            position: relative;
-        }
-.message.assistant img {
-  border-radius: 12px;
-  margin-top: 8px;
-  max-width: 100%;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amside AI - Interfaz con IA Real</title>
+<link
+href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=
+swap" rel="stylesheet">
+<link
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,
+GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+<style>
+/* Variables CSS para facilitar la gestión de colores y estilos */
+:root {
+--primary-color: #22272b; /* Fondo oscuro principal */
+--secondary-color: #37404a; /* Gris oscuro para barras y elementos */
+--accent-color: #00bcd4; /* Cian para elementos interactivos */
+--accent-color-hover: #00838f; /* Cian más oscuro al pasar el ratón */
+--text-color-primary: #eee; /* Texto claro principal */
+--text-color-secondary: #ccc; /* Texto gris claro secundario */
+--text-color-dark: #333; /* Para elementos sobre fondos claros si los hubiera */
+--error-color: #f44336; /* Rojo para mensajes de error */
+--border-radius: 10px; /* Bordes redondeados ligeramente más grandes */
+--box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); /* Sombra para profundidad */
+--transition: all 0.3s ease-in-out; /* Transiciones suaves */
+--sidebar-width: 300px; /* Ancho del sidebar */
+--accent-color-rgb: 0, 188, 212; /* Color cian en RGB para sombras */
+--glitch-color-1: #ff00c1; /* Color para efecto glitch 1 (si se vuelve a usar) */
+--glitch-color-2: #00ffff; /* Color para efecto glitch 2 (si se vuelve a usar) */
 }
-
-        .sidebar-header h2 {
-            margin: 0;
-            font-size: 2em; /* Fuente más grande */
-            font-weight: 700; /* Más audaz */
-            background: linear-gradient(45deg, var(--accent-color), #00e5ff); /* Degradado en el texto */
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.6); /* Sombra para el texto */
-            position: relative;
-        }
-
-        /* Estilo del botón "Nueva Conversación" */
-        .new-chat-button {
-            background-color: var(--accent-color);
-            color: var(--text-color-primary);
-            border: none;
-            padding: 12px 18px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 1.05em; /* Un poco más grande */
-            margin-bottom: 20px;
-            transition: background-color var(--transition), transform 0.2s ease, box-shadow var(--transition);
-            width: 100%;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            font-weight: 500;
-            box-shadow: 0 4px 10px rgba(var(--accent-color-rgb), 0.3);
-            position: relative; /* Para el efecto de onda */
-            overflow: hidden; /* Para que la onda no se salga */
-        }
-
-        .new-chat-button .material-symbols-outlined {
-            margin-right: 10px;
-            font-size: 1.2em;
-            transition: transform 0.2s ease; /* Transición para el icono */
-        }
-
-        .new-chat-button:hover {
-            background-color: var(--accent-color-hover);
-            transform: translateY(-2px); /* Pequeño efecto de elevación */
-            box-shadow: 0 6px 15px rgba(var(--accent-color-rgb), 0.4);
-        }
-
-        .new-chat-button:hover .material-symbols-outlined {
-            transform: rotate(15deg); /* Pequeña rotación del icono */
-        }
-
-        /* Efecto de onda al clickear el botón */
-        .new-chat-button.clicked::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            opacity: 1;
-            animation: click-wave 0.6s forwards;
-        }
-
-        @keyframes click-wave {
-            to {
-                transform: translate(-50%, -50%) scale(2);
-                opacity: 0;
-            }
-        }
-
-        /* Título del historial de chat */
-        .chat-list-title {
-            font-size: 0.95em; /* Ligeramente más grande */
-            color: var(--text-color-secondary);
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px; /* Más espacio entre letras */
-            font-weight: 500;
-            padding-bottom: 5px;
-            border-bottom: 1px dashed rgba(var(--accent-color-rgb), 0.3); /* Línea punteada */
-            width: 100%;
-        }
-
-        /* Lista de chats en el historial */
-        .chat-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            width: 100%;
-            overflow-y: auto; /* Para permitir scroll si hay muchos chats */
-            flex-grow: 1; /* Ocupa el espacio restante en el sidebar */
-            scrollbar-width: thin; /* Firefox */
-            scrollbar-color: var(--accent-color) var(--secondary-color); /* Firefox */
-        }
-
-        .chat-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .chat-list::-webkit-scrollbar-track {
-            background: var(--secondary-color);
-        }
-
-        .chat-list::-webkit-scrollbar-thumb {
-            background-color: var(--accent-color);
-            border-radius: 10px;
-            border: 2px solid var(--secondary-color);
-        }
-
-        .chat-list li {
-            padding: 10px 15px;
-            border-radius: var(--border-radius);
-            margin-bottom: 8px; /* Más espacio entre elementos */
-            cursor: pointer;
-            background-color: #2c343c;
-            color: var(--text-color-secondary);
-            transition: background-color var(--transition), color var(--transition), transform 0.2s ease, box-shadow 0.2s ease;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            justify-content: space-between; /* Para separar el texto de los íconos */
-            gap: 8px; /* Espacio para el ícono de chat */
-            position: relative; /* Para posicionar los íconos de acción */
-        }
-
-        .chat-list li .chat-title-content {
-            flex-grow: 1;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .chat-list li .material-symbols-outlined {
-            font-size: 1.1em;
-            color: var(--text-color-secondary);
-            flex-shrink: 0;
-        }
-
-        .chat-list li:hover {
-            background-color: #3f4a56; /* Un gris más claro al pasar el ratón */
-            color: var(--text-color-primary);
-            transform: translateX(5px); /* Pequeño desplazamiento a la derecha */
-            box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.2); /* Resplandor sutil */
-        }
-
-        .chat-list li:hover .material-symbols-outlined {
-            color: var(--text-color-primary);
-        }
-
-        .chat-list li.active {
-            background-color: var(--accent-color); /* Cian para el chat activo */
-            color: var(--text-color-primary);
-            font-weight: 500;
-            box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.3), 0 0 15px rgba(var(--accent-color-rgb), 0.5); /* Resplandor más fuerte */
-            transform: scale(1.02); /* Ligeramente más grande */
-        }
-
-        .chat-list li.active .material-symbols-outlined {
-            color: var(--text-color-primary);
-        }
-
-        /* Estilos para los íconos de acción (editar/borrar) */
-        .chat-list li .chat-actions {
-            display: none; /* Ocultos por defecto */
-            gap: 5px;
-            flex-shrink: 0;
-        }
-        .chat-list li:hover .chat-actions,
-        .chat-list li.active .chat-actions { /* Mostrar también cuando está activo */
-            display: flex;
-        }
-
-        .chat-list li .chat-actions .material-symbols-outlined {
-            font-size: 1em;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 5px;
-            transition: background-color 0.2s ease, transform 0.2s ease;
-        }
-
-        .chat-list li .chat-actions .material-symbols-outlined:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            transform: scale(1.1);
-        }
-        
-        .chat-list li .chat-actions .material-symbols-outlined.delete-icon:hover {
-            color: var(--error-color);
-            background-color: rgba(244, 67, 54, 0.2);
-        }
-        
-        .chat-list li .chat-actions .material-symbols-outlined.edit-icon:hover {
-            color: #ffeb3b; /* Amarillo para editar */
-            background-color: rgba(255, 235, 59, 0.2);
-        }
-
-        /* Estilo para el input de edición del título */
-        .chat-list li .edit-title-input {
-            background-color: #444d57;
-            border: 1px solid var(--accent-color);
-            color: var(--text-color-primary);
-            border-radius: 5px;
-            padding: 5px 8px;
-            font-size: 1em;
-            flex-grow: 1;
-            margin-right: 5px;
-            outline: none;
-        }
-
-
-        /* Contenedor principal del chat */
-        .chat-container {
-            background-color: var(--primary-color);
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            flex-grow: 1; /* Ocupa el espacio restante */
-            margin: 20px;
-            border: 1px solid #333a40;
-            position: relative; /* Para posicionar el welcome-screen y el input-area centrado */
-        }
-
-        /* Encabezado del chat */
-        .chat-header {
-            background-color: var(--secondary-color);
-            color: var(--text-color-primary);
-            padding: 15px 20px;
-            text-align: left;
-            border-bottom: 1px solid #444d57;
-            border-top-left-radius: var(--border-radius);
-            border-top-right-radius: var(--border-radius);
-            display: flex;
-            align-items: center;
-            gap: 15px; /* Espacio entre el botón y el título */
-            flex-shrink: 0; /* Evita que se encoja */
-            z-index: 20; /* Asegura que esté por encima del welcome-screen y input centrado */
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        .chat-header.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .chat-header button {
-            background: none;
-            border: none;
-            color: var(--text-color-primary);
-            font-size: 1em;
-            cursor: pointer;
-            padding: 8px 12px;
-            border-radius: var(--border-radius);
-            transition: background-color var(--transition), transform 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: 500;
-        }
-
-        .chat-header button .material-symbols-outlined {
-            font-size: 1.2em;
-        }
-
-        .chat-header button:hover {
-            background-color: #444d57;
-            transform: translateY(-1px);
-        }
-
-        .chat-header h2 {
-            margin: 0;
-            font-size: 1.5em; /* Un poco más grande */
-            font-weight: 500;
-            color: var(--accent-color);
-            text-shadow: 0 0 3px rgba(var(--accent-color-rgb), 0.3);
-        }
-
-        /* Cuerpo del chat (donde aparecen los mensajes) */
-      .chat-body {
-    padding: 20px;
-    overflow-y: auto;
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    z-index: 10;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-
-    height: 100%;
-    max-height: 100%;
-    position: relative;
-
-    scrollbar-width: thin;
-    scrollbar-color: var(--accent-color) var(--primary-color);
+/* Estilos generales del cuerpo de la página */
+body {
+font-family: 'Roboto Mono', monospace; /* Fuente estilo consola */
+background-color: var(--primary-color);
+color: var(--text-color-primary);
+margin: 0;
+display: flex; /* Contenedor principal usa flexbox */
+min-height: 100vh; /* Altura mínima del viewport */
+padding: 0;
+overflow: hidden; /* Evita scroll no deseado en el body */
+/* Animación de fondo sutil (partículas o gradiente pulsante) */
+background-image: radial-gradient(circle at top left, rgba(var(--accent-color-rgb), 0.1)
+0%, transparent 50%),
+radial-gradient(circle at bottom right, rgba(var(--glitch-color-2), 0.1)
+0%, transparent 50%);
+background-size: 200% 200%;
+animation: gradient-shift 15s ease infinite alternate;
+}
+@keyframes gradient-shift {
+0% { background-position: 0% 0%; }
+100% { background-position: 100% 100%; }
+}
+/* Estilos del sidebar (barra lateral izquierda) */
+.sidebar {
+background-color: var(--secondary-color);
+width: var(--sidebar-width);
+border-right: 1px solid #444d57; /* Separador */
+padding: 25px;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+flex-shrink: 0; /* No se encoge */
+box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 15px rgba(var(--accent-color-rgb),
+0.2); /* Sombra más compleja */
+z-index: 10; /* Para que esté por encima de otros elementos si hay solapamiento */
+transition: width var(--transition); /* Para redimensionamiento dinámico */
+}
+.sidebar-header {
+color: var(--text-color-primary);
+margin-bottom: 30px;
+text-align: left;
+width: 100%;
+display: flex;
+align-items: center;
+gap: 10px; /* Espacio entre el ícono y el texto */
+}
+.sidebar-header .icon {
+font-size: 2.5em; /* Tamaño del ícono, un poco más grande */
+color: var(--accent-color);
+text-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.7); /* Efecto neón más
+marcado */
+position: relative;
+}
+.sidebar-header h2 {
+margin: 0;
+font-size: 2em; /* Fuente más grande */
+font-weight: 700; /* Más audaz */
+background: linear-gradient(45deg, var(--accent-color), #00e5ff); /* Degradado en el
+texto */
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+text-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.6); /* Sombra para el texto */
+position: relative;
+}
+/* Estilo del botón "Nueva Conversación" */
+.new-chat-button {
+background-color: var(--accent-color);
+color: var(--text-color-primary);
+border: none;
+padding: 12px 18px;
+border-radius: var(--border-radius);
+cursor: pointer;
+font-size: 1.05em; /* Un poco más grande */
+margin-bottom: 20px;
+transition: background-color var(--transition), transform 0.2s ease, box-shadow
+var(--transition);
+width: 100%;
+text-align: left;
+display: flex;
+align-items: center;
+justify-content: flex-start;
+font-weight: 500;
+box-shadow: 0 4px 10px rgba(var(--accent-color-rgb), 0.3);
+position: relative; /* Para el efecto de onda */
+overflow: hidden; /* Para que la onda no se salga */
+}
+.new-chat-button .material-symbols-outlined {
+margin-right: 10px;
+font-size: 1.2em;
+transition: transform 0.2s ease; /* Transición para el icono */
+}
+.new-chat-button:hover {
+background-color: var(--accent-color-hover);
+transform: translateY(-2px); /* Pequeño efecto de elevación */
+box-shadow: 0 6px 15px rgba(var(--accent-color-rgb), 0.4);
+}
+.new-chat-button:hover .material-symbols-outlined {
+transform: rotate(15deg); /* Pequeña rotación del icono */
+}
+/* Efecto de onda al clickear el botón */
+.new-chat-button.clicked::after {
+content: '';
+position: absolute;
+width: 100%;
+height: 100%;
+background-color: rgba(255, 255, 255, 0.2);
+border-radius: 50%;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%) scale(0);
+opacity: 1;
+animation: click-wave 0.6s forwards;
+}
+@keyframes click-wave {
+to {
+transform: translate(-50%, -50%) scale(2);
+opacity: 0;
+}
+}
+/* Título del historial de chat */
+.chat-list-title {
+font-size: 0.95em; /* Ligeramente más grande */
+color: var(--text-color-secondary);
+margin-bottom: 12px;
+text-transform: uppercase;
+letter-spacing: 1px; /* Más espacio entre letras */
+font-weight: 500;
+padding-bottom: 5px;
+border-bottom: 1px dashed rgba(var(--accent-color-rgb), 0.3); /* Línea punteada */
+width: 100%;
+}
+/* Lista de chats en el historial */
+.chat-list {
+list-style: none;
+padding: 0;
+margin: 0;
+width: 100%;
+overflow-y: auto; /* Para permitir scroll si hay muchos chats */
+flex-grow: 1; /* Ocupa el espacio restante en el sidebar */
+scrollbar-width: thin; /* Firefox */
+scrollbar-color: var(--accent-color) var(--secondary-color); /* Firefox */
+}
+.chat-list::-webkit-scrollbar {
+width: 8px;
+}
+.chat-list::-webkit-scrollbar-track {
+background: var(--secondary-color);
+}
+.chat-list::-webkit-scrollbar-thumb {
+background-color: var(--accent-color);
+border-radius: 10px;
+border: 2px solid var(--secondary-color);
+}
+.chat-list li {
+padding: 10px 15px;
+border-radius: var(--border-radius);
+margin-bottom: 8px; /* Más espacio entre elementos */
+cursor: pointer;
+background-color: #2c343c;
+color: var(--text-color-secondary);
+transition: background-color var(--transition), color var(--transition), transform 0.2s
+ease, box-shadow 0.2s ease;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+display: flex;
+align-items: center;
+justify-content: space-between; /* Para separar el texto de los íconos */
+gap: 8px; /* Espacio para el ícono de chat */
+position: relative; /* Para posicionar los íconos de acción */
+}
+.chat-list li .chat-title-content {
+flex-grow: 1;
+display: flex;
+align-items: center;
+gap: 8px;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+}
+.chat-list li .material-symbols-outlined {
+font-size: 1.1em;
+color: var(--text-color-secondary);
+flex-shrink: 0;
+}
+.chat-list li:hover {
+background-color: #3f4a56; /* Un gris más claro al pasar el ratón */
+color: var(--text-color-primary);
+transform: translateX(5px); /* Pequeño desplazamiento a la derecha */
+box-shadow: 0 0 10px rgba(var(--accent-color-rgb), 0.2); /* Resplandor sutil */
+}
+.chat-list li:hover .material-symbols-outlined {
+color: var(--text-color-primary);
+}
+.chat-list li.active {
+background-color: var(--accent-color); /* Cian para el chat activo */
+color: var(--text-color-primary);
+font-weight: 500;
+box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.3), 0 0 15px
+rgba(var(--accent-color-rgb), 0.5); /* Resplandor más fuerte */
+transform: scale(1.02); /* Ligeramente más grande */
+}
+.chat-list li.active .material-symbols-outlined {
+color: var(--text-color-primary);
+}
+/* Estilos para los íconos de acción (editar/borrar) */
+.chat-list li .chat-actions {
+display: none; /* Ocultos por defecto */
+gap: 5px;
+flex-shrink: 0;
+}
+.chat-list li:hover .chat-actions,
+.chat-list li.active .chat-actions { /* Mostrar también cuando está activo */
+display: flex;
+}
+.chat-list li .chat-actions .material-symbols-outlined {
+font-size: 1em;
+cursor: pointer;
+padding: 4px;
+border-radius: 5px;
+transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.chat-list li .chat-actions .material-symbols-outlined:hover {
+background-color: rgba(255, 255, 255, 0.1);
+transform: scale(1.1);
+}
+.chat-list li .chat-actions .material-symbols-outlined.delete-icon:hover {
+color: var(--error-color);
+background-color: rgba(244, 67, 54, 0.2);
+}
+.chat-list li .chat-actions .material-symbols-outlined.edit-icon:hover {
+color: #ffeb3b; /* Amarillo para editar */
+background-color: rgba(255, 235, 59, 0.2);
+}
+/* Estilo para el input de edición del título */
+.chat-list li .edit-title-input {
+background-color: #444d57;
+border: 1px solid var(--accent-color);
+color: var(--text-color-primary);
+border-radius: 5px;
+padding: 5px 8px;
+font-size: 1em;
+flex-grow: 1;
+margin-right: 5px;
+outline: none;
+}
+/* Contenedor principal del chat */
+.chat-container {
+background-color: var(--primary-color);
+border-radius: var(--border-radius);
+box-shadow: var(--box-shadow);
+display: flex;
+flex-direction: column;
+overflow: hidden;
+flex-grow: 1; /* Ocupa el espacio restante */
+margin: 20px;
+border: 1px solid #333a40;
+position: relative; /* Para posicionar el welcome-screen y el input-area centrado */
+}
+/* Encabezado del chat */
+.chat-header {
+background-color: var(--secondary-color);
+color: var(--text-color-primary);
+padding: 15px 20px;
+text-align: left;
+border-bottom: 1px solid #444d57;
+border-top-left-radius: var(--border-radius);
+border-top-right-radius: var(--border-radius);
+display: flex;
+align-items: center;
+gap: 15px; /* Espacio entre el botón y el título */
+flex-shrink: 0; /* Evita que se encoja */
+z-index: 20; /* Asegura que esté por encima del welcome-screen y input centrado */
+transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.chat-header.hidden {
+opacity: 0;
+visibility: hidden;
+pointer-events: none;
+}
+.chat-header button {
+background: none;
+border: none;
+color: var(--text-color-primary);
+font-size: 1em;
+cursor: pointer;
+padding: 8px 12px;
+border-radius: var(--border-radius);
+transition: background-color var(--transition), transform 0.2s ease;
+display: flex;
+align-items: center;
+gap: 5px;
+font-weight: 500;
+}
+.chat-header button .material-symbols-outlined {
+font-size: 1.2em;
+}
+.chat-header button:hover {
+background-color: #444d57;
+transform: translateY(-1px);
+}
+.chat-header h2 {
+margin: 0;
+font-size: 1.5em; /* Un poco más grande */
+font-weight: 500;
+color: var(--accent-color);
+text-shadow: 0 0 3px rgba(var(--accent-color-rgb), 0.3);
+}
+/* Cuerpo del chat (donde aparecen los mensajes) */
+.chat-body {
+padding: 20px;
+overflow-y: auto;
+flex-grow: 1;
+flex-shrink: 1;
+flex-basis: 0;
+display: flex;
+flex-direction: column;
+gap: 15px;
+z-index: 10;
+transition: opacity 0.3s ease, visibility 0.3s ease;
+height: 100%;
+max-height: 100%;
+position: relative;
+scrollbar-width: thin;
+scrollbar-color: var(--accent-color) var(--primary-color);
 }
 .chat-body::-webkit-scrollbar {
-    width: 8px;
+width: 8px;
 }
 .chat-body::-webkit-scrollbar-track {
-    background: var(--primary-color);
+background: var(--primary-color);
 }
 .chat-body::-webkit-scrollbar-thumb {
-    background-color: var(--accent-color);
-    border-radius: 10px;
-    border: 2px solid var(--primary-color);
+background-color: var(--accent-color);
+border-radius: 10px;
+border: 2px solid var(--primary-color);
 }
-
-
-        .chat-body.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            position: absolute; /* Para que no ocupe espacio cuando está oculto */
-            width: 100%;
-            height: 100%;
-        }
-
-
-        .chat-body::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .chat-body::-webkit-scrollbar-track {
-            background: var(--primary-color);
-        }
-
-        .chat-body::-webkit-scrollbar-thumb {
-            background-color: var(--accent-color);
-            border-radius: 10px;
-            border: 2px solid var(--primary-color);
-        }
-
-        /* Estilo general para los mensajes de la IA */
-        .message {
-            background-color: #2c343c;
-            color: var(--text-color-secondary);
-            border-radius: var(--border-radius);
-            padding: 12px 16px; /* Más padding */
-            word-break: break-word;
-            align-self: flex-start;
-            max-width: 75%; /* Ancho máximo del mensaje */
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            font-size: 1.10em; /* Ligeramente más grande */
-            line-height: 1.6; /* Mejor legibilidad */
-            border: 1px solid #3f4a56; /* Borde sutil */
-            animation: fadeInMessage 0.5s ease-out; /* Animación de entrada */
-            position: relative; /* Para la cola de la burbuja */
-        }
-
-        /* Cola de la burbuja de mensaje de IA */
-        .message::before {
-            content: '';
-            position: absolute;
-            left: -8px; /* Ajusta según el padding */
-            top: 10px;
-            border: 8px solid transparent;
-            border-right-color: #2c343c;
-            filter: drop-shadow(-1px 0px 1px rgba(0,0,0,0.1)); /* Sombra para la cola */
-        }
-
-        /* Estilo específico para mensajes de error */
-        .error-message {
-            background-color: #422b2b; /* Fondo rojizo oscuro */
-            color: var(--error-color);
-            border-radius: var(--border-radius);
-            padding: 12px 16px;
-            word-break: break-word;
-            align-self: flex-start;
-            max-width: 75%;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            font-size: 1.10em;
-            border: 1px solid #5a3232; /* Borde rojo */
-            animation: fadeInMessage 0.5s ease-out; /* Animación de entrada */
-            position: relative;
-        }
-        .error-message::before {
-            content: '';
-            position: absolute;
-            left: -8px;
-            top: 10px;
-            border: 8px solid transparent;
-            border-right-color: #422b2b;
-            filter: drop-shadow(-1px 0px 1px rgba(0,0,0,0.1));
-        }
-
-        /* Contenedor para mensajes de usuario (para alinear a la derecha) */
-        .user-message-container {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end; /* Alinea el contenido a la derecha */
-            max-width: 75%;
-            align-self: flex-end;
-        }
-
-        /* Estilo específico para mensajes del usuario */
-        .user-message {
-            background-color: var(--accent-color);
-            color: var(--text-color-primary);
-            border-radius: var(--border-radius);
-            padding: 12px 16px;
-            word-break: break-word;
-            box-shadow: 0 2px 6px rgba(var(--accent-color-rgb), 0.25);
-            font-size: 1.10em;
-            line-height: 1.6;
-            margin-bottom: 5px;
-            border: 1px solid var(--accent-color-hover); /* Borde acentuado */
-            animation: fadeInMessage 0.5s ease-out; /* Animación de entrada */
-            position: relative; /* Para la cola de la burbuja */
-        }
-
-        /* Cola de la burbuja de mensaje de usuario */
-        .user-message::before {
-            content: '';
-            position: absolute;
-            right: -8px; /* Ajusta según el padding */
-            top: 10px;
-            border: 8px solid transparent;
-            border-left-color: var(--accent-color);
-            filter: drop-shadow(1px 0px 1px rgba(0,0,0,0.1)); /* Sombra para la cola */
-        }
-
-        @keyframes fadeInMessage {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Indicador de carga (spinner y texto) */
-        .loading-indicator {
-            display: flex;
-            align-self: flex-start; /* Se alinea a la izquierda como un mensaje de IA */
-            margin-top: 5px;
-            align-items: center;
-            font-size: 0.85em;
-            color: var(--text-color-secondary);
-            gap: 6px;
-            padding: 12px 16px; /* Para que coincida con el padding del mensaje */
-            display: none; /* Oculto por defecto */
-            background-color: #2c343c; /* Fondo similar al mensaje de IA */
-            border-radius: var(--border-radius);
-            max-width: fit-content; /* Se ajusta al contenido */
-        }
-
-        /* Indicador de "typing" (tres puntos) */
-        .typing-indicator span {
-            animation: blink-dots 1s infinite steps(1, end);
-        }
-        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes blink-dots {
-            0%, 60% { opacity: 0; }
-            100% { opacity: 1; }
-        }
-
-        .loading-spinner {
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-top: 2px solid var(--accent-color);
-            border-radius: 50%;
-            width: 16px; /* Más grande */
-            height: 16px;
-            animation: spin 1s linear infinite;
-        }
-
-        /* Animación para el spinner */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Área de entrada de texto y botón de enviar */
-        .input-area {
-            padding: 15px;
-            border-top: 1px solid #444d57;
-            display: flex;
-            flex-direction: column; /* Cambiado a columna para apilar elementos */
-            align-items: center;
-            background-color: var(--secondary-color);
-            border-bottom-left-radius: var(--border-radius);
-            border-bottom-right-radius: var(--border-radius);
-            flex-shrink: 0; /* Evita que se encoja */
-            z-index: 20; /* Asegura que esté por encima del welcome-screen y input centrado */
-            transition: all 0.5s ease; /* Transición para el movimiento */
-            position: relative; /* Para las sugerencias de prompt */
-        }
-
-        .input-field {
-            flex-grow: 1;
-            padding: 12px 16px; /* Más padding */
-            border: 1px solid #555e68;
-            border-radius: var(--border-radius);
-            margin-right: 0; /* Eliminado margin-right para ocupar todo el ancho */
-            margin-bottom: 12px; /* Espacio entre input y botón de enviar */
-            width: calc(100% - 32px); /* Ajusta por padding */
-            font-size: 1em; /* Ligeramente más grande */
-            color: var(--text-color-primary);
-            background-color: #2c343c;
-            resize: none; /* Evita redimensionamiento por el usuario */
-            min-height: 40px; /* Altura mínima para una línea */
-            max-height: 120px; /* Altura máxima antes de scroll */
-            overflow-y: auto; /* Permite scroll vertical si el texto es largo */
-            line-height: 1.5;
-            transition: border-color var(--transition), box-shadow var(--transition);
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: var(--accent-color);
-            box-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.4);
-        }
-
-        .send-button {
-            background-color: var(--accent-color);
-            color: var(--text-color-primary);
-            border: none;
-            padding: 10px 15px; /* Menos padding para hacerlo más pequeño */
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 0.9em; /* Fuente más pequeña */
-            transition: background-color var(--transition), transform 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px; /* Menos espacio */
-            font-weight: 500;
-            width: 100%; /* El botón ocupa todo el ancho */
-            justify-content: center; /* Centrar el contenido del botón */
-        }
-
-        .send-button .material-symbols-outlined {
-            font-size: 1.1em; /* Ajustar tamaño del ícono */
-            transition: transform 0.2s ease; /* Transición para el ícono */
-        }
-
-        .send-button:hover {
-            background-color: var(--accent-color-hover);
-            transform: translateY(-2px);
-        }
-
-        .send-button:hover .material-symbols-outlined {
-            transform: translateX(3px); /* Pequeño "vuelo" del icono */
-        }
-
-        .send-button:disabled {
-            background-color: #607d8b; /* Color gris para deshabilitado */
-            cursor: not-allowed;
-            transform: none;
-            opacity: 0.7;
-        }
-
-        /* --- Pantalla de bienvenida (New Conversation Screen) --- */
-        .welcome-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--primary-color);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
-            z-index: 30; /* Aumentado para que esté por encima de TODO */
-            opacity: 1;
-            visibility: visible;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-
-        .welcome-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none; /* No permite clics cuando está oculto */
-        }
-
-        .welcome-screen h1 {
-            font-size: 3.5em; /* Título más grande */
-            color: var(--accent-color);
-            margin-bottom: 25px;
-            font-weight: 700;
-            text-shadow: 0 0 12px rgba(var(--accent-color-rgb), 0.7);
-            letter-spacing: 2px;
-        }
-
-        .welcome-screen p {
-            font-size: 1.3em;
-            color: var(--text-color-secondary);
-            margin-bottom: 30px; /* Reducido para dejar espacio a las sugerencias */
-            max-width: 700px;
-            line-height: 1.6;
-        }
-
-        /* Nuevo: Botón para empezar a chatear desde la pantalla de bienvenida */
-        .welcome-screen .start-chat-button {
-            background-color: var(--accent-color);
-            color: var(--text-color-primary);
-            border: none;
-            padding: 18px 35px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 1.4em;
-            font-weight: 700;
-            transition: background-color var(--transition), transform 0.2s ease, box-shadow var(--transition);
-            box-shadow: 0 5px 20px rgba(var(--accent-color-rgb), 0.5);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 40px; /* Espacio antes de las sugerencias */
-        }
-
-        .welcome-screen .start-chat-button .material-symbols-outlined {
-            font-size: 1.6em;
-        }
-
-        .welcome-screen .start-chat-button:hover {
-            background-color: var(--accent-color-hover);
-            transform: translateY(-4px) scale(1.03);
-            box-shadow: 0 8px 25px rgba(var(--accent-color-rgb), 0.7);
-        }
-
-        /* Contenedor para sugerencias de prompts en welcome screen */
-        .prompt-suggestions {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            max-width: 800px;
-        }
-
-        .prompt-suggestions .suggest-prompt-button {
-            background-color: #2c343c;
-            color: var(--text-color-secondary);
-            border: 1px solid #3f4a56;
-            padding: 10px 20px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .prompt-suggestions .suggest-prompt-button:hover {
-            background-color: #3f4a56;
-            border-color: var(--accent-color);
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.2);
-        }
-        
-        .prompt-suggestions .suggest-prompt-button .material-symbols-outlined {
-            font-size: 1.1em;
-            color: var(--accent-color);
-        }
-
-
-        /* --- Estilo para el input-area centrado (cuando no hay mensajes y la pantalla de bienvenida está oculta) --- */
-        /* Oculta el chat-body cuando está el input centrado */
-        .chat-container.centered-input .chat-body {
-            display: none; /* Se oculta completamente */
-        }
-
-        /* Posiciona y estiliza el input-area cuando está centrado */
-        .chat-container.centered-input .input-area {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 85%; /* Ancho apropiado para centrar */
-            max-width: 750px; /* Evitar que sea demasiado ancho */
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            flex-direction: column; /* Apila el input y el botón verticalmente */
-            gap: 20px; /* Espacio entre input y botón */
-            padding: 30px; /* Más padding */
-            z-index: 18; /* Por debajo del welcome-screen, por encima del chat-body */
-            border: none; /* Eliminar borde superior para el modo centrado */
-            background-color: var(--secondary-color); /* Fondo sólido para la caja centrada */
-            transition: all 0.5s ease; /* Transición para el movimiento */
-        }
-        
-        .chat-container.centered-input .input-area .input-field {
-            width: calc(100% - 32px); /* Ajusta por padding */
-            max-width: none; /* Asegura que el textarea ocupe el ancho completo */
-            margin-right: 0;
-            min-height: 60px; /* Más alto para el input centrado */
-            font-size: 1.1em;
-        }
-
-        .chat-container.centered-input .input-area .send-button {
-            width: 100%; /* El botón ocupa todo el ancho */
-            padding: 15px 20px; /* Más padding para el botón centrado */
-            font-size: 1.1em;
-        }
-        
-        /* Asegurarse de que el input-area no se muestre como parte del layout principal si la welcome-screen está visible */
-        .welcome-screen:not(.hidden) ~ .input-area {
-            display: none !important;
-        }
-
-        /* --- Sugerencias de prompt debajo del input (cuando el chat está activo) --- */
-        .dynamic-prompt-suggestions {
-            position: absolute;
-            bottom: calc(100% + 10px); /* Posicionado encima del input-area */
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 30px); /* Ancho del input-area - padding */
-            max-width: 750px;
-            background-color: var(--secondary-color);
-            border-radius: var(--border-radius);
-            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
-            padding: 10px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            opacity: 0;
-            visibility: hidden;
-            transform-origin: bottom;
-            animation: slideUpFadeIn 0.3s ease forwards;
-            z-index: 10; /* Para que esté sobre el chat-body si es necesario */
-        }
-        .dynamic-prompt-suggestions.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            animation: none; /* Desactivar animación si está oculto */
-        }
-
-        @keyframes slideUpFadeIn {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-        
-        .dynamic-prompt-suggestions .suggest-item {
-            background-color: #2c343c;
-            color: var(--text-color-secondary);
-            border: 1px solid #3f4a56;
-            padding: 8px 12px;
-            border-radius: 20px; /* Más redondeado para parecer "tags" */
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .dynamic-prompt-suggestions .suggest-item:hover {
-            background-color: #3f4a56;
-            border-color: var(--accent-color);
-            transform: translateY(-2px);
-        }
-
-        /* Estilos para los nuevos botones de Gemini */
-        .gemini-action-button {
-            background-color: #3f51b5; /* Azul índigo */
-            color: var(--text-color-primary);
-            border: none;
-            padding: 10px 15px;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color var(--transition), transform 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 500;
-            margin: 5px; /* Añade un poco de margen */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            flex-grow: 1; /* Permite que los botones crezcan */
-            justify-content: center; /* Centra el contenido del botón */
-        }
-
-        .gemini-action-button:hover {
-            background-color: #303f9f; /* Azul índigo más oscuro para hover */
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        }
-
-        .gemini-action-button:disabled {
-            background-color: #9e9e9e;
-            cursor: not-allowed;
-            transform: none;
-            opacity: 0.7;
-        }
-
-        /* Contenedor para los botones de acción de Gemini */
-        .gemini-actions-container {
-            display: flex;
-            flex-wrap: wrap; /* Permite que los botones se envuelvan en pantallas más pequeñas */
-            justify-content: center; /* Centra los botones */
-            width: 100%;
-            margin-bottom: 10px; /* Espacio entre los botones y el campo de entrada */
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column; /* Coloca el sidebar encima en pantallas pequeñas */
-                min-height: 100vh;
-                overflow-y: auto; /* Permite scroll si el contenido es largo */
-            }
-
-            .sidebar {
-                width: 100%;
-                height: auto; /* Altura automática */
-                border-right: none;
-                border-bottom: 1px solid #444d57;
-                padding: 15px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                border-bottom-left-radius: var(--border-radius);
-                border-bottom-right-radius: var(--border-radius);
-                margin-bottom: 10px;
-            }
-
-            .sidebar-header {
-                justify-content: center;
-                margin-bottom: 15px;
-            }
-
-            .new-chat-button {
-                padding: 10px 15px;
-                font-size: 0.95em;
-                margin-bottom: 15px;
-                justify-content: center;
-            }
-
-            .chat-list-title {
-                text-align: center;
-                padding-bottom: 8px;
-                margin-bottom: 10px;
-            }
-
-            .chat-list {
-                max-height: 200px; /* Limita la altura de la lista de chats en móviles */
-            }
-
-            .chat-container {
-                margin: 10px;
-                height: 85vh; /* Ajusta la altura del contenedor principal */
-            }
-
-            .chat-header {
-                padding: 10px 15px;
-                font-size: 1.2em;
-                justify-content: space-between; /* Alinea elementos */
-                gap: 10px;
-            }
-
-            .chat-header button {
-                padding: 6px 10px;
-                font-size: 0.85em;
-            }
-
-            .chat-header h2 {
-                font-size: 1.3em;
-            }
-
-            .chat-body {
-                padding: 15px;
-                gap: 10px;
-            }
-
-            .message, .user-message-container {
-                max-width: 90%; /* Más ancho en pantallas pequeñas */
-            }
-
-            .message::before, .user-message::before {
-                display: none; /* Oculta las colas de burbuja en móviles para simplificar */
-            }
-
-            .input-area {
-                padding: 10px;
-                flex-direction: column; /* Apila el input y los botones verticalmente */
-            }
-
-            .input-area .input-field {
-                padding: 10px 12px;
-                margin-right: 0; /* Asegura que ocupe todo el ancho */
-                font-size: 0.95em;
-                min-height: 35px;
-            }
-
-            .input-area .send-button {
-                padding: 8px 12px;
-                font-size: 0.85em;
-                width: 100%; /* Ocupa todo el ancho */
-            }
-
-            .welcome-screen h1 {
-                font-size: 2.5em;
-            }
-
-            .welcome-screen p {
-                font-size: 1em;
-            }
-
-            .welcome-screen .start-chat-button {
-                padding: 15px 25px;
-                font-size: 1.2em;
-                margin-bottom: 30px;
-            }
-
-            .prompt-suggestions {
-                flex-direction: column; /* Apila las sugerencias verticalmente */
-                gap: 10px;
-                max-width: 95%;
-            }
-
-            .prompt-suggestions .suggest-prompt-button {
-                width: 100%; /* Ocupa todo el ancho disponible */
-                justify-content: center;
-                text-align: center;
-                padding: 12px 15px;
-            }
-            
-            /* Ajustes para el input centrado en móviles */
-            .chat-container.centered-input .input-area {
-                width: 90%;
-                max-width: 90%;
-                padding: 20px;
-                gap: 15px;
-            }
-            .chat-container.centered-input .input-area .input-field {
-                width: calc(100% - 24px); /* Ajusta por padding */
-                min-height: 50px;
-            }
-            .chat-container.centered-input .input-area .send-button {
-                width: 100%;
-                padding: 12px 15px;
-            }
-
-            .dynamic-prompt-suggestions {
-                width: calc(100% - 20px);
-                bottom: calc(100% + 5px);
-                padding: 8px;
-                gap: 5px;
-            }
-            .dynamic-prompt-suggestions .suggest-item {
-                font-size: 0.85em;
-                padding: 6px 10px;
-            }
-
-            .gemini-action-button {
-                width: calc(50% - 10px); /* Dos botones por fila */
-                margin: 5px; /* Ajusta el margen para móvil */
-            }
-        }
-    </style>
+.chat-body.hidden {
+opacity: 0;
+visibility: hidden;
+pointer-events: none;
+position: absolute; /* Para que no ocupe espacio cuando está oculto */
+width: 100%;
+height: 100%;
+}
+.chat-body::-webkit-scrollbar {
+width: 8px;
+}
+.chat-body::-webkit-scrollbar-track {
+background: var(--primary-color);
+}
+.chat-body::-webkit-scrollbar-thumb {
+background-color: var(--accent-color);
+border-radius: 10px;
+border: 2px solid var(--primary-color);
+}
+/* Estilo general para los mensajes de la IA */
+.message {
+background-color: #2c343c;
+color: var(--text-color-secondary);
+border-radius: var(--border-radius);
+padding: 12px 16px; /* Más padding */
+word-break: break-word;
+align-self: flex-start;
+max-width: 75%; /* Ancho máximo del mensaje */
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+font-size: 1.10em; /* Ligeramente más grande */
+line-height: 1.6; /* Mejor legibilidad */
+border: 1px solid #3f4a56; /* Borde sutil */
+animation: fadeInMessage 0.5s ease-out; /* Animación de entrada */
+position: relative; /* Para la cola de la burbuja */
+}
+/* Cola de la burbuja de mensaje de IA */
+.message::before {
+content: '';
+position: absolute;
+left: -8px; /* Ajusta según el padding */
+top: 10px;
+border: 8px solid transparent;
+border-right-color: #2c343c;
+filter: drop-shadow(-1px 0px 1px rgba(0,0,0,0.1)); /* Sombra para la cola */
+}
+/* Estilo específico para mensajes de error */
+.error-message {
+background-color: #422b2b; /* Fondo rojizo oscuro */
+color: var(--error-color);
+border-radius: var(--border-radius);
+padding: 12px 16px;
+word-break: break-word;
+align-self: flex-start;
+max-width: 75%;
+box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+font-size: 1.10em;
+border: 1px solid #5a3232; /* Borde rojo */
+animation: fadeInMessage 0.5s ease-out; /* Animación de entrada */
+position: relative;
+}
+.error-message::before {
+content: '';
+position: absolute;
+left: -8px;
+top: 10px;
+border: 8px solid transparent;
+border-right-color: #422b2b;
+filter: drop-shadow(-1px 0px 1px rgba(0,0,0,0.1));
+}
+/* Contenedor para mensajes de usuario (para alinear a la derecha) */
+.user-message-container {
+display: flex;
+flex-direction: column;
+align-items: flex-end; /* Alinea el contenido a la derecha */
+max-width: 75%;
+align-self: flex-end;
+}
+/* Estilo específico para mensajes del usuario */
+.user-message {
+background-color: var(--accent-color);
+color: var(--text-color-primary);
+border-radius: var(--border-radius);
+padding: 12px 16px;
+word-break: break-word;
+box-shadow: 0 2px 6px rgba(var(--accent-color-rgb), 0.25);
+font-size: 1.10em;
+line-height: 1.6;
+margin-bottom: 5px;
+border: 1px solid var(--accent-color-hover); /* Borde acentuado */
+animation: fadeInMessage 0.5s ease-out; /* Animación de entrada */
+position: relative; /* Para la cola de la burbuja */
+}
+/* Cola de la burbuja de mensaje de usuario */
+.user-message::before {
+content: '';
+position: absolute;
+right: -8px; /* Ajusta según el padding */
+top: 10px;
+border: 8px solid transparent;
+border-left-color: var(--accent-color);
+filter: drop-shadow(1px 0px 1px rgba(0,0,0,0.1)); /* Sombra para la cola */
+}
+@keyframes fadeInMessage {
+from { opacity: 0; transform: translateY(10px); }
+to { opacity: 1; transform: translateY(0); }
+}
+/* Indicador de carga (spinner y texto) */
+.loading-indicator {
+display: flex;
+align-self: flex-start; /* Se alinea a la izquierda como un mensaje de IA */
+margin-top: 5px;
+align-items: center;
+font-size: 0.85em;
+color: var(--text-color-secondary);
+gap: 6px;
+padding: 12px 16px; /* Para que coincida con el padding del mensaje */
+display: none; /* Oculto por defecto */
+background-color: #2c343c; /* Fondo similar al mensaje de IA */
+border-radius: var(--border-radius);
+max-width: fit-content; /* Se ajusta al contenido */
+}
+/* Indicador de "typing" (tres puntos) */
+.typing-indicator span {
+animation: blink-dots 1s infinite steps(1, end);
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink-dots {
+0%, 60% { opacity: 0; }
+100% { opacity: 1; }
+}
+.loading-spinner {
+border: 2px solid rgba(255, 255, 255, 0.1);
+border-top: 2px solid var(--accent-color);
+border-radius: 50%;
+width: 16px; /* Más grande */
+height: 16px;
+animation: spin 1s linear infinite;
+}
+/* Animación para el spinner */
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+/* Área de entrada de texto y botón de enviar */
+.input-area {
+padding: 15px;
+border-top: 1px solid #444d57;
+display: flex;
+flex-direction: column; /* Cambiado a columna para apilar elementos */
+align-items: center;
+background-color: var(--secondary-color);
+border-bottom-left-radius: var(--border-radius);
+border-bottom-right-radius: var(--border-radius);
+flex-shrink: 0; /* Evita que se encoja */
+z-index: 20; /* Asegura que esté por encima del welcome-screen y input centrado */
+transition: all 0.5s ease; /* Transición para el movimiento */
+position: relative; /* Para las sugerencias de prompt */
+}
+.input-field {
+flex-grow: 1;
+padding: 12px 16px; /* Más padding */
+border: 1px solid #555e68;
+border-radius: var(--border-radius);
+margin-right: 0; /* Eliminado margin-right para ocupar todo el ancho */
+margin-bottom: 12px; /* Espacio entre input y botón de enviar */
+width: calc(100% - 32px); /* Ajusta por padding */
+font-size: 1em; /* Ligeramente más grande */
+color: var(--text-color-primary);
+background-color: #2c343c;
+resize: none; /* Evita redimensionamiento por el usuario */
+min-height: 40px; /* Altura mínima para una línea */
+max-height: 120px; /* Altura máxima antes de scroll */
+overflow-y: auto; /* Permite scroll vertical si el texto es largo */
+line-height: 1.5;
+transition: border-color var(--transition), box-shadow var(--transition);
+}
+.input-field:focus {
+outline: none;
+border-color: var(--accent-color);
+box-shadow: 0 0 8px rgba(var(--accent-color-rgb), 0.4);
+}
+.send-button {
+background-color: var(--accent-color);
+color: var(--text-color-primary);
+border: none;
+padding: 10px 15px; /* Menos padding para hacerlo más pequeño */
+border-radius: var(--border-radius);
+cursor: pointer;
+font-size: 0.9em; /* Fuente más pequeña */
+transition: background-color var(--transition), transform 0.2s ease;
+display: flex;
+align-items: center;
+gap: 6px; /* Menos espacio */
+font-weight: 500;
+width: 100%; /* El botón ocupa todo el ancho */
+justify-content: center; /* Centrar el contenido del botón */
+}
+.send-button .material-symbols-outlined {
+font-size: 1.1em; /* Ajustar tamaño del ícono */
+transition: transform 0.2s ease; /* Transición para el ícono */
+}
+.send-button:hover {
+background-color: var(--accent-color-hover);
+transform: translateY(-2px);
+}
+.send-button:hover .material-symbols-outlined {
+transform: translateX(3px); /* Pequeño "vuelo" del icono */
+}
+.send-button:disabled {
+background-color: #607d8b; /* Color gris para deshabilitado */
+cursor: not-allowed;
+transform: none;
+opacity: 0.7;
+}
+/* --- Pantalla de bienvenida (New Conversation Screen) --- */
+.welcome-screen {
+position: absolute;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: var(--primary-color);
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+text-align: center;
+padding: 20px;
+box-sizing: border-box;
+z-index: 30; /* Aumentado para que esté por encima de TODO */
+opacity: 1;
+visibility: visible;
+transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+.welcome-screen.hidden {
+opacity: 0;
+visibility: hidden;
+pointer-events: none; /* No permite clics cuando está oculto */
+}
+.welcome-screen h1 {
+font-size: 3.5em; /* Título más grande */
+color: var(--accent-color);
+margin-bottom: 25px;
+font-weight: 700;
+text-shadow: 0 0 12px rgba(var(--accent-color-rgb), 0.7);
+letter-spacing: 2px;
+}
+.welcome-screen p {
+font-size: 1.3em;
+color: var(--text-color-secondary);
+margin-bottom: 30px; /* Reducido para dejar espacio a las sugerencias */
+max-width: 700px;
+line-height: 1.6;
+}
+/* Nuevo: Botón para empezar a chatear desde la pantalla de bienvenida */
+.welcome-screen .start-chat-button {
+background-color: var(--accent-color);
+color: var(--text-color-primary);
+border: none;
+padding: 18px 35px;
+border-radius: var(--border-radius);
+cursor: pointer;
+font-size: 1.4em;
+font-weight: 700;
+transition: background-color var(--transition), transform 0.2s ease, box-shadow
+var(--transition);
+box-shadow: 0 5px 20px rgba(var(--accent-color-rgb), 0.5);
+display: flex;
+align-items: center;
+gap: 12px;
+margin-bottom: 40px; /* Espacio antes de las sugerencias */
+}
+.welcome-screen .start-chat-button .material-symbols-outlined {
+font-size: 1.6em;
+}
+.welcome-screen .start-chat-button:hover {
+background-color: var(--accent-color-hover);
+transform: translateY(-4px) scale(1.03);
+box-shadow: 0 8px 25px rgba(var(--accent-color-rgb), 0.7);
+}
+/* Contenedor para sugerencias de prompts en welcome screen */
+.prompt-suggestions {
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+gap: 15px;
+max-width: 800px;
+}
+.prompt-suggestions .suggest-prompt-button {
+background-color: #2c343c;
+color: var(--text-color-secondary);
+border: 1px solid #3f4a56;
+padding: 10px 20px;
+border-radius: var(--border-radius);
+cursor: pointer;
+font-size: 1em;
+transition: background-color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.prompt-suggestions .suggest-prompt-button:hover {
+background-color: #3f4a56;
+border-color: var(--accent-color);
+transform: translateY(-2px);
+box-shadow: 0 2px 8px rgba(var(--accent-color-rgb), 0.2);
+}
+.prompt-suggestions .suggest-prompt-button .material-symbols-outlined {
+font-size: 1.1em;
+color: var(--accent-color);
+}
+/* --- Estilo para el input-area centrado (cuando no hay mensajes y la pantalla de
+bienvenida está oculta) --- */
+/* Oculta el chat-body cuando está el input centrado */
+.chat-container.centered-input .chat-body {
+display: none; /* Se oculta completamente */
+}
+/* Posiciona y estiliza el input-area cuando está centrado */
+.chat-container.centered-input .input-area {
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+width: 85%; /* Ancho apropiado para centrar */
+max-width: 750px; /* Evitar que sea demasiado ancho */
+border-radius: var(--border-radius);
+box-shadow: var(--box-shadow);
+flex-direction: column; /* Apila el input y el botón verticalmente */
+gap: 20px; /* Espacio entre input y botón */
+padding: 30px; /* Más padding */
+z-index: 18; /* Por debajo del welcome-screen, por encima del chat-body */
+border: none; /* Eliminar borde superior para el modo centrado */
+background-color: var(--secondary-color); /* Fondo sólido para la caja centrada */
+transition: all 0.5s ease; /* Transición para el movimiento */
+}
+.chat-container.centered-input .input-area .input-field {
+width: calc(100% - 32px); /* Ajusta por padding */
+max-width: none; /* Asegura que el textarea ocupe el ancho completo */
+margin-right: 0;
+min-height: 60px; /* Más alto para el input centrado */
+font-size: 1.1em;
+}
+.chat-container.centered-input .input-area .send-button {
+width: 100%; /* El botón ocupa todo el ancho */
+padding: 15px 20px; /* Más padding para el botón centrado */
+font-size: 1.1em;
+}
+/* Asegurarse de que el input-area no se muestre como parte del layout principal si la
+welcome-screen está visible */
+.welcome-screen:not(.hidden) ~ .input-area {
+display: none !important;
+}
+/* --- Sugerencias de prompt debajo del input (cuando el chat está activo) --- */
+.dynamic-prompt-suggestions {
+position: absolute;
+bottom: calc(100% + 10px); /* Posicionado encima del input-area */
+left: 50%;
+transform: translateX(-50%);
+width: calc(100% - 30px); /* Ancho del input-area - padding */
+max-width: 750px;
+background-color: var(--secondary-color);
+border-radius: var(--border-radius);
+box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2);
+padding: 10px;
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+opacity: 0;
+visibility: hidden;
+transform-origin: bottom;
+animation: slideUpFadeIn 0.3s ease forwards;
+z-index: 10; /* Para que esté sobre el chat-body si es necesario */
+}
+.dynamic-prompt-suggestions.hidden {
+opacity: 0;
+visibility: hidden;
+pointer-events: none;
+animation: none; /* Desactivar animación si está oculto */
+}
+@keyframes slideUpFadeIn {
+from {
+opacity: 0;
+transform: translateX(-50%) translateY(20px);
+}
+to {
+opacity: 1;
+transform: translateX(-50%) translateY(0);
+}
+}
+.dynamic-prompt-suggestions .suggest-item {
+background-color: #2c343c;
+color: var(--text-color-secondary);
+border: 1px solid #3f4a56;
+padding: 8px 12px;
+border-radius: 20px; /* Más redondeado para parecer "tags" */
+cursor: pointer;
+font-size: 0.9em;
+transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+display: flex;
+align-items: center;
+gap: 5px;
+}
+.dynamic-prompt-suggestions .suggest-item:hover {
+background-color: #3f4a56;
+border-color: var(--accent-color);
+transform: translateY(-2px);
+}
+/* Estilos para los nuevos botones de Gemini */
+.gemini-action-button {
+background-color: #3f51b5; /* Azul índigo */
+color: var(--text-color-primary);
+border: none;
+padding: 10px 15px;
+border-radius: var(--border-radius);
+cursor: pointer;
+font-size: 0.9em;
+transition: background-color var(--transition), transform 0.2s ease;
+display: flex;
+align-items: center;
+gap: 6px;
+font-weight: 500;
+margin: 5px; /* Añade un poco de margen */
+box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+flex-grow: 1; /* Permite que los botones crezcan */
+justify-content: center; /* Centra el contenido del botón */
+}
+.gemini-action-button:hover {
+background-color: #303f9f; /* Azul índigo más oscuro para hover */
+transform: translateY(-2px);
+box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+.gemini-action-button:disabled {
+background-color: #9e9e9e;
+cursor: not-allowed;
+transform: none;
+opacity: 0.7;
+}
+/* Contenedor para los botones de acción de Gemini */
+.gemini-actions-container {
+display: flex;
+flex-wrap: wrap; /* Permite que los botones se envuelvan en pantallas más
+pequeñas */
+justify-content: center; /* Centra los botones */
+width: 100%;
+margin-bottom: 10px; /* Espacio entre los botones y el campo de entrada */
+}
+/* Responsive adjustments */
+@media (max-width: 768px) {
+body {
+flex-direction: column; /* Coloca el sidebar encima en pantallas pequeñas */
+min-height: 100vh;
+overflow-y: auto; /* Permite scroll si el contenido es largo */
+}
+.sidebar {
+width: 100%;
+height: auto; /* Altura automática */
+border-right: none;
+border-bottom: 1px solid #444d57;
+padding: 15px;
+box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+border-bottom-left-radius: var(--border-radius);
+border-bottom-right-radius: var(--border-radius);
+margin-bottom: 10px;
+}
+.sidebar-header {
+justify-content: center;
+margin-bottom: 15px;
+}
+.new-chat-button {
+padding: 10px 15px;
+font-size: 0.95em;
+margin-bottom: 15px;
+justify-content: center;
+}
+.chat-list-title {
+text-align: center;
+padding-bottom: 8px;
+margin-bottom: 10px;
+}
+.chat-list {
+max-height: 200px; /* Limita la altura de la lista de chats en móviles */
+}
+.chat-container {
+margin: 10px;
+height: 85vh; /* Ajusta la altura del contenedor principal */
+}
+.chat-header {
+padding: 10px 15px;
+font-size: 1.2em;
+justify-content: space-between; /* Alinea elementos */
+gap: 10px;
+}
+.chat-header button {
+padding: 6px 10px;
+font-size: 0.85em;
+}
+.chat-header h2 {
+font-size: 1.3em;
+}
+.chat-body {
+padding: 15px;
+gap: 10px;
+}
+.message, .user-message-container {
+max-width: 90%; /* Más ancho en pantallas pequeñas */
+}
+.message::before, .user-message::before {
+display: none; /* Oculta las colas de burbuja en móviles para simplificar */
+}
+.input-area {
+padding: 10px;
+flex-direction: column; /* Apila el input y los botones verticalmente */
+}
+.input-area .input-field {
+padding: 10px 12px;
+margin-right: 0; /* Asegura que ocupe todo el ancho */
+font-size: 0.95em;
+min-height: 35px;
+}
+.input-area .send-button {
+padding: 8px 12px;
+font-size: 0.85em;
+width: 100%; /* Ocupa todo el ancho */
+}
+.welcome-screen h1 {
+font-size: 2.5em;
+}
+.welcome-screen p {
+font-size: 1em;
+}
+.welcome-screen .start-chat-button {
+padding: 15px 25px;
+font-size: 1.2em;
+margin-bottom: 30px;
+}
+.prompt-suggestions {
+flex-direction: column; /* Apila las sugerencias verticalmente */
+gap: 10px;
+max-width: 95%;
+}
+.prompt-suggestions .suggest-prompt-button {
+width: 100%; /* Ocupa todo el ancho disponible */
+justify-content: center;
+text-align: center;
+padding: 12px 15px;
+}
+/* Ajustes para el input centrado en móviles */
+.chat-container.centered-input .input-area {
+width: 90%;
+max-width: 90%;
+padding: 20px;
+gap: 15px;
+}
+.chat-container.centered-input .input-area .input-field {
+width: calc(100% - 24px); /* Ajusta por padding */
+min-height: 50px;
+}
+.chat-container.centered-input .input-area .send-button {
+width: 100%;
+padding: 12px 15px;
+}
+.dynamic-prompt-suggestions {
+width: calc(100% - 20px);
+bottom: calc(100% + 5px);
+padding: 8px;
+gap: 5px;
+}
+.dynamic-prompt-suggestions .suggest-item {
+font-size: 0.85em;
+padding: 6px 10px;
+}
+.gemini-action-button {
+width: calc(50% - 10px); /* Dos botones por fila */
+margin: 5px; /* Ajusta el margen para móvil */
+}
+}
+</style>
 </head>
 <body>
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <span class="material-symbols-outlined icon">smart_toy</span>
-            <h2>Amside AI</h2>
-        </div>
-        <button class="new-chat-button" id="newChatButton">
-            <span class="material-symbols-outlined">add_circle</span>
-            Nueva Conversación
-        </button>
-        <p class="chat-list-title">Historial de Chats</p>
-        <ul class="chat-list" id="chatList">
-            </ul>
-    </div>
-
-    <div class="chat-container" id="chatContainer">
-        <div class="welcome-screen" id="welcomeScreen">
-            <h1>Bienvenido a Amside AI</h1>
-            <p>Soy un asistente de IA avanzado, listo para ayudarte con tus preguntas e ideas. Puedes empezar una nueva conversación o elegir una sugerencia.</p>
-            <button class="start-chat-button" id="startChatButton">
-                <span class="material-symbols-outlined">play_arrow</span>
-                Empezar a Chatear
-            </button>
-            <div class="prompt-suggestions">
-                <button class="suggest-prompt-button">
-                    <span class="material-symbols-outlined">lightbulb</span>
-                    Dame una idea para un proyecto de IA.
-                </button>
-                <button class="suggest-prompt-button">
-                    <span class="material-symbols-outlined">question_mark</span>
-                    Explica la computación cuántica de forma sencilla.
-                </button>
-                <button class="suggest-prompt-button">
-                    <span class="material-symbols-outlined">translate</span>
-                    Traduce "Hello world" a swahili.
-                </button>
-                <button class="suggest-prompt-button">
-                    <span class="material-symbols-outlined">description</span>
-                    Escribe un breve poema sobre el futuro.
-                </button>
-            </div>
-        </div>
-
-        <div class="chat-header hidden" id="chatHeader">
-            <button id="backToHomeButton">
-                <span class="material-symbols-outlined">arrow_back</span>
-                Inicio
-            </button>
-            <h2 id="currentChatTitle">Nueva Conversación</h2>
-        </div>
-
-        <div class="chat-body hidden" id="chatBody">
-            </div>
-
-        <div class="loading-indicator" id="loadingIndicator">
-            <div class="loading-spinner"></div>
-            <span class="typing-indicator">Escribiendo<span>.</span><span>.</span><span>.</span></span>
-        </div>
-
-        <div class="input-area" id="inputArea">
-    <div class="gemini-actions-container">
-        <button id="summarizeChatButton" class="gemini-action-button">
-            <span class="material-symbols-outlined">summarize</span>
-            Resumir Chat ✨
-        </button>
-        <button id="generateIdeaButton" class="gemini-action-button">
-            <span class="material-symbols-outlined">lightbulb</span>
-            Idea Creativa ✨
-        </button>
-        <!-- ✅ NUEVO botón para generar imagen -->
-        <button id="generateImageButton" class="gemini-action-button">
-            <span class="material-symbols-outlined">brush</span>
-            Generar Imagen
-        </button>
-    </div>
-
-    <div class="dynamic-prompt-suggestions hidden" id="dynamicPromptSuggestions"></div>
-
-    <textarea id="userInput" class="input-field" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
-
-    <button id="sendButton" class="send-button">
-        <span class="material-symbols-outlined">send</span>
-        Enviar
-    </button>
+<div class="sidebar">
+<div class="sidebar-header">
+<span class="material-symbols-outlined icon">smart_toy</span>
+<h2>Amside AI</h2>
 </div>
-
-    </div>
-
-    <script>
-        // --- Constantes y Elementos del DOM ---
-        // ¡IMPORTANTE! Asegúrate de que esta URL sea la de tu backend de Render
-        const BACKEND_URL = "https://amside-ai-backend.onrender.com"; 
-
-        function appendMessage(role, content, isError = false, id = null) {
-    const chatBody = document.getElementById("chatBody");
-    const messageDiv = document.createElement("div");
-    messageDiv.className = `message ${role}`;
-    if (isError) messageDiv.classList.add("error");
-    if (id) messageDiv.id = id;
-    messageDiv.innerHTML = content;
-    chatBody.appendChild(messageDiv);
-    chatBody.scrollTop = chatBody.scrollHeight;
+<button class="new-chat-button" id="newChatButton">
+<span class="material-symbols-outlined">add_circle</span>
+Nueva Conversación
+</button>
+<p class="chat-list-title">Historial de Chats</p>
+<ul class="chat-list" id="chatList">
+</ul>
+</div>
+<div class="chat-container" id="chatContainer">
+<div class="welcome-screen" id="welcomeScreen">
+<h1>Bienvenido a Amside AI</h1>
+<p>Soy un asistente de IA avanzado, listo para ayudarte con tus preguntas e ideas.
+Puedes empezar una nueva conversación o elegir una sugerencia.</p>
+<button class="start-chat-button" id="startChatButton">
+<span class="material-symbols-outlined">play_arrow</span>
+Empezar a Chatear
+</button>
+<div class="prompt-suggestions">
+<button class="suggest-prompt-button">
+<span class="material-symbols-outlined">lightbulb</span>
+Dame una idea para un proyecto de IA.
+</button>
+<button class="suggest-prompt-button">
+<span class="material-symbols-outlined">question_mark</span>
+Explica la computación cuántica de forma sencilla.
+</button>
+<button class="suggest-prompt-button">
+<span class="material-symbols-outlined">translate</span>
+Traduce "Hello world" a swahili.
+</button>
+<button class="suggest-prompt-button">
+<span class="material-symbols-outlined">description</span>
+Escribe un breve poema sobre el futuro.
+</button>
+</div>
+</div>
+<div class="chat-header hidden" id="chatHeader">
+<button id="backToHomeButton">
+<span class="material-symbols-outlined">arrow_back</span>
+Inicio
+</button>
+<h2 id="currentChatTitle">Nueva Conversación</h2>
+</div>
+<div class="chat-body hidden" id="chatBody">
+</div>
+<div class="loading-indicator" id="loadingIndicator">
+<div class="loading-spinner"></div>
+<span
+class="typing-indicator">Escribiendo<span>.</span><span>.</span><span>.</span></span
+>
+</div>
+<div class="input-area" id="inputArea">
+<div class="gemini-actions-container">
+<button id="summarizeChatButton" class="gemini-action-button">
+<span class="material-symbols-outlined">summarize</span>
+Resumir Chat ✨
+</button>
+<button id="generateIdeaButton" class="gemini-action-button">
+<span class="material-symbols-outlined">lightbulb</span>
+Idea Creativa ✨
+</button>
+</div>
+<div class="dynamic-prompt-suggestions hidden" id="dynamicPromptSuggestions">
+</div>
+<textarea id="userInput" class="input-field" placeholder="Escribe tu mensaje aquí..."
+rows="1"></textarea>
+<button id="sendButton" class="send-button">
+<span class="material-symbols-outlined">send</span>
+Enviar
+</button>
+</div>
+</div>
+<script>
+// --- Constantes y Elementos del DOM ---
+// ¡IMPORTANTE! Asegúrate de que esta URL sea la de tu backend de Render
+const BACKEND_URL = "https://amside-ai-backend.onrender.com";
+const chatContainer = document.getElementById('chatContainer');
+const sidebar = document.querySelector('.sidebar');
+const newChatButton = document.getElementById('newChatButton');
+const chatList = document.getElementById('chatList');
+const welcomeScreen = document.getElementById('welcomeScreen');
+const startChatButton = document.getElementById('startChatButton');
+const welcomePromptSuggestions = document.querySelector('.prompt-suggestions');
+const chatHeader = document.getElementById('chatHeader');
+const backToHomeButton = document.getElementById('backToHomeButton');
+const currentChatTitle = document.getElementById('currentChatTitle');
+const chatBody = document.getElementById('chatBody');
+const loadingIndicator = document.getElementById('loadingIndicator');
+const inputArea = document.getElementById('inputArea');
+const userInput = document.getElementById('userInput');
+const sendButton = document.getElementById('sendButton');
+const dynamicPromptSuggestions =
+document.getElementById('dynamicPromptSuggestions');
+// New elements for Gemini features
+const summarizeChatButton = document.getElementById('summarizeChatButton');
+const generateIdeaButton = document.getElementById('generateIdeaButton');
+// --- Variables de Estado Globales ---
+let currentChatId = null; // ID del chat actualmente activo
+// Carga chats de localStorage. Si no hay, inicializa un objeto vacío.
+let chats = JSON.parse(localStorage.getItem('chats')) || {};
+// Para IDs únicos, asegura que el contador no se reinicie si ya hay chats.
+let chatCounter = parseInt(localStorage.getItem('chatCounter')) || 0;
+// Prompts predefinidos para las sugerencias
+const defaultPrompts = [
+"Dame una idea para un proyecto de IA.",
+"Explica la computación cuántica de forma sencilla.",
+"Traduce 'Hello world' a swahili.",
+"Escribe un breve poema sobre el futuro."
+];
+// --- Funciones de Utilidad ---
+/**
+* Genera un ID único para un nuevo chat.
+* @returns {string} Un ID único.
+*/
+function generateUniqueId() {
+chatCounter++;
+localStorage.setItem('chatCounter', chatCounter);
+return `chat-${chatCounter}`;
 }
-
-function updateMessage(id, newContent) {
-    const msg = document.getElementById(id);
-    if (msg) msg.innerHTML = newContent;
+/**
+* Guarda el estado actual de los chats en localStorage.
+*/
+function saveChats() {
+localStorage.setItem('chats', JSON.stringify(chats));
 }
-
-
-        const chatContainer = document.getElementById('chatContainer');
-        const sidebar = document.querySelector('.sidebar');
-        const newChatButton = document.getElementById('newChatButton');
-        const chatList = document.getElementById('chatList');
-
-        const welcomeScreen = document.getElementById('welcomeScreen');
-        const startChatButton = document.getElementById('startChatButton');
-        const welcomePromptSuggestions = document.querySelector('.prompt-suggestions');
-
-        const chatHeader = document.getElementById('chatHeader');
-        const backToHomeButton = document.getElementById('backToHomeButton');
-        const currentChatTitle = document.getElementById('currentChatTitle');
-        const chatBody = document.getElementById('chatBody');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-
-        const inputArea = document.getElementById('inputArea');
-        const userInput = document.getElementById('userInput');
-        const sendButton = document.getElementById('sendButton');
-        const dynamicPromptSuggestions = document.getElementById('dynamicPromptSuggestions');
-
-        // New elements for Gemini features
-        const summarizeChatButton = document.getElementById('summarizeChatButton');
-        const generateIdeaButton = document.getElementById('generateIdeaButton');
-
-        // --- Variables de Estado Globales ---
-        let currentChatId = null; // ID del chat actualmente activo
-        // Carga chats de localStorage. Si no hay, inicializa un objeto vacío.
-        let chats = JSON.parse(localStorage.getItem('chats')) || {}; 
-        // Para IDs únicos, asegura que el contador no se reinicie si ya hay chats.
-        let chatCounter = parseInt(localStorage.getItem('chatCounter')) || 0; 
-
-        // Prompts predefinidos para las sugerencias
-        const defaultPrompts = [
-            "Dame una idea para un proyecto de IA.",
-            "Explica la computación cuántica de forma sencilla.",
-            "Traduce 'Hello world' a swahili.",
-            "Escribe un breve poema sobre el futuro."
-        ];
-
-        // --- Funciones de Utilidad ---
-
-        /**
-         * Genera un ID único para un nuevo chat.
-         * @returns {string} Un ID único.
-         */
-        function generateUniqueId() {
-            chatCounter++;
-            localStorage.setItem('chatCounter', chatCounter);
-            return `chat-${chatCounter}`;
-        }
-
-        /**
-         * Guarda el estado actual de los chats en localStorage.
-         */
-        function saveChats() {
-            localStorage.setItem('chats', JSON.stringify(chats));
-        }
-
-        /**
-         * Añade un mensaje al área de chat.
-         * @param {string} sender 'user' o 'assistant'
-         * @param {string} text El contenido del mensaje
-         * @param {boolean} [isError=false] Indica si es un mensaje de error
-         * @param {boolean} [save=true] Indica si el mensaje debe guardarse en el chat activo.
-         */
-        function appendMessage(sender, text, isError = false, save = true) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
-            if (sender === 'user') {
-                const userContainer = document.createElement('div');
-                userContainer.classList.add('user-message-container');
-                messageDiv.classList.add('user-message');
-                userContainer.appendChild(messageDiv);
-                chatBody.appendChild(userContainer);
-            } else { // sender === 'assistant'
-                messageDiv.classList.add('ai-message');
-                if (isError) {
-                    messageDiv.classList.add('error-message');
-                }
-                chatBody.appendChild(messageDiv);
-            }
-            messageDiv.textContent = text;
-            chatBody.scrollTop = chatBody.scrollHeight; // Auto-scroll al final
-
-            if (save && currentChatId) {
-                // Guardar el mensaje en el historial del chat activo
-                chats[currentChatId].messages.push({ role: sender, content: text });
-                saveChats();
-            }
-        }
-
-        /**
-         * Muestra u oculta el indicador de carga y deshabilita/habilita el input/botón.
-         * También deshabilita/habilita los botones de Gemini.
-         * @param {boolean} show True para mostrar, false para ocultar
-         */
-        function showLoading(show) {
-            loadingIndicator.style.display = show ? 'flex' : 'none';
-            sendButton.disabled = show;
-            userInput.disabled = show;
-            summarizeChatButton.disabled = show; // Deshabilita los botones de Gemini
-            generateIdeaButton.disabled = show;   // Deshabilita los botones de Gemini
-            userInput.placeholder = show ? 'La IA está pensando...' : 'Escribe tu mensaje aquí...';
-        }
-
-        /**
-         * Muestra el chat activo y oculta la pantalla de bienvenida/input centrado.
-         */
-        function showChatView() {
-            welcomeScreen.classList.add('hidden');
-            chatHeader.classList.remove('hidden');
-            chatBody.classList.remove('hidden');
-            chatContainer.classList.remove('centered-input');
-            inputArea.classList.remove('centered-input'); // Asegura que el input vuelva a su posición normal
-            userInput.focus();
-            updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
-        }
-
-        /**
-         * Muestra la pantalla de bienvenida y oculta el chat activo.
-         */
-        function showWelcomeView() {
-            welcomeScreen.classList.remove('hidden');
-            chatHeader.classList.add('hidden');
-            chatBody.classList.add('hidden');
-            
-            // Determina si el input debe estar centrado (si no hay chats o no hay mensajes en el chat actual)
-            const hasMessagesInCurrentChat = currentChatId && chats[currentChatId] && chats[currentChatId].messages.length > 0;
-            const totalChatsExist = Object.keys(chats).length > 0;
-
-            if (!totalChatsExist || !hasMessagesInCurrentChat) {
-                chatContainer.classList.add('centered-input');
-                inputArea.classList.add('centered-input');
-            } else {
-                chatContainer.classList.remove('centered-input');
-                inputArea.classList.remove('centered-input');
-            }
-            
-            currentChatId = null; // Deseleccionar chat
-            saveChats(); // Guardar el estado de deselección
-            renderChatList(); // Para desmarcar el chat activo si lo hubiera
-            dynamicPromptSuggestions.classList.add('hidden'); // Ocultar sugerencias dinámicas al volver a la vista de bienvenida
-            userInput.value = ''; // Limpiar input
-            userInput.style.height = 'auto'; // Resetear altura del input
-            userInput.focus();
-            updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
-        }
-
-        /**
-         * Inicia una nueva conversación o carga una existente.
-         * @param {string} [id] El ID del chat a cargar. Si no se proporciona, crea uno nuevo.
-         */
-        function startNewConversation(id = null) {
-            let newChat = null;
-            if (id && chats[id]) {
-                // Cargar chat existente
-                currentChatId = id;
-                newChat = chats[id];
-            } else {
-                // Crear nuevo chat
-                currentChatId = generateUniqueId();
-                newChat = {
-                    title: `Conversación ${chatCounter}`, // Título inicial
-                    messages: [] // Historial de mensajes vacío para el nuevo chat
-                };
-                chats[currentChatId] = newChat;
-                saveChats();
-            }
-
-            currentChatTitle.textContent = newChat.title;
-            chatBody.innerHTML = ''; // Limpia los mensajes anteriores
-
-            // Renderiza los mensajes del chat cargado
-            // No guardar de nuevo al cargar (save=false)
-            newChat.messages.forEach(msg => appendMessage(msg.role, msg.content, msg.isError, false)); 
-
-            showChatView();
-            renderChatList(); // Actualiza la lista para marcar el chat activo
-            userInput.focus();
-
-            // Si el chat está vacío, ajusta la vista para centrar el input
-            if (newChat.messages.length === 0) {
-                chatContainer.classList.add('centered-input');
-                inputArea.classList.add('centered-input');
-                dynamicPromptSuggestions.classList.add('hidden'); // Ocultar sugerencias dinámicas aquí
-            } else {
-                chatContainer.classList.remove('centered-input');
-                inputArea.classList.remove('centered-input');
-            }
-            updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
-        }
-
-        /**
-         * Renderiza la lista de chats en el sidebar.
-         */
-        function renderChatList() {
-            chatList.innerHTML = '';
-            const chatIds = Object.keys(chats);
-
-            if (chatIds.length === 0) {
-                chatList.innerHTML = '<li style="text-align: center; color: var(--text-color-secondary); padding: 20px;">No hay conversaciones.</li>';
-                return;
-            }
-
-            // Ordenar los chats por el número del ID de forma descendente (más recientes primero)
-            const sortedChatIds = chatIds.sort((a, b) => {
-                const numA = parseInt(a.split('-')[1]);
-                const numB = parseInt(b.split('-')[1]);
-                return numB - numA; // Orden descendente
-            });
-
-            sortedChatIds.forEach(id => {
-                const chat = chats[id];
-                const listItem = document.createElement('li');
-                listItem.dataset.chatId = id;
-                listItem.classList.toggle('active', id === currentChatId);
-
-                // Contenido del título del chat
-                const chatTitleContent = document.createElement('span');
-                chatTitleContent.classList.add('chat-title-content');
-                chatTitleContent.innerHTML = `<span class="material-symbols-outlined">chat</span><span>${chat.title}</span>`;
-                listItem.appendChild(chatTitleContent);
-
-                // Acciones de editar/borrar
-                const chatActions = document.createElement('span');
-                chatActions.classList.add('chat-actions');
-                chatActions.innerHTML = `
-                    <span class="material-symbols-outlined edit-icon" title="Editar título">edit</span>
-                    <span class="material-symbols-outlined delete-icon" title="Eliminar chat">delete</span>
-                `;
-                listItem.appendChild(chatActions);
-
-                chatList.appendChild(listItem);
-            });
-        }
-
-        /**
-         * Envía el mensaje del usuario al backend y maneja la respuesta de la IA.
-         */
-        async function sendMessage() {
-            const message = userInput.value.trim();
-            if (!message) {
-                dynamicPromptSuggestions.classList.add('hidden');
-                return;
-            }
-
-            // Si no hay un chat activo, crea uno nuevo.
-            if (!currentChatId) {
-                startNewConversation();
-            }
-
-            // Si el chat estaba en la vista centrada, cambia a la vista de chat normal
-            if (chatContainer.classList.contains('centered-input')) {
-                showChatView();
-            }
-
-            // Construir el historial de mensajes para enviar al backend
-            // Incluye los mensajes existentes del chat actual y el nuevo mensaje del usuario
-            const messagesToSend = [];
-
-            // Añadir mensajes existentes del chat actual (si los hay)
-            // Asegurarse de que chats[currentChatId] y chats[currentChatId].messages existen
-            if (currentChatId && chats[currentChatId] && Array.isArray(chats[currentChatId].messages)) {
-                chats[currentChatId].messages.forEach(msg => {
-                    messagesToSend.push({ role: msg.role, content: msg.content });
-                });
-            }
-
-            // Añadir el mensaje actual del usuario a la lista que se enviará al backend
-            messagesToSend.push({ role: 'user', content: message });
-
-            // Ahora, añadir el mensaje del usuario a la UI y guardarlo en localStorage
-            // (esto actualiza chats[currentChatId].messages para futuras llamadas)
-            appendMessage('user', message);
-
-            userInput.value = ''; // Limpiar el input
-            userInput.style.height = 'auto'; // Restablecer la altura del input
-            dynamicPromptSuggestions.classList.add('hidden'); // Ocultar sugerencias dinámicas
-
-            showLoading(true); // Mostrar indicador de carga
-
-            // Si es el primer mensaje en un chat nuevo, actualizar el título
-            // Ahora se basa en messagesToSend.length (que incluye el mensaje actual del usuario)
-            if (messagesToSend.length === 1) { // Solo el mensaje del usuario
-                const firstWords = message.split(' ').slice(0, 5).join(' ');
-                chats[currentChatId].title = firstWords + (message.split(' ').length > 5 ? '...' : '');
-                currentChatTitle.textContent = chats[currentChatId].title;
-                saveChats();
-                renderChatList(); // Actualizar la lista del sidebar con el nuevo título
-            }
-
-            try {
-                const response = await fetch(`${BACKEND_URL}/generate`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    // Enviar el historial completo de mensajes al backend
-                    body: JSON.stringify({ messages: messagesToSend })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`Error del servidor: ${response.status} - ${errorData.error || 'Desconocido'}`);
-                }
-
-                const data = await response.json();
-                // Añadir la respuesta de la IA al chat (y la guarda en localStorage)
-                appendMessage('assistant', data.response); 
-
-            } catch (error) {
-                console.error("Error al obtener respuesta de la IA:", error);
-                // Mostrar mensaje de error con estilo
-                appendMessage('assistant', `Lo siento, hubo un error al procesar tu solicitud: ${error.message}. Por favor, inténtalo de nuevo.`, true); 
-            } finally {
-                showLoading(false); // Ocultar indicador de carga
-                userInput.focus(); // Devolver el foco al campo de entrada
-                updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
-            }
-        }
-
-        // --- Gemini API Call Function ---
-        async function callGeminiAPI(prompt, chatHistory = []) {
-            const apiKey = ""; // Canvas proporcionará automáticamente esta clave en tiempo de ejecución
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-            // Construir el historial de chat para la API de Gemini
-            // La API de Gemini espera roles 'user' y 'model'.
-            // Mapeamos 'assistant' a 'model'.
-            let geminiChatHistory = chatHistory.map(msg => ({
-                role: msg.role === 'assistant' ? 'model' : msg.role,
-                parts: [{ text: msg.content }]
-            }));
-
-            // Añadir el prompt actual como el último mensaje del usuario
-            geminiChatHistory.push({ role: "user", parts: [{ text: prompt }] });
-
-            const payload = { contents: geminiChatHistory };
-
-            showLoading(true); // Mostrar indicador de carga para las llamadas a la API de Gemini
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`Error de la API de Gemini: ${response.status} - ${errorData.error?.message || 'Desconocido'}`);
-                }
-
-                const result = await response.json();
-
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    return result.candidates[0].content.parts[0].text;
-                } else {
-                    throw new Error("Respuesta inesperada de la API de Gemini: no se encontró texto.");
-                }
-            } finally {
-                showLoading(false); // Ocultar indicador de carga
-            }
-        }
-
-        // --- Nuevas Funcionalidades de Gemini ---
-
-        /**
-         * Resume el chat actual usando la API de Gemini.
-         */
-        async function summarizeChat() {
-    if (!currentChatId || chats[currentChatId].messages.length === 0) {
-        appendMessage('assistant', 'No hay mensajes en el chat actual para resumir.', true);
-        return;
-    }
-
-    const messages = chats[currentChatId].messages;
-
-    showLoading(true);
-
-    try {
-        const response = await fetch(`${BACKEND_URL}/summarize`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages })
-        });
-
-        if (!response.ok) throw new Error("Error al resumir el chat");
-
-        const data = await response.json();
-        appendMessage('assistant', `✨ Resumen del Chat:\n\n${data.summary}`);
-    } catch (error) {
-        console.error("Error al resumir:", error);
-        appendMessage('assistant', `No se pudo generar el resumen: ${error.message}`, true);
-    } finally {
-        showLoading(false);
-    }
+/**
+* Añade un mensaje al área de chat.
+* @param {string} sender 'user' o 'assistant'
+* @param {string} text El contenido del mensaje
+* @param {boolean} [isError=false] Indica si es un mensaje de error
+* @param {boolean} [save=true] Indica si el mensaje debe guardarse en el chat activo.
+*/
+function appendMessage(sender, text, isError = false, save = true) {
+const messageDiv = document.createElement('div');
+messageDiv.classList.add('message');
+if (sender === 'user') {
+const userContainer = document.createElement('div');
+userContainer.classList.add('user-message-container');
+messageDiv.classList.add('user-message');
+userContainer.appendChild(messageDiv);
+chatBody.appendChild(userContainer);
+} else { // sender === 'assistant'
+messageDiv.classList.add('ai-message');
+if (isError) {
+messageDiv.classList.add('error-message');
 }
-
-        /**
-         * Genera una idea creativa basada en el último mensaje del usuario o en el contexto general.
-         */
-        async function generateCreativeIdea() {
-    const messages = currentChatId && chats[currentChatId] ? chats[currentChatId].messages : [];
-
-    showLoading(true);
-
-    try {
-        const response = await fetch(`${BACKEND_URL}/creative-idea`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages })
-        });
-
-        if (!response.ok) throw new Error("Error al generar la idea");
-
-        const data = await response.json();
-        appendMessage('assistant', `✨ Idea Creativa:\n\n${data.idea}`);
-    } catch (error) {
-        console.error("Error al generar idea creativa:", error);
-        appendMessage('assistant', `No se pudo generar una idea creativa: ${error.message}`, true);
-    } finally {
-        showLoading(false);
-    }
+chatBody.appendChild(messageDiv);
 }
-
-
-        /**
-         * Actualiza el estado de los botones de Gemini (habilitado/deshabilitado)
-         * basado en si hay un chat activo con mensajes.
-         */
-        function updateGeminiButtonsState() {
-            const isChatActiveAndHasMessages = currentChatId && chats[currentChatId] && chats[currentChatId].messages.length > 0;
-            summarizeChatButton.disabled = !isChatActiveAndHasMessages;
-            generateIdeaButton.disabled = !isChatActiveAndHasMessages;
-        }
-
-
-        // --- Event Listeners ---
-
-        // Botón "Nueva Conversación" en el sidebar
-        newChatButton.addEventListener('click', (e) => {
-            newChatButton.classList.add('clicked');
-            newChatButton.addEventListener('animationend', () => {
-                newChatButton.classList.remove('clicked');
-            }, { once: true });
-            startNewConversation();
-        });
-
-        // Manejo de clics en la lista de chats (cargar, editar, borrar)
-        chatList.addEventListener('click', (e) => {
-            const listItem = e.target.closest('li');
-            if (!listItem) return;
-
-            const chatId = listItem.dataset.chatId;
-
-            if (e.target.classList.contains('delete-icon')) {
-                // Usar un modal personalizado en lugar de confirm() si es posible en tu entorno
-                if (window.confirm('¿Estás seguro de que quieres eliminar esta conversación?')) {
-                    delete chats[chatId];
-                    saveChats();
-                    if (currentChatId === chatId) {
-                        showWelcomeView(); // Si eliminamos el chat activo, volvemos a la pantalla de bienvenida
-                    }
-                    renderChatList(); // Actualizar la lista
-                    updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
-                }
-            } else if (e.target.classList.contains('edit-icon')) {
-                // Entrar en modo de edición
-                const titleSpan = listItem.querySelector('.chat-title-content span:last-child');
-                const originalTitle = titleSpan.textContent;
-
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = originalTitle;
-                input.classList.add('edit-title-input');
-
-                titleSpan.replaceWith(input); // Reemplazar el título con el input
-                input.focus();
-                input.select(); // Seleccionar todo el texto para facilitar la edición
-
-                // Ocultar acciones mientras se edita
-                listItem.querySelector('.chat-actions').style.display = 'none';
-
-                // Guardar el nuevo título al perder el foco o presionar Enter
-                const saveEdit = () => {
-                    const newTitle = input.value.trim();
-                    if (newTitle && newTitle !== originalTitle) {
-                        chats[chatId].title = newTitle;
-                        if (currentChatId === chatId) {
-                            currentChatTitle.textContent = newTitle; // Actualizar el título del header si es el chat activo
-                        }
-                        saveChats();
-                    }
-                    input.replaceWith(titleSpan); // Restaurar el span original
-                    titleSpan.textContent = newTitle || originalTitle; // Asegurar que el texto esté actualizado
-                    listItem.querySelector('.chat-actions').style.display = 'flex'; // Mostrar acciones de nuevo
-                    renderChatList(); // Para que el título actualizado se refleje correctamente
-                };
-
-                input.addEventListener('blur', saveEdit); // Guardar al perder el foco
-                input.addEventListener('keypress', (event) => {
-                    if (event.key === 'Enter') {
-                        input.blur(); // Simula el blur para guardar
-                    }
-                });
-            } else {
-                // Cargar chat
-                startNewConversation(chatId);
-            }
-        });
-
-        // Botón "Empezar a Chatear" en la pantalla de bienvenida
-        startChatButton.addEventListener('click', () => {
-            startNewConversation();
-        });
-
-        // Clic en las sugerencias de prompt de la pantalla de bienvenida
-        welcomePromptSuggestions.addEventListener('click', (e) => {
-            const button = e.target.closest('.suggest-prompt-button');
-            if (button) {
-                // Extrae el texto del prompt, eliminando el icono y el espacio extra
-                const promptText = button.textContent.trim().replace(/^\S+\s*/, ''); 
-                userInput.value = promptText;
-                userInput.style.height = 'auto'; 
-                userInput.style.height = userInput.scrollHeight + 'px'; 
-                startNewConversation(); // Inicia un nuevo chat
-                sendMessage(); // Envía el prompt directamente
-            }
-        });
-
-        // Botón "Volver al Inicio" en el encabezado del chat
-        backToHomeButton.addEventListener('click', showWelcomeView);
-
-        // Envío de mensaje al hacer clic en el botón
-        sendButton.addEventListener('click', sendMessage);
-
-        // Envío de mensaje al presionar Enter en el campo de texto
-        userInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) { // Permite Shift+Enter para nueva línea
-                e.preventDefault(); // Evita el salto de línea por defecto
-                sendMessage();
-            }
-        });
-
-        // Auto-ajuste de la altura del textarea y mostrar/ocultar sugerencias dinámicas
-        userInput.addEventListener('input', () => {
-            userInput.style.height = 'auto'; // Restablece la altura para calcular correctamente
-            userInput.style.height = userInput.scrollHeight + 'px';
-
-            // Mostrar/ocultar sugerencias dinámicas
-            const hasMessagesInCurrentChat = currentChatId && chats[currentChatId] && chats[currentChatId].messages.length > 0;
-            if (userInput.value.trim() === '' && hasMessagesInCurrentChat && !loadingIndicator.style.display.includes('flex')) {
-                renderDynamicPromptSuggestions();
-                dynamicPromptSuggestions.classList.remove('hidden');
-            } else {
-                dynamicPromptSuggestions.classList.add('hidden');
-            }
-        });
-
-        // Ocultar sugerencias dinámicas al hacer clic fuera del input/sugerencias
-        document.addEventListener('click', (event) => {
-            if (!inputArea.contains(event.target) && !dynamicPromptSuggestions.contains(event.target)) {
-                dynamicPromptSuggestions.classList.add('hidden');
-            }
-        });
-
-        // Event listeners para los nuevos botones de Gemini
-        summarizeChatButton.addEventListener('click', summarizeChat);
-        generateIdeaButton.addEventListener('click', generateCreativeIdea);
-
-
-        // --- Funciones de Sugerencias Dinámicas ---
-        function renderDynamicPromptSuggestions() {
-            dynamicPromptSuggestions.innerHTML = '';
-            defaultPrompts.forEach(prompt => {
-                const button = document.createElement('button');
-                button.classList.add('suggest-item');
-                button.textContent = prompt;
-                button.addEventListener('click', () => {
-                    userInput.value = prompt;
-                    userInput.style.height = 'auto';
-                    userInput.style.height = userInput.scrollHeight + 'px';
-                    dynamicPromptSuggestions.classList.add('hidden');
-                    userInput.focus();
-                    // Opcional: enviar el mensaje automáticamente al seleccionar una sugerencia
-                    // sendMessage(); 
-                });
-                dynamicPromptSuggestions.appendChild(button);
-            });
-        }
-        
-        // Mostrar sugerencias dinámicas al enfocar el input si está vacío y hay un chat activo con mensajes
-        userInput.addEventListener('focus', () => {
-            const hasMessagesInCurrentChat = currentChatId && chats[currentChatId] && chats[currentChatId].messages.length > 0;
-            if (userInput.value.trim() === '' && hasMessagesInCurrentChat && !loadingIndicator.style.display.includes('flex')) {
-                renderDynamicPromptSuggestions();
-                dynamicPromptSuggestions.classList.remove('hidden');
-            }
-        });
-
-
-        // --- Inicialización al cargar la página ---
-        document.addEventListener('DOMContentLoaded', () => {
-            renderChatList();
-            // Si hay chats guardados, intenta cargar el último activo.
-            // Si no hay chats o el último activo no existe, muestra la pantalla de bienvenida.
-            const lastActiveChatId = localStorage.getItem('lastActiveChatId');
-            if (lastActiveChatId && chats[lastActiveChatId]) {
-                startNewConversation(lastActiveChatId);
-            } else {
-                showWelcomeView();
-            }
-            updateGeminiButtonsState(); // Asegura que los botones de Gemini estén en el estado correcto al cargar
-        });
-
-        // Guarda el ID del chat activo cuando se cierra la página
-        window.addEventListener('beforeunload', () => {
-            if (currentChatId) {
-                localStorage.setItem('lastActiveChatId', currentChatId);
-            } else {
-                localStorage.removeItem('lastActiveChatId');
-            }
-            const imageInput = document.getElementById('imageInput');
-const imageToTextButton = document.getElementById('imageToTextButton');
-const generateImageButton = document.getElementById('generateImageButton');
-
-imageToTextButton.addEventListener('click', async () => {
-    const file = imageInput.files[0];
-    if (!file) return alert("Sube una imagen primero.");
-    
-    const formData = new FormData();
-    formData.append("image", file);
-
-    showLoading(true);
-    try {
-        const response = await fetch(`${BACKEND_URL}/image-to-text`, {
-            method: 'POST',
-            body: formData
-        });
-        const data = await response.json();
-        appendMessage('assistant', `🖼 Texto de la imagen:\n\n${data.text}`);
-    } catch (error) {
-        appendMessage('assistant', `Error al procesar la imagen: ${error.message}`, true);
-    } finally {
-        showLoading(false);
-    }
+messageDiv.textContent = text;
+chatBody.scrollTop = chatBody.scrollHeight; // Auto-scroll al final
+if (save && currentChatId) {
+// Guardar el mensaje en el historial del chat activo
+chats[currentChatId].messages.push({ role: sender, content: text });
+saveChats();
+}
+}
+/**
+* Muestra u oculta el indicador de carga y deshabilita/habilita el input/botón.
+* También deshabilita/habilita los botones de Gemini.
+* @param {boolean} show True para mostrar, false para ocultar
+*/
+function showLoading(show) {
+loadingIndicator.style.display = show ? 'flex' : 'none';
+sendButton.disabled = show;
+userInput.disabled = show;
+summarizeChatButton.disabled = show; // Deshabilita los botones de Gemini
+generateIdeaButton.disabled = show; // Deshabilita los botones de Gemini
+userInput.placeholder = show ? 'La IA está pensando...' : 'Escribe tu mensaje aquí...';
+}
+/**
+* Muestra el chat activo y oculta la pantalla de bienvenida/input centrado.
+*/
+function showChatView() {
+welcomeScreen.classList.add('hidden');
+chatHeader.classList.remove('hidden');
+chatBody.classList.remove('hidden');
+chatContainer.classList.remove('centered-input');
+inputArea.classList.remove('centered-input'); // Asegura que el input vuelva a su
+posición normal
+userInput.focus();
+updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
+}
+/**
+* Muestra la pantalla de bienvenida y oculta el chat activo.
+*/
+function showWelcomeView() {
+welcomeScreen.classList.remove('hidden');
+chatHeader.classList.add('hidden');
+chatBody.classList.add('hidden');
+// Determina si el input debe estar centrado (si no hay chats o no hay mensajes en el
+chat actual)
+const hasMessagesInCurrentChat = currentChatId && chats[currentChatId] &&
+chats[currentChatId].messages.length > 0;
+const totalChatsExist = Object.keys(chats).length > 0;
+if (!totalChatsExist || !hasMessagesInCurrentChat) {
+chatContainer.classList.add('centered-input');
+inputArea.classList.add('centered-input');
+} else {
+chatContainer.classList.remove('centered-input');
+inputArea.classList.remove('centered-input');
+}
+currentChatId = null; // Deseleccionar chat
+saveChats(); // Guardar el estado de deselección
+renderChatList(); // Para desmarcar el chat activo si lo hubiera
+dynamicPromptSuggestions.classList.add('hidden'); // Ocultar sugerencias dinámicas
+al volver a la vista de bienvenida
+userInput.value = ''; // Limpiar input
+userInput.style.height = 'auto'; // Resetear altura del input
+userInput.focus();
+updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
+}
+/**
+* Inicia una nueva conversación o carga una existente.
+* @param {string} [id] El ID del chat a cargar. Si no se proporciona, crea uno nuevo.
+*/
+function startNewConversation(id = null) {
+let newChat = null;
+if (id && chats[id]) {
+// Cargar chat existente
+currentChatId = id;
+newChat = chats[id];
+} else {
+// Crear nuevo chat
+currentChatId = generateUniqueId();
+newChat = {
+title: `Conversación ${chatCounter}`, // Título inicial
+messages: [] // Historial de mensajes vacío para el nuevo chat
+};
+chats[currentChatId] = newChat;
+saveChats();
+}
+currentChatTitle.textContent = newChat.title;
+chatBody.innerHTML = ''; // Limpia los mensajes anteriores
+// Renderiza los mensajes del chat cargado
+// No guardar de nuevo al cargar (save=false)
+newChat.messages.forEach(msg => appendMessage(msg.role, msg.content,
+msg.isError, false));
+showChatView();
+renderChatList(); // Actualiza la lista para marcar el chat activo
+userInput.focus();
+// Si el chat está vacío, ajusta la vista para centrar el input
+if (newChat.messages.length === 0) {
+chatContainer.classList.add('centered-input');
+inputArea.classList.add('centered-input');
+dynamicPromptSuggestions.classList.add('hidden'); // Ocultar sugerencias
+dinámicas aquí
+} else {
+chatContainer.classList.remove('centered-input');
+inputArea.classList.remove('centered-input');
+}
+updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
+}
+/**
+* Renderiza la lista de chats en el sidebar.
+*/
+function renderChatList() {
+chatList.innerHTML = '';
+const chatIds = Object.keys(chats);
+if (chatIds.length === 0) {
+chatList.innerHTML = '<li style="text-align: center; color:
+var(--text-color-secondary); padding: 20px;">No hay conversaciones.</li>';
+return;
+}
+// Ordenar los chats por el número del ID de forma descendente (más recientes
+primero)
+const sortedChatIds = chatIds.sort((a, b) => {
+const numA = parseInt(a.split('-')[1]);
+const numB = parseInt(b.split('-')[1]);
+return numB - numA; // Orden descendente
 });
-
-generateImageButton.addEventListener("click", async () => {
-    const prompt = userInput.value.trim();
-    if (!prompt) {
-        alert("Escribe una descripción para generar la imagen.");
-        return;
-    }
-
-    appendMessage('user', prompt);
-    userInput.value = "";
-    showLoading(true);
-
-    try {
-        const tempId = `temp-${Date.now()}`;
-        appendMessage('assistant', '🎨 Generando imagen...', false, tempId);
-
-        const response = await fetch(`${BACKEND_URL}/text-to-image`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ prompt })
-        });
-
-        const data = await response.json();
-
-        if (data.image_url) {
-            const imageHTML = `<img src="${BACKEND_URL}${data.image_url}" style="max-width: 100%; border-radius: 12px;">`;
-            updateMessage(tempId, imageHTML);
-        } else if (data.error) {
-            updateMessage(tempId, `⚠️ Error: ${data.error}`);
-        } else {
-            updateMessage(tempId, `⚠️ No se pudo generar la imagen.`);
-        }
-    } catch (error) {
-        appendMessage('assistant', `🚫 Error al generar imagen: ${error.message}`, true);
-    } finally {
-        showLoading(false);
-    }
+sortedChatIds.forEach(id => {
+const chat = chats[id];
+const listItem = document.createElement('li');
+listItem.dataset.chatId = id;
+listItem.classList.toggle('active', id === currentChatId);
+// Contenido del título del chat
+const chatTitleContent = document.createElement('span');
+chatTitleContent.classList.add('chat-title-content');
+chatTitleContent.innerHTML = `<span
+class="material-symbols-outlined">chat</span><span>${chat.title}</span>`;
+listItem.appendChild(chatTitleContent);
+// Acciones de editar/borrar
+const chatActions = document.createElement('span');
+chatActions.classList.add('chat-actions');
+chatActions.innerHTML = `
+<span class="material-symbols-outlined edit-icon" title="Editar
+título">edit</span>
+<span class="material-symbols-outlined delete-icon" title="Eliminar
+chat">delete</span>
+`;
+listItem.appendChild(chatActions);
+chatList.appendChild(listItem);
 });
-
-
-    // Mostrar el mensaje del usuario en el chat
-    appendMessage('user', prompt);
-    userInput.value = "";
-
-    // Mostrar "Escribiendo..." con el spinner
-    showLoading(true);
-
-    try {
-        // Mostrar mensaje temporal de carga
-        const tempId = `temp-${Date.now()}`;
-        appendMessage('assistant', '🎨 Generando imagen...', false, tempId);
-
-        const response = await fetch(`${BACKEND_URL}/text-to-image`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ prompt })
-        });
-
-        const data = await response.json();
-
-        if (data.image_url) {
-            const imageHTML = `<img src="${BACKEND_URL}${data.image_url}" style="max-width: 100%; border-radius: 12px;">`;
-            updateMessage(tempId, imageHTML);
-        } else if (data.error) {
-            updateMessage(tempId, `⚠️ Error: ${data.error}`);
-        } else {
-            updateMessage(tempId, `⚠️ No se pudo generar la imagen.`);
-        }
-    } catch (error) {
-        appendMessage('assistant', `🚫 Error al generar imagen: ${error.message}`, true);
-    } finally {
-        showLoading(false);
-    }
+}
+/**
+* Envía el mensaje del usuario al backend y maneja la respuesta de la IA.
+*/
+async function sendMessage() {
+const message = userInput.value.trim();
+if (!message) {
+dynamicPromptSuggestions.classList.add('hidden');
+return;
+}
+// Si no hay un chat activo, crea uno nuevo.
+if (!currentChatId) {
+startNewConversation();
+}
+// Si el chat estaba en la vista centrada, cambia a la vista de chat normal
+if (chatContainer.classList.contains('centered-input')) {
+showChatView();
+}
+// Construir el historial de mensajes para enviar al backend
+// Incluye los mensajes existentes del chat actual y el nuevo mensaje del usuario
+const messagesToSend = [];
+// Añadir mensajes existentes del chat actual (si los hay)
+// Asegurarse de que chats[currentChatId] y chats[currentChatId].messages existen
+if (currentChatId && chats[currentChatId] &&
+Array.isArray(chats[currentChatId].messages)) {
+chats[currentChatId].messages.forEach(msg => {
+messagesToSend.push({ role: msg.role, content: msg.content });
 });
-
-
-
-b
-        });
-    </script>
+}
+// Añadir el mensaje actual del usuario a la lista que se enviará al backend
+messagesToSend.push({ role: 'user', content: message });
+// Ahora, añadir el mensaje del usuario a la UI y guardarlo en localStorage
+// (esto actualiza chats[currentChatId].messages para futuras llamadas)
+appendMessage('user', message);
+userInput.value = ''; // Limpiar el input
+userInput.style.height = 'auto'; // Restablecer la altura del input
+dynamicPromptSuggestions.classList.add('hidden'); // Ocultar sugerencias dinámicas
+showLoading(true); // Mostrar indicador de carga
+// Si es el primer mensaje en un chat nuevo, actualizar el título
+// Ahora se basa en messagesToSend.length (que incluye el mensaje actual del
+usuario)
+if (messagesToSend.length === 1) { // Solo el mensaje del usuario
+const firstWords = message.split(' ').slice(0, 5).join(' ');
+chats[currentChatId].title = firstWords + (message.split(' ').length > 5 ? '...' : '');
+currentChatTitle.textContent = chats[currentChatId].title;
+saveChats();
+renderChatList(); // Actualizar la lista del sidebar con el nuevo título
+}
+try {
+const response = await fetch(`${BACKEND_URL}/generate`, {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+},
+// Enviar el historial completo de mensajes al backend
+body: JSON.stringify({ messages: messagesToSend })
+});
+if (!response.ok) {
+const errorData = await response.json();
+throw new Error(`Error del servidor: ${response.status} - ${errorData.error ||
+'Desconocido'}`);
+}
+const data = await response.json();
+// Añadir la respuesta de la IA al chat (y la guarda en localStorage)
+appendMessage('assistant', data.response);
+} catch (error) {
+console.error("Error al obtener respuesta de la IA:", error);
+// Mostrar mensaje de error con estilo
+appendMessage('assistant', `Lo siento, hubo un error al procesar tu solicitud:
+${error.message}. Por favor, inténtalo de nuevo.`, true);
+} finally {
+showLoading(false); // Ocultar indicador de carga
+userInput.focus(); // Devolver el foco al campo de entrada
+updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
+}
+}
+// --- Gemini API Call Function ---
+async function callGeminiAPI(prompt, chatHistory = []) {
+const apiKey = ""; // Canvas proporcionará automáticamente esta clave en tiempo de
+ejecución
+const apiUrl =
+`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateConten
+t?key=${apiKey}`;
+// Construir el historial de chat para la API de Gemini
+// La API de Gemini espera roles 'user' y 'model'.
+// Mapeamos 'assistant' a 'model'.
+let geminiChatHistory = chatHistory.map(msg => ({
+role: msg.role === 'assistant' ? 'model' : msg.role,
+parts: [{ text: msg.content }]
+}));
+// Añadir el prompt actual como el último mensaje del usuario
+geminiChatHistory.push({ role: "user", parts: [{ text: prompt }] });
+const payload = { contents: geminiChatHistory };
+showLoading(true); // Mostrar indicador de carga para las llamadas a la API de
+Gemini
+try {
+const response = await fetch(apiUrl, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(payload)
+});
+if (!response.ok) {
+const errorData = await response.json();
+throw new Error(`Error de la API de Gemini: ${response.status} -
+${errorData.error?.message || 'Desconocido'}`);
+}
+const result = await response.json();
+if (result.candidates && result.candidates.length > 0 &&
+result.candidates[0].content && result.candidates[0].content.parts &&
+result.candidates[0].content.parts.length > 0) {
+return result.candidates[0].content.parts[0].text;
+} else {
+throw new Error("Respuesta inesperada de la API de Gemini: no se encontró
+texto.");
+}
+} finally {
+showLoading(false); // Ocultar indicador de carga
+}
+}
+// --- Nuevas Funcionalidades de Gemini ---
+/**
+* Resume el chat actual usando la API de Gemini.
+*/
+async function summarizeChat() {
+if (!currentChatId || chats[currentChatId].messages.length === 0) {
+appendMessage('assistant', 'No hay mensajes en el chat actual para resumir.', true);
+return;
+}
+const messages = chats[currentChatId].messages;
+showLoading(true);
+try {
+const response = await fetch(`${BACKEND_URL}/summarize`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ messages })
+});
+if (!response.ok) throw new Error("Error al resumir el chat");
+const data = await response.json();
+appendMessage('assistant', `✨ Resumen del Chat:\n\n${data.summary}`);
+} catch (error) {
+console.error("Error al resumir:", error);
+appendMessage('assistant', `No se pudo generar el resumen: ${error.message}`, true);
+} finally {
+showLoading(false);
+}
+}
+/**
+* Genera una idea creativa basada en el último mensaje del usuario o en el contexto
+general.
+*/
+async function generateCreativeIdea() {
+const messages = currentChatId && chats[currentChatId] ?
+chats[currentChatId].messages : [];
+showLoading(true);
+try {
+const response = await fetch(`${BACKEND_URL}/creative-idea`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ messages })
+});
+if (!response.ok) throw new Error("Error al generar la idea");
+const data = await response.json();
+appendMessage('assistant', `✨ Idea Creativa:\n\n${data.idea}`);
+} catch (error) {
+console.error("Error al generar idea creativa:", error);
+appendMessage('assistant', `No se pudo generar una idea creativa: ${error.message}`,
+true);
+} finally {
+showLoading(false);
+}
+}
+/**
+* Actualiza el estado de los botones de Gemini (habilitado/deshabilitado)
+* basado en si hay un chat activo con mensajes.
+*/
+function updateGeminiButtonsState() {
+const isChatActiveAndHasMessages = currentChatId && chats[currentChatId] &&
+chats[currentChatId].messages.length > 0;
+summarizeChatButton.disabled = !isChatActiveAndHasMessages;
+generateIdeaButton.disabled = !isChatActiveAndHasMessages;
+}
+// --- Event Listeners ---
+// Botón "Nueva Conversación" en el sidebar
+newChatButton.addEventListener('click', (e) => {
+newChatButton.classList.add('clicked');
+newChatButton.addEventListener('animationend', () => {
+newChatButton.classList.remove('clicked');
+}, { once: true });
+startNewConversation();
+});
+// Manejo de clics en la lista de chats (cargar, editar, borrar)
+chatList.addEventListener('click', (e) => {
+const listItem = e.target.closest('li');
+if (!listItem) return;
+const chatId = listItem.dataset.chatId;
+if (e.target.classList.contains('delete-icon')) {
+// Usar un modal personalizado en lugar de confirm() si es posible en tu entorno
+if (window.confirm('¿Estás seguro de que quieres eliminar esta conversación?')) {
+delete chats[chatId];
+saveChats();
+if (currentChatId === chatId) {
+showWelcomeView(); // Si eliminamos el chat activo, volvemos a la pantalla
+de bienvenida
+}
+renderChatList(); // Actualizar la lista
+updateGeminiButtonsState(); // Actualiza el estado de los botones de Gemini
+}
+} else if (e.target.classList.contains('edit-icon')) {
+// Entrar en modo de edición
+const titleSpan = listItem.querySelector('.chat-title-content span:last-child');
+const originalTitle = titleSpan.textContent;
+const input = document.createElement('input');
+input.type = 'text';
+input.value = originalTitle;
+input.classList.add('edit-title-input');
+titleSpan.replaceWith(input); // Reemplazar el título con el input
+input.focus();
+input.select(); // Seleccionar todo el texto para facilitar la edición
+// Ocultar acciones mientras se edita
+listItem.querySelector('.chat-actions').style.display = 'none';
+// Guardar el nuevo título al perder el foco o presionar Enter
+const saveEdit = () => {
+const newTitle = input.value.trim();
+if (newTitle && newTitle !== originalTitle) {
+chats[chatId].title = newTitle;
+if (currentChatId === chatId) {
+currentChatTitle.textContent = newTitle; // Actualizar el título del header si
+es el chat activo
+}
+saveChats();
+}
+input.replaceWith(titleSpan); // Restaurar el span original
+titleSpan.textContent = newTitle || originalTitle; // Asegurar que el texto esté
+actualizado
+listItem.querySelector('.chat-actions').style.display = 'flex'; // Mostrar acciones
+de nuevo
+renderChatList(); // Para que el título actualizado se refleje correctamente
+};
+input.addEventListener('blur', saveEdit); // Guardar al perder el foco
+input.addEventListener('keypress', (event) => {
+if (event.key === 'Enter') {
+input.blur(); // Simula el blur para guardar
+}
+});
+} else {
+// Cargar chat
+startNewConversation(chatId);
+}
+});
+// Botón "Empezar a Chatear" en la pantalla de bienvenida
+startChatButton.addEventListener('click', () => {
+startNewConversation();
+});
+// Clic en las sugerencias de prompt de la pantalla de bienvenida
+welcomePromptSuggestions.addEventListener('click', (e) => {
+const button = e.target.closest('.suggest-prompt-button');
+if (button) {
+// Extrae el texto del prompt, eliminando el icono y el espacio extra
+const promptText = button.textContent.trim().replace(/^\S+\s*/, '');
+userInput.value = promptText;
+userInput.style.height = 'auto';
+userInput.style.height = userInput.scrollHeight + 'px';
+startNewConversation(); // Inicia un nuevo chat
+sendMessage(); // Envía el prompt directamente
+}
+});
+// Botón "Volver al Inicio" en el encabezado del chat
+backToHomeButton.addEventListener('click', showWelcomeView);
+// Envío de mensaje al hacer clic en el botón
+sendButton.addEventListener('click', sendMessage);
+// Envío de mensaje al presionar Enter en el campo de texto
+userInput.addEventListener('keypress', (e) => {
+if (e.key === 'Enter' && !e.shiftKey) { // Permite Shift+Enter para nueva línea
+e.preventDefault(); // Evita el salto de línea por defecto
+sendMessage();
+}
+});
+// Auto-ajuste de la altura del textarea y mostrar/ocultar sugerencias dinámicas
+userInput.addEventListener('input', () => {
+userInput.style.height = 'auto'; // Restablece la altura para calcular correctamente
+userInput.style.height = userInput.scrollHeight + 'px';
+// Mostrar/ocultar sugerencias dinámicas
+const hasMessagesInCurrentChat = currentChatId && chats[currentChatId] &&
+chats[currentChatId].messages.length > 0;
+if (userInput.value.trim() === '' && hasMessagesInCurrentChat &&
+!loadingIndicator.style.display.includes('flex')) {
+renderDynamicPromptSuggestions();
+dynamicPromptSuggestions.classList.remove('hidden');
+} else {
+dynamicPromptSuggestions.classList.add('hidden');
+}
+});
+// Ocultar sugerencias dinámicas al hacer clic fuera del input/sugerencias
+document.addEventListener('click', (event) => {
+if (!inputArea.contains(event.target) &&
+!dynamicPromptSuggestions.contains(event.target)) {
+dynamicPromptSuggestions.classList.add('hidden');
+}
+});
+// Event listeners para los nuevos botones de Gemini
+summarizeChatButton.addEventListener('click', summarizeChat);
+generateIdeaButton.addEventListener('click', generateCreativeIdea);
+// --- Funciones de Sugerencias Dinámicas ---
+function renderDynamicPromptSuggestions() {
+dynamicPromptSuggestions.innerHTML = '';
+defaultPrompts.forEach(prompt => {
+const button = document.createElement('button');
+button.classList.add('suggest-item');
+button.textContent = prompt;
+button.addEventListener('click', () => {
+userInput.value = prompt;
+userInput.style.height = 'auto';
+userInput.style.height = userInput.scrollHeight + 'px';
+dynamicPromptSuggestions.classList.add('hidden');
+userInput.focus();
+// Opcional: enviar el mensaje automáticamente al seleccionar una sugerencia
+// sendMessage();
+});
+dynamicPromptSuggestions.appendChild(button);
+});
+}
+// Mostrar sugerencias dinámicas al enfocar el input si está vacío y hay un chat activo
+con mensajes
+userInput.addEventListener('focus', () => {
+const hasMessagesInCurrentChat = currentChatId && chats[currentChatId] &&
+chats[currentChatId].messages.length > 0;
+if (userInput.value.trim() === '' && hasMessagesInCurrentChat &&
+!loadingIndicator.style.display.includes('flex')) {
+renderDynamicPromptSuggestions();
+dynamicPromptSuggestions.classList.remove('hidden');
+}
+});
+// --- Inicialización al cargar la página ---
+document.addEventListener('DOMContentLoaded', () => {
+renderChatList();
+// Si hay chats guardados, intenta cargar el último activo.
+// Si no hay chats o el último activo no existe, muestra la pantalla de bienvenida.
+const lastActiveChatId = localStorage.getItem('lastActiveChatId');
+if (lastActiveChatId && chats[lastActiveChatId]) {
+startNewConversation(lastActiveChatId);
+} else {
+showWelcomeView();
+}
+updateGeminiButtonsState(); // Asegura que los botones de Gemini estén en el
+estado correcto al cargar
+});
+// Guarda el ID del chat activo cuando se cierra la página
+window.addEventListener('beforeunload', () => {
+if (currentChatId) {
+localStorage.setItem('lastActiveChatId', currentChatId);
+} else {
+localStorage.removeItem('lastActiveChatId');
+}
+});
+</script>
 </body>
 </html>
-
-
