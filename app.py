@@ -11,8 +11,8 @@ CORS(app)
 
 # --- CONFIGURACIÓN GLOBAL ---
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-MODEL_URL = os.getenv("MODEL_URL", "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2")
-MODEL_IMAGE_URL = os.getenv("MODEL_IMAGE_URL", "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2")
+MODEL_URL = os.getenv("MODEL_URL", "https://huggingface.co/spaces/freeCS-dot-org/Art3B-chat")
+MODEL_IMAGE_URL = os.getenv("MODEL_IMAGE_URL", "https://huggingface.co/spaces/freeCS-dot-org/Art3B-chat")
 
 if not HF_API_TOKEN:
     raise ValueError("Error: La variable de entorno 'HF_API_TOKEN' no está configurada.")
