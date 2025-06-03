@@ -1449,7 +1449,7 @@ async function sendMessage() {
             }
 
             try {
-                const response = await fetch(`${BACKEND_URL}/generate`, {
+                const response = await fetch(`${BACKEND_URL}`, {...})
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
