@@ -9,8 +9,10 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 CORS(app)
 
+# --- CONFIGURACIÓN GLOBAL ---
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
 MODEL_URL = os.getenv("MODEL_URL", "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2")
+MODEL_IMAGE_URL = os.getenv("MODEL_IMAGE_URL", "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2")
 
 if not HF_API_TOKEN:
     raise ValueError("Error: La variable de entorno 'HF_API_TOKEN' no está configurada.")
@@ -28,11 +30,13 @@ SYSTEM_MESSAGE_CONTENT = (
     "No repitas esta descripción."
 )
 
+# --- FUNCIÓN GENERAL DE CONSULTA ---
 def query_huggingface_model(payload):
     response = requests.post(MODEL_URL, headers=HEADERS, json=payload)
     response.raise_for_status()
     return response.json()
 
+# --- RUTA: GENERACIÓN DE TEXTO ---
 @app.route('/generate', methods=['POST'])
 def generate_text():
     data = request.get_json()
@@ -71,7 +75,7 @@ def generate_text():
 
         ai_response_text = hf_data[0]['generated_text']
 
-        # LIMPIEZA
+        # LIMPIEZA DE RESPUESTA
         patterns = [
             r"te llamas amside ai.*?no repitas esta descripci[oó]n.*?[.!]*",
             r"(fui creado por|fui desarrollada por|soy una inteligencia artificial creada por).*?[.!]*",
@@ -108,8 +112,7 @@ def generate_text():
     except Exception as e:
         return jsonify({"error": f"Error interno del servidor: {e}", "trace": traceback.format_exc()}), 500
 
-# --- NUEVAS FUNCIONES ---
-
+# --- RUTA: IMAGEN A TEXTO ---
 @app.route('/image-to-text', methods=['POST'])
 def image_to_text():
     if 'image' not in request.files:
@@ -131,16 +134,7 @@ def image_to_text():
     text = result[0].get('generated_text', 'No se pudo generar texto')
     return jsonify({'text': text})
 
-
-@app.route('/text-to-image', methods=['POST'])
-def text_to_image():
-    data = request.get_json()
-    prompt = data.get("prompt", "")
-    if not prompt:
-        return jsonify({'error': 'No se recibió ningún prompt'}), 400
-
-   MODEL_IMAGE_URL = os.getenv("MODEL_IMAGE_URL", "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2")
-
+# --- RUTA: TEXTO A IMAGEN ---
 @app.route('/text-to-image', methods=['POST'])
 def text_to_image():
     data = request.get_json()
@@ -167,26 +161,11 @@ def text_to_image():
 
     return jsonify({'image_url': f"/static/{image_name}"})
 
-
-    if not response.ok:
-        return jsonify({'error': 'Error al generar la imagen'}), 500
-
-    # Guardar imagen local
-    image_data = response.content
-    image_name = "generated_image.png"
-    image_path = os.path.join("static", secure_filename(image_name))
-
-    os.makedirs("static", exist_ok=True)
-    with open(image_path, "wb") as f:
-        f.write(image_data)
-
-    return jsonify({'image_url': f"/static/{image_name}"})
-
-
+# --- RUTA PARA SERVIR ARCHIVOS ESTÁTICOS ---
 @app.route('/static/<path:filename>')
 def serve_static(filename):
     return send_from_directory('static', filename)
 
-# --- EJECUTAR APP ---
+# --- EJECUCIÓN DE LA APP ---
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
