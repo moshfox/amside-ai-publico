@@ -1128,7 +1128,7 @@
     <script>
         // --- Constantes y Elementos del DOM ---
         // ¡IMPORTANTE! Asegúrate de que esta URL sea la de tu backend de Render
-        const BACKEND_URL = "https://huggingface.co/spaces/freeCS-dot-org/Art3B-chat";
+        const BACKEND_URL = "https://hf.space/embed/HuggingFaceH4/zephyr-7b-alpha/api/predict/";
 
 async function sendMessage() {
     const message = userInput.value.trim();
@@ -1449,7 +1449,7 @@ async function sendMessage() {
             }
 
             try {
-                const response = await fetch(`${BACKEND_URL}`, {...})
+                const response = await fetch(`${BACKEND_URL}/generate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1786,6 +1786,3 @@ async function sendMessage() {
     </script>
 </body>
 </html>
-
-
-
